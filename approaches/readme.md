@@ -12,11 +12,19 @@
 * `initObj` = Initialize object
 	* `Bk/Sk`
 	* Hashing algorithm
-* `pT` = Partition table, containing information which node is responsible for certain `Bk/Sk`.
+* `pT` = Partition table, containing information which node is responsible for certain `Bk/Sk`
 
 ## Approach 1
 
 ## Approach 2
+
+### Master
+ToDo: Short summary of core idea
+
+### Worker
+ToDo: Short summary of core idea
+
+### Overview
 
 <img src="images/DDD_Approach_2.png">
 
