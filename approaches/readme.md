@@ -1,5 +1,19 @@
 # Different approaches for DDD
 
+## Glossary
+
+* `Pk` = Partitioning key
+* `Bk` = Blocking key
+* `Sk` = Sorting key
+* `infoObj` = Information object
+	* Node resources, e.g. CPU, RAM, Disk
+	* Processing time
+	* Possible hashing algorithms
+* `initObj` = Initialize object
+	* `Bk/Sk`
+	* Hashing algorithm
+* `pT` = Partition table, containing information which node is responsible for certain `Bk/Sk`.
+
 ## Approach 1
 
 ## Approach 2
