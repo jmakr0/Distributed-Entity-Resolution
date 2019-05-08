@@ -9,6 +9,7 @@
 	* Node resources, e.g. CPU, RAM, Disk
 	* Processing time
 	* Possible hashing algorithms
+	* Current partition size, can be used to merge/split partion if too small/big
 * `initObj` = Initialize object
 	* `Bk/Sk`
 	* Hashing algorithm
