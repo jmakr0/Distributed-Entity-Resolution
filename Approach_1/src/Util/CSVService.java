@@ -2,12 +2,11 @@ package Util;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class CSVService {
 
@@ -74,5 +73,36 @@ public class CSVService {
         }
 
         return result;
+    }
+
+    public static Set<Pair<Integer,Integer>> readRestaurantGoldStandard(String dataFile, String splitSymbol) {
+        Set<Pair<Integer,Integer>> goldStandard = new HashSet<Pair<Integer, Integer>>();
+
+        CSVReader reader = null;
+        try {
+            InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
+            reader = new CSVReader(inputStreamReader, '\n');
+
+            // first line is header
+            String[] tmpRecord = reader.readNext();
+            while ((tmpRecord = reader.readNext()) != null) {
+                String[] split = tmpRecord[0].split(splitSymbol);
+                Integer id1 = Integer.parseInt(removeWhitespaces(split[1]));
+                Integer id2 = Integer.parseInt(removeWhitespaces(split[2]));
+                goldStandard.add(new Pair<Integer, Integer>(id1,id2));
+            }
+            reader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return  goldStandard;
+    }
+
+    private static String removeWhitespaces(String s) {
+        return s.replaceAll("\\s+","");
     }
 }
