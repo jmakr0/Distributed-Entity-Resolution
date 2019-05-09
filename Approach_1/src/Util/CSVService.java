@@ -27,7 +27,7 @@ public class CSVService {
         }
     }
 
-    public static List<String[]> readCoraCSV(String dataFile, String splitSymbol) {
+    public static List<String[]> readDataset(String dataFile, String splitSymbol, boolean addIdField) {
         List<String[]> result = new ArrayList<String[]>();
         CSVReader reader = null;
 
@@ -37,25 +37,33 @@ public class CSVService {
 
             // create header
             String[] originalHeader = reader.readNext()[0].split(splitSymbol);
-            // header = originalHeader + id column
-            String[] header = new String[originalHeader.length+1];
-            header[0] = "id";
-            System.arraycopy(originalHeader,0, header,1,originalHeader.length);
+            String[] header = null;
+            if(addIdField) {
+                // header = originalHeader + id column
+                 header = new String[originalHeader.length + 1];
+                header[0] = "id";
+                System.arraycopy(originalHeader, 0, header, 1, originalHeader.length);
+            } else {
+                header = originalHeader;
+            }
 
             String[] tmpRecord = null;
             int idCounter = 0;
+            int destCopyPosition = addIdField ? 1 : 0;
             while ((tmpRecord = reader.readNext()) != null) {
                 String[] split = tmpRecord[0].split(splitSymbol);
                 String[] record = new String[header.length];
                 Arrays.fill(record,"");
 
-                // add id column
-                record[0] = "" + idCounter;
-                // copy all other values
-                System.arraycopy(split,0,record,1,split.length-1);
-                result.add(record);
+                if(addIdField) {
+                    // add id column
+                    record[0] = "" + idCounter;
+                    idCounter++;
+                }
 
-                idCounter++;
+                // copy all other values
+                System.arraycopy(split,0,record,destCopyPosition,split.length-1);
+                result.add(record);
             }
             reader.close();
         } catch (FileNotFoundException e) {
