@@ -2,7 +2,6 @@ package Util;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import javafx.util.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -75,8 +74,8 @@ public class CSVService {
         return result;
     }
 
-    public static Set<Pair<Integer,Integer>> readRestaurantGoldStandard(String dataFile, String splitSymbol) {
-        Set<Pair<Integer,Integer>> goldStandard = new HashSet<Pair<Integer, Integer>>();
+    public static Set<Set<Integer>> readRestaurantGoldStandard(String dataFile, String splitSymbol) {
+        Set<Set<Integer>> goldStandard = new HashSet<Set<Integer>>();
 
         CSVReader reader = null;
         try {
@@ -89,7 +88,10 @@ public class CSVService {
                 String[] split = tmpRecord[0].split(splitSymbol);
                 Integer id1 = Integer.parseInt(removeWhitespaces(split[1]));
                 Integer id2 = Integer.parseInt(removeWhitespaces(split[2]));
-                goldStandard.add(new Pair<Integer, Integer>(id1,id2));
+                HashSet<Integer> set = new HashSet<Integer>();
+                set.add(id1);
+                set.add(id2);
+                goldStandard.add(set);
             }
             reader.close();
         } catch (FileNotFoundException e) {
