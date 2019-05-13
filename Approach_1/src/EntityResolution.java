@@ -4,11 +4,9 @@ import Evaluation.ConsoleOutputEvaluator;
 import Evaluation.GoldStandardEvaluator;
 import Similarity.Comparator.Numbers.NumberComparator;
 import Similarity.Comparator.Numbers.SimpleNumberComparator;
-import Similarity.Comparator.Strings.JaccardCoefficientStringComparator;
+import Similarity.Comparator.Strings.JaroWinklerComparator;
 import Similarity.Comparator.Strings.StringComparator;
 import Similarity.Comparator.UniversalComparator;
-import Similarity.Tokenizer.CustomStringTokenizer;
-import Similarity.Tokenizer.StringSpaceTokenizer;
 import Util.CSVService;
 
 import java.util.*;
@@ -17,9 +15,10 @@ public class EntityResolution {
 
     private static final String RESTAURAND_DATA_PATH = "../data/restaurant.csv";
     private static final String RESTAURANT_DATA_GOLD = "../data/restaurant_gold.csv";
-    private static final double SIMILARITY_THRESHOLD = 0.55;
+    private static final double SIMILARITY_THRESHOLD = 0.9;
 
     public static void main(String[] args) {
+
         findDuplicatesForRestaurantDataset();
     }
 
@@ -56,8 +55,7 @@ public class EntityResolution {
     }
 
     private static Set<Set<Integer>> findDuplicates(Map<String, List<String[]>> groupedData) {
-        CustomStringTokenizer tokenizer = new StringSpaceTokenizer();
-        StringComparator sComparator = new JaccardCoefficientStringComparator(tokenizer);
+        StringComparator sComparator = new JaroWinklerComparator();
         NumberComparator nComparator = new SimpleNumberComparator();
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 

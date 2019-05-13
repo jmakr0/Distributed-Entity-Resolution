@@ -6,14 +6,16 @@ import Util.SetOperations;
 
 import java.util.Set;
 
-public class JaccardCoefficientStringComparator extends AbstractStringComparator {
+public class JaccardCoefficientStringComparator implements StringComparator {
+
+    private CustomStringTokenizer tokenizer;
 
     /**
      * Initializes an Object of type JaccardCoefficientStringComparator
      * @param tokenizer A CustomStringTokenizer that is responsible for cutting the given string into parts for comparison.
      */
     public JaccardCoefficientStringComparator(CustomStringTokenizer tokenizer) {
-        super(tokenizer);
+        this.tokenizer = tokenizer;
     }
 
     public double compare(String s1, String s2) {
