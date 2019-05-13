@@ -3,7 +3,7 @@ import DuplicateDetection.SimpleDuplicateDetector;
 import Evaluation.ConsoleOutputEvaluator;
 import Evaluation.GoldStandardEvaluator;
 import Similarity.Comparator.Numbers.NumberComparator;
-import Similarity.Comparator.Numbers.SimpleNumberComparator;
+import Similarity.Comparator.Numbers.ABSBasedNumberComparator;
 import Similarity.Comparator.Strings.JaroWinklerComparator;
 import Similarity.Comparator.Strings.StringComparator;
 import Similarity.Comparator.UniversalComparator;
@@ -16,6 +16,8 @@ public class EntityResolution {
     private static final String RESTAURAND_DATA_PATH = "../data/restaurant.csv";
     private static final String RESTAURANT_DATA_GOLD = "../data/restaurant_gold.csv";
     private static final double SIMILARITY_THRESHOLD = 0.9;
+    private static final double INTERVAL_START = 5;
+    private static final double INTERVAL_END = 30;
 
     public static void main(String[] args) {
 
@@ -56,7 +58,7 @@ public class EntityResolution {
 
     private static Set<Set<Integer>> findDuplicates(Map<String, List<String[]>> groupedData) {
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new SimpleNumberComparator();
+        NumberComparator nComparator = new ABSBasedNumberComparator(INTERVAL_START,INTERVAL_END);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
         DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, SIMILARITY_THRESHOLD);

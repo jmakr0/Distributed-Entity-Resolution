@@ -3,24 +3,24 @@ package Similarity.Comparator;
 import Similarity.Comparator.Numbers.NumberComparator;
 import Similarity.Comparator.Strings.StringComparator;
 
-public class UniversalComparator{
+public class UniversalComparator {
 
-    private StringComparator sComparator;
-    private NumberComparator nComparator;
+    private StringComparator defaultStringComparator;
+    private NumberComparator defaultNumberComparator;
 
     /**
      * Initializes Comparator
-     * @param sComparator the comparator used for Strings
-     * @param nComparator the comparator used for numbers
+     * @param defaultStringComparator the comparator used for Strings
+     * @param defaultNumberComparator the comparator used for numbers
      */
-    public UniversalComparator(StringComparator sComparator, NumberComparator nComparator) {
-        this.sComparator = sComparator;
-        this.nComparator = nComparator;
+    public UniversalComparator(StringComparator defaultStringComparator, NumberComparator defaultNumberComparator) {
+        this.defaultStringComparator = defaultStringComparator;
+        this.defaultNumberComparator = defaultNumberComparator;
     }
 
     /**
      * Compares two given Arrays of Strings representing two different records
-     * @param elem1 the frist record
+     * @param elem1 the first record
      * @param elem2 the second record
      * @return A value between 0 and 1 (1 for high similarity)
      */
@@ -46,12 +46,11 @@ public class UniversalComparator{
     }
 
     private double compareDoubles(double elem1, double elem2) {
-        // TODO implement appropriate comparison for doubles/numbers
-        return 1;
+        return defaultNumberComparator.compare(elem1, elem2);
     }
 
     private double compareStrings(String elem1, String elem2) {
-        return sComparator.compare(elem1,elem2);
+        return defaultStringComparator.compare(elem1,elem2);
     }
 
     private boolean canBeParsedAsDouble(String s) {

@@ -2,7 +2,7 @@ package Similarity.Tests;
 
 import Similarity.Comparator.*;
 import Similarity.Comparator.Numbers.NumberComparator;
-import Similarity.Comparator.Numbers.SimpleNumberComparator;
+import Similarity.Comparator.Numbers.ABSBasedNumberComparator;
 import Similarity.Comparator.Strings.JaccardCoefficientStringComparator;
 import Similarity.Comparator.Strings.StringComparator;
 import Similarity.Tokenizer.CustomStringTokenizer;
@@ -19,7 +19,7 @@ public class UniversalComparatorTest {
     public void initComparator() {
         CustomStringTokenizer tokenizer = new StringCharTokenizer();
         StringComparator sComparator = new JaccardCoefficientStringComparator(tokenizer);
-        NumberComparator nComparator = new SimpleNumberComparator();
+        NumberComparator nComparator = new ABSBasedNumberComparator(3,15);
         uvc = new UniversalComparator(sComparator, nComparator);
     }
 
