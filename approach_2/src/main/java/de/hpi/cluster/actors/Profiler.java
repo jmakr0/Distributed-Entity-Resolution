@@ -6,7 +6,6 @@ import akka.event.LoggingAdapter;
 import akka.remote.RemoteActorRef;
 import de.hpi.cluster.actors.Worker.WorkMessage;
 import de.hpi.cluster.actors.listeners.ClusterListener;
-import de.hpi.utils.Results;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -39,7 +38,7 @@ public class Profiler extends AbstractActor {
         private static final long serialVersionUID = -7330958742629706627L;
         private ConfigMessage() {}
         private int slavesCount;
-        private Results results;
+//        private Results results;
     }
 
 	@Data @AllArgsConstructor @SuppressWarnings("unused")
@@ -103,7 +102,7 @@ public class Profiler extends AbstractActor {
 
     private boolean prefixFound = false;
 
-    private Results results;
+//    private Results results;
     private Map<String,Integer> rainbowTable = new HashMap<>();
 
     private List<String> geneSequences;
@@ -178,7 +177,7 @@ public class Profiler extends AbstractActor {
     private void handle(ConfigMessage message) {
         this.log.info("Received slaves count: {}", message.slavesCount);
 	    this.waitSlavesCount = message.slavesCount;
-	    this.results = message.results;
+//	    this.results = message.results;
     }
 
 	private void start(){
@@ -206,149 +205,149 @@ public class Profiler extends AbstractActor {
     }
 
     private void handle(CompletionRainbowTaskMessage message) {
-		ActorRef worker = this.sender();
-		Worker.RainbowWorkMessage work = (Worker.RainbowWorkMessage) this.busyWorkers.remove(worker);
-
-        this.log.info("Completed Rainbow table for: [{},{}]", work.getMin(), work.getMax());
-
-        this.rainbowTable.putAll(message.hashes);
-
-        this.assign(worker);
-
-        if(isTableComlpete(rainbowTable)) {
-            this.results.setPasswords(rainbowTable);
-
-            startSearchingforLinearCombinations();
-        }
+//		ActorRef worker = this.sender();
+//		Worker.RainbowWorkMessage work = (Worker.RainbowWorkMessage) this.busyWorkers.remove(worker);
+//
+//        this.log.info("Completed Rainbow table for: [{},{}]", work.getMin(), work.getMax());
+//
+//        this.rainbowTable.putAll(message.hashes);
+//
+//        this.assign(worker);
+//
+//        if(isTableComlpete(rainbowTable)) {
+//            this.results.setPasswords(rainbowTable);
+//
+//            startSearchingforLinearCombinations();
+//        }
     }
 
     private void handle(CheckedLinearCombinationIntervalMessage message) {
-        ActorRef worker = this.sender();
-        this.busyWorkers.remove(worker);
-        if(!prefixFound) {
-            if (message.linearCombination == null) {
-                this.assignNextLinearCombinationInterval();
-            } else {
-                this.unassignedWork.clear();
-
-                int[] linearCombination = message.linearCombination;
-                this.log.info("Found linear combination: {}", Arrays.toString(linearCombination));
-                this.results.setPrefixes(linearCombination);
-                prefixFound = true;
-
-                startFindingPartners();
-            }
-        }
-
-        this.assign(worker);
+//        ActorRef worker = this.sender();
+//        this.busyWorkers.remove(worker);
+//        if(!prefixFound) {
+//            if (message.linearCombination == null) {
+//                this.assignNextLinearCombinationInterval();
+//            } else {
+//                this.unassignedWork.clear();
+//
+//                int[] linearCombination = message.linearCombination;
+//                this.log.info("Found linear combination: {}", Arrays.toString(linearCombination));
+//                this.results.setPrefixes(linearCombination);
+//                prefixFound = true;
+//
+//                startFindingPartners();
+////            }
+//        }
+//
+//        this.assign(worker);
 
     }
 
     private void handle(GenePartnerFoundMessage genePartnerFoundMessage) {
-        ActorRef worker = this.sender();
-        this.busyWorkers.remove(worker);
-
-	    int searchedFor = genePartnerFoundMessage.searchedFor;
-	    int partner = genePartnerFoundMessage.foundPartner;
-
-	    this.results.setGenePartner(searchedFor, partner);
-
-        this.assign(worker);
-
-	    if(!this.results.everyoneHasAPartner()) {
-	        assignNextFindingPartnerTask();
-        } else {
-            this.log.info("Every person has an associated partner");
-
-           startFindingHashesWithPrefix();
-
-        }
+//        ActorRef worker = this.sender();
+//        this.busyWorkers.remove(worker);
+//
+//	    int searchedFor = genePartnerFoundMessage.searchedFor;
+//	    int partner = genePartnerFoundMessage.foundPartner;
+//
+//	    this.results.setGenePartner(searchedFor, partner);
+//
+//        this.assign(worker);
+//
+//	    if(!this.results.everyoneHasAPartner()) {
+//	        assignNextFindingPartnerTask();
+//        } else {
+//            this.log.info("Every person has an associated partner");
+//
+//           startFindingHashesWithPrefix();
+//
+//        }
     }
 
     private void handle(HashWithPrefixFoundMessage hashWithPrefixFoundMessage) {
-        ActorRef worker = this.sender();
-        this.busyWorkers.remove(worker);
-
-        int personID = hashWithPrefixFoundMessage.personID;
-        String hash = hashWithPrefixFoundMessage.hash;
-
-        this.results.setPrefixHash(personID, hash);
-
-        this.assign(worker);
-
-        if(!this.results.allPrefixHashesCalculated()) {
-            assignNextFindingHashesWithPrefixTask();
-        } else {
-            this.log.info("All prefix hashes calculated");
-
-            long stop = System.currentTimeMillis();
-            System.out.println("Time: " + (stop - this.startTime));
-
-            this.results.writeResultsToCsv();
-
-            this.log.info("Wrote to CSV file");
-
-            // todo terminate program
-            terminateAll();
-
-        }
+//        ActorRef worker = this.sender();
+//        this.busyWorkers.remove(worker);
+//
+//        int personID = hashWithPrefixFoundMessage.personID;
+//        String hash = hashWithPrefixFoundMessage.hash;
+//
+//        this.results.setPrefixHash(personID, hash);
+//
+//        this.assign(worker);
+//
+//        if(!this.results.allPrefixHashesCalculated()) {
+//            assignNextFindingHashesWithPrefixTask();
+//        } else {
+//            this.log.info("All prefix hashes calculated");
+//
+//            long stop = System.currentTimeMillis();
+//            System.out.println("Time: " + (stop - this.startTime));
+//
+//            this.results.writeResultsToCsv();
+//
+//            this.log.info("Wrote to CSV file");
+//
+//            // todo terminate program
+//            terminateAll();
+//
+//        }
     }
 
     private void startSearchingforLinearCombinations() {
-        this.currentStartIndex = 0;
-        this.currentStopIndex = this.LINEAR_COMBINATION_INTERVAL_SIZE;
-        this.allPasswords = this.results.getAllPasswordsSortedByID();
-
-        for (int i = 0; i < this.idleWorkers.size(); i++) {
-            assignNextLinearCombinationInterval();
-        }
+//        this.currentStartIndex = 0;
+//        this.currentStopIndex = this.LINEAR_COMBINATION_INTERVAL_SIZE;
+//        this.allPasswords = this.results.getAllPasswordsSortedByID();
+//
+//        for (int i = 0; i < this.idleWorkers.size(); i++) {
+//            assignNextLinearCombinationInterval();
+//        }
 
     }
 
     private void assignNextLinearCombinationInterval() {
-        this.assign(new Worker.LinearCombinationWorkMessage(this.currentStartIndex, this.currentStopIndex, this.allPasswords));
-        this.currentStartIndex += this.LINEAR_COMBINATION_INTERVAL_SIZE;
-        this.currentStopIndex += this.LINEAR_COMBINATION_INTERVAL_SIZE;
+//        this.assign(new Worker.LinearCombinationWorkMessage(this.currentStartIndex, this.currentStopIndex, this.allPasswords));
+//        this.currentStartIndex += this.LINEAR_COMBINATION_INTERVAL_SIZE;
+//        this.currentStopIndex += this.LINEAR_COMBINATION_INTERVAL_SIZE;
     }
 
     private void startFindingPartners() {
-	    this.geneSequences = this.results.getAllGeneSequences();
-	    this.numberOfUsers = this.results.getNumberOfResults();
-	    this.currentGeneSequenceUser = 1;
-
-        for (int i = 0; i < this.idleWorkers.size(); i++) {
-            assignNextFindingPartnerTask();
-        }
+//	    this.geneSequences = this.results.getAllGeneSequences();
+//	    this.numberOfUsers = this.results.getNumberOfResults();
+//	    this.currentGeneSequenceUser = 1;
+//
+//        for (int i = 0; i < this.idleWorkers.size(); i++) {
+//            assignNextFindingPartnerTask();
+//        }
     }
 
     private void assignNextFindingPartnerTask() {
-	    if(this.currentGeneSequenceUser <= this.numberOfUsers) {
-            this.assign(new Worker.GenePartnerWorkMessage(this.geneSequences, this.currentGeneSequenceUser));
-            this.currentGeneSequenceUser++;
-        }
+//	    if(this.currentGeneSequenceUser <= this.numberOfUsers) {
+//            this.assign(new Worker.GenePartnerWorkMessage(this.geneSequences, this.currentGeneSequenceUser));
+//            this.currentGeneSequenceUser++;
+//        }
     }
 
     private void startFindingHashesWithPrefix() {
-	    this.prefixes = this.results.getAllPrefixes();
-	    this.partners = this.results.getAllPartners();
-
-	    this.numberOfUsers = this.results.getNumberOfResults();
-	    this.currentHashPrefixUser = 1;
-
-        for (int i = 0; i < this.idleWorkers.size(); i++) {
-            assignNextFindingHashesWithPrefixTask();
-        }
+//	    this.prefixes = this.results.getAllPrefixes();
+//	    this.partners = this.results.getAllPartners();
+//
+//	    this.numberOfUsers = this.results.getNumberOfResults();
+//	    this.currentHashPrefixUser = 1;
+//
+//        for (int i = 0; i < this.idleWorkers.size(); i++) {
+//            assignNextFindingHashesWithPrefixTask();
+//        }
 
     }
 
     private void assignNextFindingHashesWithPrefixTask() {
-        if(this.currentHashPrefixUser <= this.numberOfUsers) {
-            int partnerNumber = this.partners.get(this.currentHashPrefixUser - 1);
-            int prefix = this.prefixes.get(this.currentHashPrefixUser - 1);
-
-            this.assign(new Worker.FindHashWithPrefixWorkMessage(this.currentHashPrefixUser, partnerNumber, prefix));
-            this.currentHashPrefixUser++;
-        }
+//        if(this.currentHashPrefixUser <= this.numberOfUsers) {
+//            int partnerNumber = this.partners.get(this.currentHashPrefixUser - 1);
+//            int prefix = this.prefixes.get(this.currentHashPrefixUser - 1);
+//
+//            this.assign(new Worker.FindHashWithPrefixWorkMessage(this.currentHashPrefixUser, partnerNumber, prefix));
+//            this.currentHashPrefixUser++;
+//        }
     }
 
     private boolean isTableComlpete(Map<String,Integer> rainbowTable) {

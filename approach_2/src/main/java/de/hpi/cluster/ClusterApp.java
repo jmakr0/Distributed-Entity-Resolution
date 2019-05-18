@@ -10,7 +10,7 @@ import com.beust.jcommander.Parameters;
 
 public class ClusterApp {
 
-    public static final String ACTOR_SYSTEM_NAME = "octopus";
+    public static final String ACTOR_SYSTEM_NAME = "ddd-approach-2";
 
     public static void main(String[] args) {
 
