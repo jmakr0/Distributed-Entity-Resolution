@@ -14,7 +14,6 @@ import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
 import de.hpi.cluster.actors.Profiler.RegistrationMessage;
 import de.hpi.cluster.actors.listeners.MetricsListener;
-import de.hpi.utils.SerialAnalyzer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -159,44 +158,44 @@ public class Worker extends AbstractActor {
 
     private void handle(GenePartnerWorkMessage genePartnerWorkMessage) {
         // -1 to map from person id to List index
-        int searchingForPartner = genePartnerWorkMessage.partner - 1;
-        int partner = SerialAnalyzer.longestOverlapPartner(searchingForPartner, genePartnerWorkMessage.geneSequences);
-        // map back from list index to person id
-        partner += 1;
-
-        this.sender().tell(new Profiler.GenePartnerFoundMessage(genePartnerWorkMessage.partner, partner), this.self());
+//        int searchingForPartner = genePartnerWorkMessage.partner - 1;
+//        int partner = SerialAnalyzer.longestOverlapPartner(searchingForPartner, genePartnerWorkMessage.geneSequences);
+//        // map back from list index to person id
+//        partner += 1;
+//
+//        this.sender().tell(new Profiler.GenePartnerFoundMessage(genePartnerWorkMessage.partner, partner), this.self());
     }
 
     private void handle(FindHashWithPrefixWorkMessage findHashWithPrefixWorkMessage) {
-        int personID = findHashWithPrefixWorkMessage.personID;
-        int partnerNumber = findHashWithPrefixWorkMessage.partnerNumber;
-        String prefix = findHashWithPrefixWorkMessage.prefix == 1 ? "1" : "0";
-
-        String hash = SerialAnalyzer.findHash(partnerNumber, prefix, 5);
-
-        this.sender().tell(new Profiler.HashWithPrefixFoundMessage(personID, hash), this.self());
+//        int personID = findHashWithPrefixWorkMessage.personID;
+//        int partnerNumber = findHashWithPrefixWorkMessage.partnerNumber;
+//        String prefix = findHashWithPrefixWorkMessage.prefix == 1 ? "1" : "0";
+//
+//        String hash = SerialAnalyzer.findHash(partnerNumber, prefix, 5);
+//
+//        this.sender().tell(new Profiler.HashWithPrefixFoundMessage(personID, hash), this.self());
     }
 
     private int[] checkLinearCombinationsInterval(long start, long stop, int[] numbers) {
-        for (long a = start; a < stop; a++) {
-            String binary = Long.toBinaryString(a);
-
-            int[] prefixes = new int[62];
-            for (int i = 0; i < prefixes.length; i++)
-                prefixes[i] = 1;
-
-            int i = 0;
-            for (int j = binary.length() - 1; j >= 0; j--) {
-                if (binary.charAt(j) == '1')
-                    prefixes[i] = -1;
-                i++;
-            }
-
-            int sum = this.sum(numbers, prefixes);
-
-            if (sum == 0)
-                return prefixes;
-        }
+//        for (long a = start; a < stop; a++) {
+//            String binary = Long.toBinaryString(a);
+//
+//            int[] prefixes = new int[62];
+//            for (int i = 0; i < prefixes.length; i++)
+//                prefixes[i] = 1;
+//
+//            int i = 0;
+//            for (int j = binary.length() - 1; j >= 0; j--) {
+//                if (binary.charAt(j) == '1')
+//                    prefixes[i] = -1;
+//                i++;
+//            }
+//
+//            int sum = this.sum(numbers, prefixes);
+//
+//            if (sum == 0)
+//                return prefixes;
+//        }
 
         return null;
     }
@@ -210,11 +209,11 @@ public class Worker extends AbstractActor {
 
     private Map<String,Integer> calculateHashes(int min, int max) {
         Map<String,Integer> hashes = new HashMap<>();
-
-        for (int i = min; i <= max; i++) {
-            hashes.put(SerialAnalyzer.hash(i),i);
-        }
-
+//
+//        for (int i = min; i <= max; i++) {
+//            hashes.put(SerialAnalyzer.hash(i),i);
+//        }
+//
         return hashes;
     }
 

@@ -8,10 +8,6 @@ import de.hpi.cluster.actors.Profiler;
 //import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
-import de.hpi.utils.CSVService;
-import de.hpi.utils.Results;
-
-import java.util.List;
 
 public class ClusterMaster extends ClusterSystem {
 	
@@ -47,10 +43,10 @@ public class ClusterMaster extends ClusterSystem {
 			}
 		});
 
-        List<String[]> csvData = CSVService.readCSV(csvPath);
-        Results resultsObject = new Results(csvData);
+//        List<String[]> csvData = CSVService.readCSV(csvPath);
+//        Results resultsObject = new Results(csvData);
 
-		system.actorSelection("/user/" + Profiler.DEFAULT_NAME).tell(new Profiler.ConfigMessage(slaves, resultsObject), ActorRef.noSender());
+		system.actorSelection("/user/" + Profiler.DEFAULT_NAME).tell(new Profiler.ConfigMessage(slaves), ActorRef.noSender());
 //		system.actorSelection("/user/" + Profiler.DEFAULT_NAME).tell(new Profiler.TaskMessages(csvTaskMessages), ActorRef.noSender());
 	}
 
