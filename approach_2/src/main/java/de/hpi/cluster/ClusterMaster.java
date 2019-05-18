@@ -13,7 +13,7 @@ public class ClusterMaster extends ClusterSystem {
 	
 	public static final String MASTER_ROLE = "master";
 
-	public static void start(String actorSystemName, int workers, String host, int port, int slaves, String csvPath) {
+	public static void start(String actorSystemName, int workers, String host, int port, int slaves, String inputPath) {
 
 		final Config config = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port);
 		

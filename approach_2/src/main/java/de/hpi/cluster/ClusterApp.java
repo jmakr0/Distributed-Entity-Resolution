@@ -30,7 +30,7 @@ public class ClusterApp {
 
             switch (jCommander.getParsedCommand()) {
                 case ClusterMaster.MASTER_ROLE:
-                    ClusterMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.host, masterCommand.port, masterCommand.slaves, masterCommand.csv);
+                    ClusterMaster.sta rt(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.host, masterCommand.port, masterCommand.slaves, masterCommand.inputPath);
                     break;
                 case ClusterSlave.SLAVE_ROLE:
                     ClusterSlave.start(ACTOR_SYSTEM_NAME, slaveCommand.workers, slaveCommand.host, slaveCommand.port, slaveCommand.masterhost, slaveCommand.masterport);
@@ -56,8 +56,6 @@ public class ClusterApp {
         public static final int DEFAULT_SLAVE_PORT = 7879;
         public static final int DEFAULT_WORKERS = 4;
         public static final int DEFAULT_SLAVES = 4;
-        public static final String DEFAULT_CSV = "students.csv";
-
 
         @Parameter(names = {"-h", "--host"}, description = "this machine's host name or IP to bind against")
         String host = this.getDefaultHost();
@@ -81,9 +79,8 @@ public class ClusterApp {
         @Parameter(names = {"-s", "--slaves"}, description = "number of slaves the master waits for", required = false)
         int slaves = DEFAULT_SLAVES;
 
-        @Parameter(names = {"-i", "--input"}, description = "file path to input csv", required = false)
-        String csv = DEFAULT_CSV;
-
+        @Parameter(names = {"-i", "--input"}, description = "file path to input file", required = true)
+        String inputPath;
     }
 
     @Parameters(commandDescription = "start a master actor system")
