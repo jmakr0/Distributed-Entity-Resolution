@@ -11,13 +11,83 @@ import java.util.*;
 
 public class CSVService {
 
+    private int startLine = 1;
+    private String dataFile;
+
+    public CSVService(String dataFile) {
+        this.dataFile = dataFile;
+    }
+
+    public static class ReadLineResult {
+
+        private String data;
+        private int lastIndexRead;
+        private boolean foundEndOfFile;
+
+        public ReadLineResult(String data, int lastIndexRead, boolean foundEndOfFile) {
+            this.data = data;
+            this.lastIndexRead = lastIndexRead;
+            this.foundEndOfFile = foundEndOfFile;
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public int getLastIndexRead() {
+            return lastIndexRead;
+        }
+
+        public boolean foundEndOfFile() {
+            return foundEndOfFile;
+        }
+    }
+
+    public ReadLineResult readNextDataBlock(int maxSize) {
+        ReadLineResult result = readLines(dataFile, startLine, startLine + maxSize - 1);
+        startLine += maxSize;
+        return result;
+    }
+
+    public static ReadLineResult readLines(String dataFile, int startLine, int endLine) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            CSVReader reader = getCsvReader(dataFile);
+            boolean foundEndOfFile = false;
+
+            // skip first lines
+            for (int i = 0; i < startLine ; i++) {
+                reader.readNext();
+            }
+
+            int lineNumber;
+            for (lineNumber = startLine; lineNumber <= endLine && !foundEndOfFile ; lineNumber++) {
+                String[] tmpRecord = reader.readNext();
+                if (tmpRecord != null) {
+                    sb.append(tmpRecord[0]);
+                    sb.append("\n");
+                } else {
+                    foundEndOfFile = true;
+                }
+            }
+            return new ReadLineResult(sb.toString(), lineNumber, foundEndOfFile);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
+
     public static List<String[]> readDataset(String dataFile, String splitSymbol, boolean addIdField) {
         List<String[]> result = new ArrayList<String[]>();
         CSVReader reader = null;
 
         try {
-            InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
-            reader = new CSVReader(inputStreamReader, '\n');
+            reader = getCsvReader(dataFile);
 
             // create header
             String[] originalHeader = reader.readNext()[0].split(splitSymbol);
@@ -60,13 +130,19 @@ public class CSVService {
         return result;
     }
 
+    private static CSVReader getCsvReader(String dataFile) throws FileNotFoundException {
+        CSVReader reader;
+        InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
+        reader = new CSVReader(inputStreamReader, '\n');
+        return reader;
+    }
+
     public static Set<Set<Integer>> readRestaurantGoldStandard(String dataFile, String splitSymbol) {
         Set<Set<Integer>> goldStandard = new HashSet<Set<Integer>>();
 
         CSVReader reader = null;
         try {
-            InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
-            reader = new CSVReader(inputStreamReader, '\n');
+            reader = getCsvReader(dataFile);
 
             // first line is header
             String[] tmpRecord = reader.readNext();
@@ -93,4 +169,6 @@ public class CSVService {
     private static String removeWhitespaces(String s) {
         return s.replaceAll("\\s+","");
     }
+
+
 }

@@ -70,9 +70,12 @@ public class EntityResolution {
         Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
 
         for (String key: groupedData.keySet()) {
-            duplicates.addAll(duDetector.findDuplicatesForBlock(groupedData.get(key)));
+            Set<Set<Integer>> dups = duDetector.findDuplicatesForBlock(groupedData.get(key));
+            if (!dups.isEmpty()) {
+                duplicates.addAll(duDetector.findDuplicatesForBlock(groupedData.get(key)));
+            }
         }
-
+        System.out.println(duplicates);
         return duplicates;
     }
 }
