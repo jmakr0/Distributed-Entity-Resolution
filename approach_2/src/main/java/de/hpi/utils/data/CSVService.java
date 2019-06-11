@@ -64,7 +64,7 @@ public class CSVService {
             for (lineNumber = startLine; lineNumber <= endLine && !foundEndOfFile ; lineNumber++) {
                 String[] tmpRecord = reader.readNext();
                 if (tmpRecord != null) {
-                    sb.append(tmpRecord[0]);
+                    sb.append(tmpRecord[0].replaceAll("\"", "").replaceAll("\'", ""));
                     sb.append("\n");
                 } else {
                     foundEndOfFile = true;
