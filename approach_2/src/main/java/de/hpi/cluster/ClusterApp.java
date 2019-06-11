@@ -1,12 +1,12 @@
 package de.hpi.cluster;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class ClusterApp {
 
@@ -33,7 +33,8 @@ public class ClusterApp {
                     ClusterMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.host, masterCommand.port, masterCommand.workers, masterCommand.inputPath, masterCommand.goldPath);
                     break;
                 case ClusterWorker.WORKER_ROLE:
-                    ClusterWorker.start(ACTOR_SYSTEM_NAME, workerCommand.workers, workerCommand.host, workerCommand.port, workerCommand.masterhost, workerCommand.masterport);
+//                    ClusterWorker.start(ACTOR_SYSTEM_NAME, workerCommand.workers, workerCommand.host, workerCommand.port, workerCommand.masterhost, workerCommand.masterport);
+                    ClusterWorker.start(ACTOR_SYSTEM_NAME, 20, workerCommand.host, workerCommand.port, workerCommand.masterhost, workerCommand.masterport);
                     break;
                 default:
                     throw new AssertionError();
@@ -54,7 +55,7 @@ public class ClusterApp {
 
         public static final int DEFAULT_MASTER_PORT = 7877;
         public static final int DEFAULT_SLAVE_PORT = 7879;
-        public static final int DEFAULT_WORKERS = 4;
+        public static final int DEFAULT_WORKERS = 0;
 
         @Parameter(names = {"-h", "--host"}, description = "this machine's host name or IP to bind against")
         String host = getDefaultHost();
@@ -75,10 +76,10 @@ public class ClusterApp {
         @Parameter(names = {"-w", "--workers"}, description = "number of workers to start locally", required = false)
         int workers = DEFAULT_WORKERS;
 
-        @Parameter(names = {"-i", "--input"}, description = "file path to input file", required = true)
+        @Parameter(names = {"-i", "--input"}, description = "file path to input file", required = false)
         String inputPath;
 
-        @Parameter(names = {"-g", "--gold"}, description = "file path to gold standard file", required = true)
+        @Parameter(names = {"-g", "--gold"}, description = "file path to gold standard file", required = false)
         String goldPath;
     }
 

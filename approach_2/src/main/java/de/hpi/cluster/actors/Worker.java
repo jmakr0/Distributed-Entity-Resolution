@@ -9,19 +9,17 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.actors.Master.DataAckMessage;
 import de.hpi.cluster.actors.listeners.MetricsListener;
 import de.hpi.cluster.messages.InfoObject;
-import de.hpi.cluster.messages.interfaces.BlockingInterface;
+import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.ddd.dd.DuplicateDetector;
 import de.hpi.ddd.dd.SimpleDuplicateDetector;
-import de.hpi.ddd.partition.HashRouter;
+import de.hpi.ddd.partition.Md5HashRouter;
 import de.hpi.ddd.similarity.UniversalComparator;
 import de.hpi.ddd.similarity.numeric.AbsComparator;
 import de.hpi.ddd.similarity.numeric.NumberComparator;
 import de.hpi.ddd.similarity.strings.JaroWinklerComparator;
 import de.hpi.ddd.similarity.strings.StringComparator;
-import de.hpi.utils.helper.TokenGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -34,36 +32,48 @@ public class Worker extends AbstractActor {
         PARSING, REPARTITIONING, UNDEFINED
     }
 
-    ////////////////////////
-    // Actor Construction //
-    ////////////////////////
-
     public static final String DEFAULT_NAME = "worker";
 
     public static Props props() {
         return Props.create(Worker.class);
     }
 
-    ////////////////////
-    // Actor Messages //
-    ////////////////////
-
     @Data @AllArgsConstructor
     public static class RegisterAckMessage implements Serializable {
         private static final long serialVersionUID = -4243194361868862395L;
         private RegisterAckMessage() {}
-        protected BlockingInterface blocking;
+        protected Blocking blocking;
         protected double similarityThreshold;
         protected double numberComparisonIntervalStart;
         protected double numberComparisonIntervalEnd;
+        protected Md5HashRouter router;
     }
 
     @Data @AllArgsConstructor
-    public static class PartitionBroadcastMessage implements Serializable {
+    public static class RepartitionMessage implements Serializable {
         private static final long serialVersionUID = -7643424361868862395L;
-        private PartitionBroadcastMessage() {}
-        protected HashRouter<ActorRef> router;
+        private RepartitionMessage() {}
+        protected Md5HashRouter router;
     }
+
+//    @Data @AllArgsConstructor
+//    public static class RouterVersionRequestMessage implements Serializable {
+//        private static final long serialVersionUID = -7643424361868832395L;
+//        private RouterVersionRequestMessage() {}
+//    }
+
+//    @Data @AllArgsConstructor
+//    public static class RouterVersionResponseMessage implements Serializable {
+//        private static final long serialVersionUID = -7643424361868832395L;
+//        private RouterVersionResponseMessage() {}
+//        protected int version;
+//    }
+
+//    @Data @AllArgsConstructor
+//    public static class RouterRequestMessage implements Serializable {
+//        private static final long serialVersionUID = -7643424361868832395L;
+//        private RouterRequestMessage() {}
+//    }
 
     @Data @AllArgsConstructor
     public static class DataMessage implements Serializable {
@@ -78,7 +88,7 @@ public class Worker extends AbstractActor {
         private ParsedDataMessage() {}
         protected String key;
         protected List<String[]> data;
-        protected String id;
+        protected Md5HashRouter router;
     }
 
     @Data @AllArgsConstructor
@@ -93,27 +103,24 @@ public class Worker extends AbstractActor {
         private static final long serialVersionUID = -5431818188868861534L;
     }
 
-    /////////////////
-    // Actor State //
-    /////////////////
-
-    private final int TOKEN_SIZE = 10;
+//    private final int TOKEN_SIZE = 10;
 
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
     private final Cluster cluster = Cluster.get(this.context().system());
+
+    // todo: put this into ONE object
     private double similarityThreshold;
     private double numberComparisonIntervalStart;
     private double numberComparisonIntervalEnd;
-    private HashRouter<ActorRef> router;
-    private ActorRef masterActor;
-    private Map<String,List<String[]>> groupedData = new HashMap<>();
-    private List<String> waitingFor = new LinkedList<>();
-    private Phase phase = Phase.UNDEFINED;
 
+    private Md5HashRouter router;
+    private Map<String, List<String[]>> data = new HashMap<>();
 
-    /////////////////////
-    // Actor Lifecycle //
-    /////////////////////
+//    private ActorRef masterActor;
+//    private List<String> waitingFor = new LinkedList<>();
+//    private Phase phase = Phase.UNDEFINED;
+    private Blocking blocking;
+
 
     @Override
     public void preStart() throws Exception {
@@ -141,74 +148,113 @@ public class Worker extends AbstractActor {
         this.log.info("Stopped {}.", this.getSelf());
     }
 
-    ////////////////////
-    // Actor Behavior //
-    ////////////////////
-
     @Override
     public Receive createReceive() {
         return receiveBuilder()
                 .match(CurrentClusterState.class, this::handle)
                 .match(MemberUp.class, this::handle)
                 .match(RegisterAckMessage.class, this::handle)
-                .match(PartitionBroadcastMessage.class, this::handle)
+                .match(RepartitionMessage.class, this::handle)
+//                .match(RouterVersionRequestMessage.class, this::handle)
+//                .match(RouterVersionResponseMessage.class, this::handle)
+//                .match(RouterRequestMessage.class, this::handle)
                 .match(DataMessage.class, this::handle)
                 .match(ParsedDataMessage.class, this::handle)
-                .match(ParsedDataAckMessage.class, this::handle)
+//                .match(ParsedDataAckMessage.class, this::handle)
                 .match(StartComparingMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
-    //	##############################################################
-    //  Registration
-    //	##############################################################
+    private void handle(CurrentClusterState message) {
+        message.getMembers().forEach(member -> {
+            if (member.status().equals(MemberStatus.up()))
+                this.register(member);
+        });
+    }
 
-    private void register(Member member) {
-        if (member.hasRole(ClusterMaster.MASTER_ROLE)) {
-//            InfoObject infoObject = new de.hpi.cluster.messages.InfoObject();
-            InfoObject infoObj = new InfoObject(this.self().toString());
-            this.getContext()
-                    .actorSelection(member.address() + "/user/" + Master.DEFAULT_NAME)
-                    .tell(new Master.RegisterMessage(infoObj), this.self());
-        }
+    private void handle(MemberUp message) {
+        this.register(message.member());
     }
 
     private void handle(RegisterAckMessage registerAckMessage) {
-        this.log.info("Received RegisterAck");
-        masterActor = this.sender();
-        // TODO use blocking method
-//        this.blocking = registerAckMessage.blocking;
+        this.log.info("RegisterAckMessage received");
+        this.log.info("Router version: " + registerAckMessage.router.getVersion());
+
+        this.blocking = registerAckMessage.blocking;
         this.similarityThreshold = registerAckMessage.similarityThreshold;
         this.numberComparisonIntervalStart = registerAckMessage.numberComparisonIntervalStart;
         this.numberComparisonIntervalEnd = registerAckMessage.numberComparisonIntervalEnd;
+        this.setRouter(registerAckMessage.router, "RegisterAckMessage");
 
-        this.sender().tell(new Master.ReadyForWorkMessage(), this.self());
+//        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
     }
 
-    //	##############################################################
-    //  partitioning
-    //	##############################################################
+    private void handle(RepartitionMessage repartitionMessage) {
+        this.log.info("Repartitioning with worker router {}, master router {}", this.getRouterVersion(), repartitionMessage.router.getVersion());
 
-    private void handle(PartitionBroadcastMessage partitionBroadcastMessage) {
-        this.log.info("received PartitionBroadcastMessage");
-        this.router = partitionBroadcastMessage.router;
-        repartition();
-    }
-
-    private void repartition() {
-//        this.masterActor.tell(new Master.RepartitionFinishedMessage(), this.self());
-        this.phase = Phase.REPARTITIONING;
-        if (this.groupedData.isEmpty()) {
-            this.masterActor.tell(new Master.RepartitionFinishedMessage(), this.self());
-        } else {
-            this.distributeDataToWorkers(this.groupedData);
+        if(repartitionMessage.router.getVersion() > this.getRouterVersion()) {
+            this.setRouter(repartitionMessage.router, "RepartitionMessage");
+            this.repartition();
         }
+
+        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
     }
 
-    //	##############################################################
-    //  send Data
-    //	##############################################################
+//    private void handle(RouterVersionRequestMessage routerVersionRequestMessage) {
+//        ActorRef peer = this.sender();
+//
+//        peer.tell(new RouterVersionResponseMessage(this.router.getVersion()), this.self());
+//    }
+
+//    private void handle(RouterVersionResponseMessage routerVersionResponseMessage) {
+//        ActorRef peer = this.sender();
+//        int myRouterVersion = this.router.getVersion();
+//        int peerRouterVersion = routerVersionResponseMessage.version;
+//
+//        if(myRouterVersion == peerRouterVersion) {
+//            this.sendData(peer);
+//        } else if (myRouterVersion > peerRouterVersion) {
+//            this.sendRouter(peer);
+//        } else {
+//            this.requestRouter(peer);
+//        }
+//    }
+
+//    private void handle(RouterRequestMessage routerRequestMessage) {
+//        ActorRef peer = this.sender();
+//
+//        peer.tell(new RepartitionMessage(this.router), this.self());
+//    }
+
+//    private void sendData(ActorRef peer) {
+
+        // todo:
+        // get data for peer
+        // delete peer from sendQueue
+        // send data to peer
+
+//        Iterator<Map.Entry<String,List<String[]>>> iterator = this.data.entrySet().iterator();
+//
+//        while (iterator.hasNext()) {
+//            Map.Entry<String,List<String[]>> entry = iterator.next();
+//            ActorRef responsibleWorker = this.router.getObjectForKey(entry.getValue().toString());
+//
+//        }
+////            ActorRef responsibleWorker = router.getObjectForKey(key);
+////            List<String[]> pd = this.data.get(key);
+////            responsibleWorker.tell(new ParsedDataMessage(key, pd), this.self());
+////        }
+//    }
+
+//    private void sendRouter(ActorRef peer) {
+//        peer.tell(new RepartitionMessage(this.router), this.self());
+//    }
+
+//    private void requestRouter(ActorRef peer) {
+//        peer.tell(new RouterRequestMessage(), this.self());
+//    }
 
     private void handle(DataMessage dataMessage) {
         Map<String,List<String[]>> parsedData = new HashMap<>();
@@ -222,7 +268,7 @@ public class Worker extends AbstractActor {
 
         // TODO use blocking function that was received via message before
         for (String[] record: records) {
-            String prefix = record[1].substring(0,Math.min(5, record[1].length() - 1));
+            String prefix = this.blocking.getKey(record);
             if(parsedData.containsKey(prefix)) {
                 parsedData.get(prefix).add(record);
             } else {
@@ -232,65 +278,90 @@ public class Worker extends AbstractActor {
             }
         }
 
-        // after the data is parsed it has be send to the responsible workers
-        this.phase = Phase.PARSING;
-        distributeDataToWorkers(parsedData);
+        this.distributeDataToWorkers(parsedData);
 
+        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
+
+        this.log.info("" + this.data.keySet().size());
+    }
+
+    private void repartition() {
+        this.log.info("Repartition");
+
+        Iterator<Map.Entry<String,List<String[]>>> iterator = this.data.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<String,List<String[]>> entry = iterator.next();
+            ActorRef peer = this.router.getObjectForKey(entry.getValue().toString());
+
+            if(peer.compareTo(this.self()) != 0) {
+                peer.tell(new ParsedDataMessage(entry.getKey(), entry.getValue(), this.router), this.self());
+                iterator.remove();
+            }
+
+        }
     }
 
     private void distributeDataToWorkers(Map<String, List<String[]>> parsedData) {
         for(String key: parsedData.keySet()) {
             ActorRef responsibleWorker = this.router.getObjectForKey(key);
             List<String[]> pd = parsedData.get(key);
-            String id = TokenGenerator.getRandomAlphaNumericString(this.TOKEN_SIZE);
-            responsibleWorker.tell(new ParsedDataMessage(key, pd, id), this.self());
-            waitingFor.add(id);
-        }
-    }
 
-    private void handle(ParsedDataMessage parsedDataMessage) {
-        String key = parsedDataMessage.key;
-        if(groupedData.containsKey(key)) {
-            groupedData.get(key).addAll(parsedDataMessage.data);
-        } else {
-            List<String[]> list = new LinkedList<String[]>();
-            list.addAll(parsedDataMessage.data);
-            groupedData.put(key,list);
-        }
-        this.sender().tell(new ParsedDataAckMessage(parsedDataMessage.id), this.self());
-    }
-
-    private void handle(ParsedDataAckMessage parsedDataAckMessage) {
-        this.waitingFor.remove(parsedDataAckMessage.id);
-        if(this.waitingFor.isEmpty()) {
-            switch (phase) {
-                case PARSING:
-                    this.masterActor.tell(new DataAckMessage(), this.self());
-                    break;
-                case REPARTITIONING:
-                    this.masterActor.tell(new Master.RepartitionFinishedMessage(), this.self());
-                    break;
-                default:
-                    this.log.warning("Reached undefined state");
+            if(responsibleWorker.compareTo(this.self()) != 0) {
+                responsibleWorker.tell(new ParsedDataMessage(key, pd, this.router), this.self());
             }
 
         }
     }
 
-    //	##############################################################
-    //  similarity
-    //	##############################################################
+    private void handle(ParsedDataMessage parsedDataMessage) {
+        int myRouterVersion = this.getRouterVersion();
+        int peerRouterVersion = parsedDataMessage.router.getVersion();
+
+        String key = parsedDataMessage.key;
+
+        if(this.data.containsKey(key)) {
+            this.data.get(key).addAll(parsedDataMessage.data);
+        } else {
+            List<String[]> list = new LinkedList<String[]>();
+            list.addAll(parsedDataMessage.data);
+            this.data.put(key,list);
+        }
+
+        if(peerRouterVersion > myRouterVersion) {
+            this.setRouter(parsedDataMessage.router, "ParsedDataMessage");
+            this.repartition();
+        }
+
+    }
+
+    private void handle(ParsedDataAckMessage parsedDataAckMessage) {
+//        this.waitingFor.remove(parsedDataAckMessage.id);
+//        if(this.waitingFor.isEmpty()) {
+//            switch (phase) {
+//                case PARSING:
+//                    this.masterActor.tell(new DataAckMessage(), this.self());
+//                    break;
+//                case REPARTITIONING:
+//                    this.masterActor.tell(new Master.RepartitionFinishedMessage(), this.self());
+//                    break;
+//                default:
+//                    this.log.warning("Reached undefined state");
+//            }
+//
+//        }
+    }
 
     private void handle(StartComparingMessage startComparingMessage) {
-        this.log.info("number of data keys: {}", this.groupedData.keySet().size());
+        this.log.info("number of data keys: {}", this.data.keySet().size());
         StringComparator sComparator = new JaroWinklerComparator();
         NumberComparator nComparator = new AbsComparator(this.numberComparisonIntervalStart,this.numberComparisonIntervalEnd);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
         DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
 
-        for (String key: groupedData.keySet()) {
-            Set<Set<Integer>> duplicates = duDetector.findDuplicatesForBlock(groupedData.get(key));
+        for (String key: data.keySet()) {
+            Set<Set<Integer>> duplicates = duDetector.findDuplicatesForBlock(data.get(key));
             if (!duplicates.isEmpty()) {
                 this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
@@ -298,14 +369,26 @@ public class Worker extends AbstractActor {
         this.sender().tell(new Master.ComparisonFinishedMessage(), this.self());
     }
 
-    private void handle(CurrentClusterState message) {
-        message.getMembers().forEach(member -> {
-            if (member.status().equals(MemberStatus.up()))
-                this.register(member);
-        });
+    private void register(Member member) {
+        if (member.hasRole(ClusterMaster.MASTER_ROLE)) {
+            InfoObject infoObj = new InfoObject(this.self().toString());
+            this.getContext()
+                    .actorSelection(member.address() + "/user/" + Master.DEFAULT_NAME)
+                    .tell(new Master.RegisterMessage(infoObj), this.self());
+        }
     }
 
-    private void handle(MemberUp message) {
-        this.register(message.member());
+    private int getRouterVersion() {
+        return this.router != null ? this.router.getVersion() : 0;
     }
+
+    private void setRouter(Md5HashRouter router, String source) {
+        if(this.router == null) {
+            this.log.info("Set router to version {} from {}", router.getVersion(), source);
+        } else {
+            this.log.info("Set router from version {} to {} from {}", this.router.getVersion(), router.getVersion(), source);
+        }
+        this.router = router;
+    }
+
 }

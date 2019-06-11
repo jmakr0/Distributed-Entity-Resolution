@@ -5,9 +5,10 @@ import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.Master;
-//import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
+
+//import de.hpi.cluster.actors.Reaper;
 
 public class ClusterMaster extends ClusterSystem {
 	
