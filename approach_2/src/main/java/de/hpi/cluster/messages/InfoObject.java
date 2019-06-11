@@ -10,6 +10,8 @@ public class InfoObject implements InfoObjectInterface {
         this.info = info;
     }
 
+    private InfoObject() {}
+
     @Override
     public String infoString() {
         return info;
