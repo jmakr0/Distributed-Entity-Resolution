@@ -49,7 +49,8 @@ public class CSVService {
             int idCounter = 0;
             int destCopyPosition = addIdField ? 1 : 0;
             while ((tmpRecord = reader.readNext()) != null) {
-                String[] split = tmpRecord[0].split(splitSymbol);
+                String line = tmpRecord[0].replaceAll("\"", "").replaceAll("\'", "");
+                String[] split = line.split(splitSymbol);
                 String[] record = new String[header.length];
                 Arrays.fill(record,"");
 
@@ -60,7 +61,7 @@ public class CSVService {
                 }
 
                 // copy all other values
-                System.arraycopy(split,0,record,destCopyPosition,split.length-1);
+                System.arraycopy(split,0,record,destCopyPosition,split.length);
                 result.add(record);
             }
             reader.close();
