@@ -76,10 +76,10 @@ public class ClusterApp {
         @Parameter(names = {"-w", "--workers"}, description = "number of workers to start locally", required = false)
         int workers = DEFAULT_WORKERS;
 
-        @Parameter(names = {"-i", "--input"}, description = "file path to input file", required = false)
+        @Parameter(names = {"-d", "--path_data"}, description = "file path to data file", required = false)
         String inputPath;
 
-        @Parameter(names = {"-g", "--gold"}, description = "file path to gold standard file", required = false)
+        @Parameter(names = {"-g", "--path_gold_standard"}, description = "file path to gold standard file", required = false)
         String goldPath;
     }
 
@@ -100,10 +100,10 @@ public class ClusterApp {
             return DEFAULT_SLAVE_PORT;
         }
 
-        @Parameter(names = {"-mp", "--masterport"}, description = "port of the master", required = false)
+        @Parameter(names = {"-mp", "--master_port"}, description = "port of the master", required = false)
         int masterport = DEFAULT_MASTER_PORT;
 
-        @Parameter(names = {"-mh", "--masterhost"}, description = "host name or IP of the master", required = true)
+        @Parameter(names = {"-mh", "--master_host"}, description = "host name or IP of the master", required = true)
         String masterhost;
     }
 }
