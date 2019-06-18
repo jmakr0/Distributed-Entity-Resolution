@@ -56,25 +56,6 @@ public class Worker extends AbstractActor {
         protected Md5HashRouter router;
     }
 
-//    @Data @AllArgsConstructor
-//    public static class RouterVersionRequestMessage implements Serializable {
-//        private static final long serialVersionUID = -7643424361868832395L;
-//        private RouterVersionRequestMessage() {}
-//    }
-
-//    @Data @AllArgsConstructor
-//    public static class RouterVersionResponseMessage implements Serializable {
-//        private static final long serialVersionUID = -7643424361868832395L;
-//        private RouterVersionResponseMessage() {}
-//        protected int version;
-//    }
-
-//    @Data @AllArgsConstructor
-//    public static class RouterRequestMessage implements Serializable {
-//        private static final long serialVersionUID = -7643424361868832395L;
-//        private RouterRequestMessage() {}
-//    }
-
     @Data @AllArgsConstructor
     public static class DataMessage implements Serializable {
         private static final long serialVersionUID = -7643424368868862395L;
@@ -92,18 +73,9 @@ public class Worker extends AbstractActor {
     }
 
     @Data @AllArgsConstructor
-    public static class ParsedDataAckMessage implements Serializable {
-        private static final long serialVersionUID = -5432124368868861534L;
-        private ParsedDataAckMessage() {}
-        protected String id;
-    }
-
-    @Data @AllArgsConstructor
-    public static class StartComparingMessage implements Serializable {
+    public static class SimilarityMessage implements Serializable {
         private static final long serialVersionUID = -5431818188868861534L;
     }
-
-//    private final int TOKEN_SIZE = 10;
 
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
     private final Cluster cluster = Cluster.get(this.context().system());
@@ -116,9 +88,6 @@ public class Worker extends AbstractActor {
     private Md5HashRouter router;
     private Map<String, List<String[]>> data = new HashMap<>();
 
-//    private ActorRef masterActor;
-//    private List<String> waitingFor = new LinkedList<>();
-//    private Phase phase = Phase.UNDEFINED;
     private Blocking blocking;
 
 
@@ -155,13 +124,9 @@ public class Worker extends AbstractActor {
                 .match(MemberUp.class, this::handle)
                 .match(RegisterAckMessage.class, this::handle)
                 .match(RepartitionMessage.class, this::handle)
-//                .match(RouterVersionRequestMessage.class, this::handle)
-//                .match(RouterVersionResponseMessage.class, this::handle)
-//                .match(RouterRequestMessage.class, this::handle)
                 .match(DataMessage.class, this::handle)
                 .match(ParsedDataMessage.class, this::handle)
-//                .match(ParsedDataAckMessage.class, this::handle)
-                .match(StartComparingMessage.class, this::handle)
+                .match(SimilarityMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -257,9 +222,15 @@ public class Worker extends AbstractActor {
 //    }
 
     private void handle(DataMessage dataMessage) {
+        this.log.info("data massage received");
+
         Map<String,List<String[]>> parsedData = new HashMap<>();
 
-        String[] lines = dataMessage.data.split("\n");
+        String[] lines = {};
+
+        if (!dataMessage.data.isEmpty()) {
+            lines = dataMessage.data.split("\n");
+        }
         List<String[]> records = new LinkedList<>();
 
         for (String line: lines) {
@@ -280,9 +251,9 @@ public class Worker extends AbstractActor {
 
         this.distributeDataToWorkers(parsedData);
 
-        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
+        this.log.info("data size: {}",this.data.keySet().size());
 
-        this.log.info("" + this.data.keySet().size());
+        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
     }
 
     private void repartition() {
@@ -307,7 +278,18 @@ public class Worker extends AbstractActor {
             ActorRef responsibleWorker = this.router.getObjectForKey(key);
             List<String[]> pd = parsedData.get(key);
 
-            if(responsibleWorker.compareTo(this.self()) != 0) {
+            if(responsibleWorker.compareTo(this.self()) == 0) {
+
+                // todo: put in method
+                if(this.data.containsKey(key)) {
+                    this.data.get(key).addAll(pd);
+                } else {
+                    List<String[]> list = new LinkedList<String[]>();
+                    list.addAll(pd);
+                    this.data.put(key, list);
+                }
+
+            } else {
                 responsibleWorker.tell(new ParsedDataMessage(key, pd, this.router), this.self());
             }
 
@@ -335,25 +317,9 @@ public class Worker extends AbstractActor {
 
     }
 
-    private void handle(ParsedDataAckMessage parsedDataAckMessage) {
-//        this.waitingFor.remove(parsedDataAckMessage.id);
-//        if(this.waitingFor.isEmpty()) {
-//            switch (phase) {
-//                case PARSING:
-//                    this.masterActor.tell(new DataAckMessage(), this.self());
-//                    break;
-//                case REPARTITIONING:
-//                    this.masterActor.tell(new Master.RepartitionFinishedMessage(), this.self());
-//                    break;
-//                default:
-//                    this.log.warning("Reached undefined state");
-//            }
-//
-//        }
-    }
-
-    private void handle(StartComparingMessage startComparingMessage) {
+    private void handle(SimilarityMessage similarityMessage) {
         this.log.info("number of data keys: {}", this.data.keySet().size());
+
         StringComparator sComparator = new JaroWinklerComparator();
         NumberComparator nComparator = new AbsComparator(this.numberComparisonIntervalStart,this.numberComparisonIntervalEnd);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
@@ -363,9 +329,12 @@ public class Worker extends AbstractActor {
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicatesForBlock(data.get(key));
             if (!duplicates.isEmpty()) {
+                this.log.info("Duplicate {}", duplicates);
+
                 this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
         }
+
         this.sender().tell(new Master.ComparisonFinishedMessage(), this.self());
     }
 
