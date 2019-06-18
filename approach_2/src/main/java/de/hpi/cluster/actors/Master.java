@@ -3,10 +3,10 @@ package de.hpi.cluster.actors;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.remote.RemoteActorRef;
-import de.hpi.cluster.actors.listeners.ClusterListener;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
+import de.hpi.ddd.evaluation.ConsoleOutputEvaluator;
+import de.hpi.ddd.evaluation.GoldStandardEvaluator;
 import de.hpi.ddd.partition.Md5HashRouter;
 import de.hpi.utils.data.CSVService;
 import lombok.AllArgsConstructor;
@@ -46,17 +46,6 @@ public class Master extends AbstractActor {
         private int routerVersion;
     }
 
-
-    @Data @AllArgsConstructor
-    public static class RepartitionFinishedMessage implements Serializable {
-        private static final long serialVersionUID = -7643194361812342425L;
-    }
-
-    @Data @AllArgsConstructor
-    public static class DataAckMessage implements Serializable {
-        private static final long serialVersionUID = -4243194361812342425L;
-    }
-
     @Data @AllArgsConstructor
     public static class DuplicateMessage implements Serializable {
         private static final long serialVersionUID = -1111194311112342425L;
@@ -69,42 +58,29 @@ public class Master extends AbstractActor {
         private static final long serialVersionUID = -1111194361812333325L;
     }
 
-
 	private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-//    private final Queue<ActorRef> idleWorkers = new LinkedList<>();
-//    private final Set<ActorRef> knownWorkers = new HashSet<>();
-//    private final Set<ActorRef> unroutedWorkers = new HashSet<>();
-
-    private final int LINE_STEPS = 2;
-    private final int NUMBER_OF_BUCKETS = 100;
+    private final int LINE_STEPS = 1000;
+    private final int NUMBER_OF_BUCKETS = 500;
     private final double SIMILARITY_THRESHOLD = 0.9;
     private final double NUMBER_INTERVAL_START = 5;
     private final double NUMBER_INTERVAL_END = 30;
 
-
-    private Boolean isWorking = false;
-    private boolean allDataRead = false;
-
     private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
+
+    private Set<ActorRef> workers = new HashSet<>();
 
     private boolean repartitionRunning = false;
 
     private CSVService csvService;
     private String goldPath;
-
     private Md5HashRouter router = new Md5HashRouter(NUMBER_OF_BUCKETS);
-
-    // DEBUG
-    private int dataMessagesSEND = 0;
-    private int dataMessagesACK = 0;
-
+    // todo: move this to parser
+    private boolean hasData = true;
 
     @Override
     public void preStart() throws Exception {
         super.preStart();
-        // Register at this actor system's reaper
-//        Reaper.watchWithDefaultReaper(this);
     }
 
     @Override
@@ -121,8 +97,6 @@ public class Master extends AbstractActor {
                 .match(ConfigMessage.class, this::handle)
                 .match(RegisterMessage.class, this::handle)
                 .match(WorkRequestMessage.class, this::handle)
-                .match(RepartitionFinishedMessage.class, this::handle)
-                .match(DataAckMessage.class, this::handle)
                 .match(Terminated.class, this::handle)
                 .match(DuplicateMessage.class, this::handle)
                 .match(ComparisonFinishedMessage.class, this::handle)
@@ -139,6 +113,8 @@ public class Master extends AbstractActor {
         this.log.info("REGISTERED with Info: \"{}\"", registerMessage.info.infoString());
 
         ActorRef worker = this.sender();
+
+        this.addWorker(worker);
 
         this.router.addNewObject(worker);
 
@@ -168,8 +144,12 @@ public class Master extends AbstractActor {
         if (masterVersion > workerVersion) {
             this.sendRepartition(worker);
         } else if (masterVersion == workerVersion) {
-            this.sendData(worker);
-            // todo: similarity call here
+
+            if(this.hasData){
+                this.sendData(worker);
+            } else {
+                this.sendSimilarity(worker);
+            }
         } else {
             this.log.error("Reached undefined state");
         }
@@ -177,161 +157,56 @@ public class Master extends AbstractActor {
     }
 
     private void sendRepartition(ActorRef worker) {
-        this.log.info("Repartitioning message");
+        this.log.info("Repartitioning message to {}", worker.path().name());
 
         Md5HashRouter routerCopy = new Md5HashRouter(this.router);
 
         worker.tell(new Worker.RepartitionMessage(routerCopy), this.self());
     }
 
+    private void sendSimilarity(ActorRef worker) {
+        this.log.info("Similarity message to {}", worker.path().name());
+
+        worker.tell(new Worker.SimilarityMessage(), this.self());
+    }
+
     private void sendData(ActorRef worker) {
         // todo: adjust load to worker performance
         String data = this.csvService.readNextDataBlock(this.LINE_STEPS).getData();
 
-        if(!data.isEmpty()) {
-            worker.tell(new Worker.DataMessage(data), this.self());
-        } else {
-            this.log.info("done");
-           // todo: similarity
-        }
+        worker.tell(new Worker.DataMessage(data), this.self());
 
-    }
-
-    private void handle(RepartitionFinishedMessage repartitionFinishedMessage) {
-//        this.markActorAsIdle(this.sender());
-//        this.log.info("Repartition finished by: \"{}\"", this.sender());
-//        if (allWorkersIdle()) {
-//            repartitionRunning = false;
-//            this.log.info("Repartition finishreed by ALL workers: " + ((int) this.idleWorkers.size() - (int) this.unroutedWorkers.size()));
-//            // if new workers registered while the repartitioning process was running -> sendRepartition again
-//            if (!this.unroutedWorkers.isEmpty()) {
-//                this.sendRepartition();
-//            }
-//            // if sendRepartition is done we can assign new work for the workers
-//            else {
-//                this.assignWork();
-//            }
-//        }
-    }
-
-    private void handle(DataAckMessage dataAckMessage) {
-//        dataMessagesACK++;
-//        this.log.info("DataMessage ACK: " + dataMessagesACK + " from " + this.sender());
-//        this.markActorAsIdle(this.sender());
-//        if (this.unroutedWorkers.isEmpty()) {
-//            this.assignWork();
-//        } else if (allWorkersIdle()){
-//            this.sendRepartition();
-//        }
-
+        this.hasData = !data.isEmpty();
     }
 
     private void handle(ComparisonFinishedMessage comparisonFinishedMessage) {
-//        this.markActorAsIdle(this.sender());
-//
-//        if (this.allWorkersIdle()) {
-//            // evaluate results
-//            Set<Set<Integer>> goldStandard = CSVService.readRestaurantGoldStandard(this.goldPath, ",");
-//            GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
-//            evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
-//            this.log.info("Duplicates: \"{}\"", this.duplicates);
-//        }
+
+        this.workers.remove(this.sender());
+
+        if (this.workers.isEmpty()) {
+            // evaluate results
+            Set<Set<Integer>> goldStandard = CSVService.readRestaurantGoldStandard(this.goldPath, ",");
+            GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
+            evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
+            this.log.info("Duplicates: \"{}\"", this.duplicates);
+        }
     }
 
+
     private void handle(DuplicateMessage duplicateMessage) {
+        this.log.info("Duplicate {}", duplicateMessage.duplicates);
+
         this.duplicates.addAll(duplicateMessage.duplicates);
     }
 
-    private void assignWork() {
-//        while (!this.idleWorkers.isEmpty() && !allDataRead) {
-//            // get next data block
-//            ReadLineResult readResult = this.csvService.readNextDataBlock(this.LINE_STEPS);
-//            String data = readResult.getData();
-//            if (!data.isEmpty()) {
-//                // if there is data to process form a DataMessage and send it to worker
-//                ActorRef worker = this.idleWorkers.poll();
-//                worker.tell(new DataMessage(readResult.getData()), this.self());
-//                dataMessagesSEND++;
-//                this.log.info("DataMessage send: \"{}\"", dataMessagesSEND);
-//            }
-//            allDataRead = readResult.foundEndOfFile();
-//            if (allDataRead) {
-//                this.log.info("############# ALL DATA READ ################");
-//            }
-//        }
-//
-//        // if all Data is read and all workers are idle -> no data flow between workers -> ready for similarity phase
-//        if (allDataRead && allWorkersIdle()) {
-//            startSimilarityPhase();
-//        }
-    }
-
-    private void startSimilarityPhase() {
-//        for (ActorRef worker: this.idleWorkers) {
-//            worker.tell(new Worker.StartComparingMessage(), this.self());
-//        }
-//        this.idleWorkers.clear();
-    }
-
-    private void markActorAsBusy(ActorRef actor) {
-//        this.idleWorkers.remove(actor);
-    }
-
-    private void markActorAsIdle(ActorRef actor) {
-//        this.idleWorkers.add(actor);
-    }
-
-//    private boolean allWorkersIdle() {
-//        return this.idleWorkers.containsAll(this.knownWorkers);
-//    }
-
     private void handle(Terminated message) {
 		this.context().unwatch(message.getActor());
-		
-//		if (!this.idleWorkers.remove(message.getActor())) {
-//			WorkMessage work = this.busyWorkers.remove(message.getActor());
-//			if (work != null) {
-//				this.register(work);
-//			}
-//		}
+
 		this.log.info("Unregistered {}", message.getActor());
 	}
 
-	private void start(){
-	    if(isWorking)
-	        return;
-
-        this.isWorking = true;
-    }
-
-    private void monitorSlaves(ActorRef sender) {
-	    if(!(sender instanceof RemoteActorRef))
-	        return;
-
-	    String key = sender.path().address().toString();
-
-//	    if(!this.slaves.contains(key)){
-//	        this.slaves.add(key);
-//	        this.waitSlavesCount -= 1;
-//        }
-    }
-
-    private void terminateAll() {
-
-//        for (ActorRef actor:this.busyWorkers.keySet()) {
-//            actor.tell(PoisonPill.getInstance(), this.getSelf());
-//        }
-
-//        for (ActorRef actor:this.idleWorkers) {
-//            actor.tell(PoisonPill.getInstance(), this.getSelf());
-//        }
-
-        // todo REAPER check if the cluster listener can be reached by parent relation or similar
-        ActorSelection actorSelection = this.context().system().actorSelection("user/" + ClusterListener.DEFAULT_NAME);
-        actorSelection.tell(PoisonPill.getInstance(), this.getSelf());
-
-        this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());
-
+	private void addWorker(ActorRef actor) {
+        this.workers.add(actor);
     }
 
 }

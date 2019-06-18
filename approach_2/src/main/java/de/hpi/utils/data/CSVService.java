@@ -38,7 +38,7 @@ public class CSVService {
             return lastIndexRead;
         }
 
-        public boolean foundEndOfFile() {
+        public boolean isFoundEndOfFile() {
             return foundEndOfFile;
         }
     }
