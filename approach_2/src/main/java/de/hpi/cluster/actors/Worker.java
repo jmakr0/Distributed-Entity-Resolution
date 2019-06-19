@@ -97,19 +97,12 @@ public class Worker extends AbstractActor {
 
         this.cluster.subscribe(this.self(), MemberUp.class);
 
-        // Register at this actor system's reaper
-//        Reaper.watchWithDefaultReaper(this);
+        Reaper.watchWithDefaultReaper(this);
     }
 
     @Override
     public void postStop() throws Exception {
         super.postStop();
-
-        // todo REAPER check if the metrics listener can be reached by parent relation or similar
-        ActorSelection actorSelection = this.context().system().actorSelection("user/" + MetricsListener.DEFAULT_NAME);
-        actorSelection.tell(PoisonPill.getInstance(), this.getSelf());
-
-        this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());
 
         this.cluster.unsubscribe(this.self());
 

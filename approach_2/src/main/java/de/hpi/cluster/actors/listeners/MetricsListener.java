@@ -12,6 +12,7 @@ import akka.cluster.metrics.StandardMetrics.Cpu;
 import akka.cluster.metrics.StandardMetrics.HeapMemory;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import de.hpi.cluster.actors.Reaper;
 //import de.hpi.cluster.actors.Reaper;
 
 public class MetricsListener extends AbstractActor {
@@ -45,7 +46,7 @@ public class MetricsListener extends AbstractActor {
 		this.extension.subscribe(self());
 
 		// Register at this actor system's reaper
-//		Reaper.watchWithDefaultReaper(this);
+		Reaper.watchForCleanShutdown(this);
 	}
 
 	@Override
