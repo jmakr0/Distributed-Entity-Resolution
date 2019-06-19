@@ -69,6 +69,8 @@ public class Master extends AbstractActor {
     private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
 
     private Set<ActorRef> workers = new HashSet<>();
+    // todo: see if we really need this list, currently we do
+    private Set<ActorRef> registeredWorkers = new HashSet<>();
 
     private boolean repartitionRunning = false;
 
@@ -81,11 +83,17 @@ public class Master extends AbstractActor {
     @Override
     public void preStart() throws Exception {
         super.preStart();
+
+        Reaper.watchWithDefaultReaper(this);
     }
 
     @Override
     public void postStop() throws Exception {
         super.postStop();
+
+        for (ActorRef worker : this.registeredWorkers) {
+            worker.tell(PoisonPill.getInstance(), this.self());
+        }
 
         // Log the stop event
         this.log.info("Stopped {}.", this.getSelf());
@@ -189,6 +197,8 @@ public class Master extends AbstractActor {
             GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
             evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
             this.log.info("Duplicates: \"{}\"", this.duplicates);
+            this.log.info("All tasks finished, starting shutdown process.");
+            this.startShutdown();
         }
     }
 
@@ -207,6 +217,11 @@ public class Master extends AbstractActor {
 
 	private void addWorker(ActorRef actor) {
         this.workers.add(actor);
+        this.registeredWorkers.add(actor);
+    }
+
+    private void startShutdown() {
+        this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());
     }
 
 }
