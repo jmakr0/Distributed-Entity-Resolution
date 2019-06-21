@@ -1,6 +1,8 @@
 package de.hpi.utils.data;
 
+import akka.stream.impl.fusing.Collect;
 import au.com.bytecode.opencsv.CSVReader;
+import de.hpi.utils.helper.SetOperations;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,121 +15,121 @@ public class CSVService {
 
     private int startLine = 1;
     private String dataFile;
+    private boolean allDataRead = false;
+    private Map<Integer, Queue<String>> data;
+    private Set<Integer> queueSizes;
+    private final int QUEUE_SIZE = 5;
 
     public CSVService(String dataFile) {
         this.dataFile = dataFile;
+        this.data = new HashMap<>();
+        this.queueSizes = new HashSet<>();
+        queueSizes.add(2);
+        fillQueues();
     }
 
-    public static class ReadLineResult {
-
-        private String data;
-        private int lastIndexRead;
-        private boolean foundEndOfFile;
-
-        public ReadLineResult(String data, int lastIndexRead, boolean foundEndOfFile) {
-            this.data = data;
-            this.lastIndexRead = lastIndexRead;
-            this.foundEndOfFile = foundEndOfFile;
-        }
-
-        public String getData() {
-            return data;
-        }
-
-        public int getLastIndexRead() {
-            return lastIndexRead;
-        }
-
-        public boolean isFoundEndOfFile() {
-            return foundEndOfFile;
+    public boolean dataAvailable() {
+        if (allQueuesEmpty()) {
+            fillQueues();
+            return !allQueuesEmpty();
+        } else {
+            return true;
         }
     }
 
-    public ReadLineResult readNextDataBlock(int maxSize) {
-        ReadLineResult result = readLines(dataFile, startLine, startLine + maxSize - 1);
-        startLine += maxSize;
-        return result;
-    }
-
-    public static ReadLineResult readLines(String dataFile, int startLine, int endLine) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            CSVReader reader = getCsvReader(dataFile);
-            boolean foundEndOfFile = false;
-
-            // skip first lines
-            for (int i = 0; i < startLine ; i++) {
-                reader.readNext();
+    private boolean allQueuesEmpty() {
+        for (Queue<String> dataQueue: this.data.values()) {
+            if (dataQueue.size() > 0) {
+                return false;
             }
+        }
+        return true;
+    }
 
-            int lineNumber;
-            for (lineNumber = startLine; lineNumber <= endLine && !foundEndOfFile ; lineNumber++) {
-                String[] tmpRecord = reader.readNext();
-                if (tmpRecord != null) {
-                    sb.append(tmpRecord[0].replaceAll("\"", "").replaceAll("\'", ""));
-                    sb.append("\n");
-                } else {
-                    foundEndOfFile = true;
-                }
+    public String readNextDataBlock(int size) {
+        this.queueSizes.add(size);
+
+        if (!sizeAvailable(size)) {
+            fillQueues();
+            if(!sizeAvailable(size)) {
+                return getNextFittingDataBlock(size);
             }
-            return new ReadLineResult(sb.toString(), lineNumber, foundEndOfFile);
+        }
+        return this.data.get(size).poll();
+    }
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private boolean sizeAvailable(int maxSize) {
+        return this.data.get(maxSize) != null && this.data.get(maxSize).peek() != null;
+    }
+
+    private String getNextFittingDataBlock(int maxSize) {
+        List<Integer> allKeys = new LinkedList<>();
+        allKeys.addAll(this.data.keySet());
+        Collections.sort(allKeys, Collections.reverseOrder());
+
+        // first search for the next smaller block
+        for (int size: allKeys) {
+            if(size < maxSize && this.data.get(size).peek() != null) {
+                return this.data.get(size).poll();
+            }
+        }
+        // if all smaller queues are empty, search for bigger blocks
+        Collections.sort(allKeys);
+        for (int size: allKeys) {
+            if(size > maxSize && this.data.get(size).peek() != null) {
+                return this.data.get(size).poll();
+            }
         }
 
         return null;
 
     }
 
-    public static List<String[]> readDataset(String dataFile, String splitSymbol, boolean addIdField) {
-        List<String[]> result = new ArrayList<String[]>();
-        CSVReader reader = null;
 
+    public void fillQueues() {
+        // create new queues
+        Set<Integer> currentQueueSizes = this.data.keySet();
+        Set<Integer> missingSizes = SetOperations.setDiff(this.queueSizes, currentQueueSizes);
+        for (int queueSize: missingSizes) {
+            this.data.put(queueSize, new LinkedList<>());
+        }
+
+        CSVReader reader = null;
         try {
             reader = getCsvReader(dataFile);
 
-            // create header
-            String[] originalHeader = reader.readNext()[0].split(splitSymbol);
-            String[] header = null;
-            if(addIdField) {
-                // header = originalHeader + id column
-                 header = new String[originalHeader.length + 1];
-                header[0] = "id";
-                System.arraycopy(originalHeader, 0, header, 1, originalHeader.length);
-            } else {
-                header = originalHeader;
+            // skip first lines
+            for (int i = 0; i < startLine ; i++) {
+                reader.readNext();
             }
 
-            String[] tmpRecord = null;
-            int idCounter = 0;
-            int destCopyPosition = addIdField ? 1 : 0;
-            while ((tmpRecord = reader.readNext()) != null) {
-                String[] split = tmpRecord[0].split(splitSymbol);
-                String[] record = new String[header.length];
-                Arrays.fill(record,"");
+            // fill up queues
+            for (Integer numberOfLines: this.data.keySet()) {
+                Queue<String> queue = this.data.get(numberOfLines);
 
-                if(addIdField) {
-                    // add id column
-                    record[0] = "" + idCounter;
-                    idCounter++;
+                while(!allDataRead && queue.size() < this.QUEUE_SIZE) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = startLine; i < startLine + numberOfLines; i++) {
+                        String[] tmpRecord = reader.readNext();
+                        if (tmpRecord != null) {
+                            System.out.println(tmpRecord[0]);
+                            sb.append(tmpRecord[0].replaceAll("\"", "").replaceAll("\'", ""));
+                            sb.append("\n");
+                        } else {
+                            allDataRead = true;
+                            break;
+                        }
+                    }
+                    queue.add(sb.toString());
+                    startLine += numberOfLines;
                 }
-
-                // copy all other values
-                System.arraycopy(split,0,record,destCopyPosition,split.length-1);
-                result.add(record);
             }
-            reader.close();
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return result;
     }
 
     private static CSVReader getCsvReader(String dataFile) throws FileNotFoundException {

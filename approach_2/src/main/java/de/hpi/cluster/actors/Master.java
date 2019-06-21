@@ -151,7 +151,7 @@ public class Master extends AbstractActor {
             this.sendRepartition(worker);
         } else if (masterVersion == workerVersion) {
 
-            if(this.hasData){
+            if(this.csvService.dataAvailable()){
                 this.sendData(worker);
             } else {
                 this.sendSimilarity(worker);
