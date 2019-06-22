@@ -179,7 +179,7 @@ public class Master extends AbstractActor {
     private void sendData(ActorRef worker) {
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
         this.log.info("numberOfLines: {}", numberOfLines);
-        String data = this.csvService.readNextDataBlock(numberOfLines).getData();
+        String data = this.csvService.readNextDataBlock(numberOfLines);
 
         DataMessage dataMessage = new DataMessage(data);
         worker.tell(dataMessage, this.self());
