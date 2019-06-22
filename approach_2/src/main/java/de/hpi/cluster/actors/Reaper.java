@@ -30,8 +30,8 @@ public class Reaper extends AbstractLoggingActor {
 		private static final long serialVersionUID = -5201749681392553264L;
 	}
 
-    public static class WatchMeShutdownMessage implements Serializable {
 
+    public static class WatchMeShutdownMessage implements Serializable {
         private static final long serialVersionUID = -1234567881392553264L;
     }
 
@@ -47,14 +47,14 @@ public class Reaper extends AbstractLoggingActor {
 	}
 
 
-    public static void watchForShutdown(AbstractActor actor) {
-        ActorSelection defaultReaper = actor.getContext().getSystem().actorSelection("/user/" + DEFAULT_NAME);
-        defaultReaper.tell(new WatchMeShutdownMessage(), actor.getSelf());
-    }
+  public static void watchForShutdown(AbstractActor actor) {
+     ActorSelection defaultReaper = actor.getContext().getSystem().actorSelection("/user/" + DEFAULT_NAME);
+     defaultReaper.tell(new WatchMeShutdownMessage(), actor.getSelf());
+  }
 
 	// A reference to all actors whose life is watched by this reaper
-    private final Set<ActorRef> watchees = new HashSet<>();
-    private final Set<ActorRef> shutdowns = new HashSet<>();
+  private final Set<ActorRef> watchees = new HashSet<>();
+  private final Set<ActorRef> shutdowns = new HashSet<>();
 
 	@Override
 	public void preStart() throws Exception {
@@ -75,8 +75,8 @@ public class Reaper extends AbstractLoggingActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-                .match(WatchMeMessage.class, this::handle)
-                .match(WatchMeShutdownMessage.class, this::handle)
+        .match(WatchMeMessage.class, this::handle)
+        .match(WatchMeShutdownMessage.class, this::handle)
 				.match(Terminated.class, this::handle)
 				.matchAny(object -> this.log().error(this.getClass().getName() + " received unknown message: " + object.toString()))
 				.build();
@@ -94,8 +94,8 @@ public class Reaper extends AbstractLoggingActor {
 		}
 	}
 
-	private void handle(WatchMeShutdownMessage message) {
 
+	private void handle(WatchMeShutdownMessage message) {
 	    // Find the sender of this message
         final ActorRef sender = this.getSender();
 
