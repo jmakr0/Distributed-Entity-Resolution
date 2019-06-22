@@ -3,11 +3,13 @@ package de.hpi.cluster.actors;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import de.hpi.cluster.actors.Worker.DataMessage;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
 import de.hpi.ddd.evaluation.ConsoleOutputEvaluator;
 import de.hpi.ddd.evaluation.GoldStandardEvaluator;
 import de.hpi.ddd.partition.Md5HashRouter;
+import de.hpi.utils.perfromance.PerformanceTracker;
 import de.hpi.utils.data.CSVService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -60,11 +62,12 @@ public class Master extends AbstractActor {
 
 	private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private final int LINE_STEPS = 1000;
     private final int NUMBER_OF_BUCKETS = 500;
     private final double SIMILARITY_THRESHOLD = 0.9;
     private final double NUMBER_INTERVAL_START = 5;
     private final double NUMBER_INTERVAL_END = 30;
+    private final long TIME_THRESHOLD = 5000;
+    private final int MIN_WORKLOAD = 1;
 
     private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
 
@@ -75,6 +78,9 @@ public class Master extends AbstractActor {
     private CSVService csvService;
     private String goldPath;
     private Md5HashRouter router = new Md5HashRouter(NUMBER_OF_BUCKETS);
+
+    private PerformanceTracker performanceTracker = new PerformanceTracker(TIME_THRESHOLD, MIN_WORKLOAD);
+
     // todo: move this to parser
     private boolean hasData = true;
 
@@ -171,10 +177,12 @@ public class Master extends AbstractActor {
     }
 
     private void sendData(ActorRef worker) {
-        // todo: adjust load to worker performance
-        String data = this.csvService.readNextDataBlock(this.LINE_STEPS).getData();
+        int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
+        this.log.info("numberOfLines: {}", numberOfLines);
+        String data = this.csvService.readNextDataBlock(numberOfLines).getData();
 
-        worker.tell(new Worker.DataMessage(data), this.self());
+        DataMessage dataMessage = new DataMessage(data);
+        worker.tell(dataMessage, this.self());
 
         this.hasData = !data.isEmpty();
     }
