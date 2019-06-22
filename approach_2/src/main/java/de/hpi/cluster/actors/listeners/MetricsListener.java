@@ -46,7 +46,7 @@ public class MetricsListener extends AbstractActor {
 		this.extension.subscribe(self());
 
 		// Register at this actor system's reaper
-		Reaper.watchForCleanShutdown(this);
+		Reaper.watchForShutdown(this);
 	}
 
 	@Override
