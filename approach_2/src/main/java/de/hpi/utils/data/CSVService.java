@@ -19,13 +19,15 @@ public class CSVService {
     private Map<Integer, Queue<String>> data;
     private Set<Integer> queueSizes;
     private final int QUEUE_SIZE = 5;
+    private CSVReader csvReader;
 
-    public CSVService(String dataFile) {
+    public CSVService(String dataFile, int minBlockSize) {
+        this.csvReader = getCsvReader(dataFile);
         this.dataFile = dataFile;
         this.data = new HashMap<>();
         this.queueSizes = new HashSet<>();
-        queueSizes.add(2);
-        fillQueues();
+        this.queueSizes.add(minBlockSize);
+        this.fillQueues();
     }
 
     public boolean dataAvailable() {
@@ -46,16 +48,16 @@ public class CSVService {
         return true;
     }
 
-    public String readNextDataBlock(int size) {
-        this.queueSizes.add(size);
+    public String getRecords(int lines) {
+        this.queueSizes.add(lines);
 
-        if (!sizeAvailable(size)) {
+        if (!sizeAvailable(lines)) {
             fillQueues();
-            if(!sizeAvailable(size)) {
-                return getNextFittingDataBlock(size);
+            if(!sizeAvailable(lines)) {
+                return getNextFittingDataBlock(lines);
             }
         }
-        return this.data.get(size).poll();
+        return this.data.get(lines).poll();
     }
 
     private boolean sizeAvailable(int maxSize) {
@@ -63,26 +65,25 @@ public class CSVService {
     }
 
     private String getNextFittingDataBlock(int maxSize) {
-        List<Integer> allKeys = new LinkedList<>();
-        allKeys.addAll(this.data.keySet());
-        Collections.sort(allKeys, Collections.reverseOrder());
+        List<Integer> sizes = new LinkedList<>();
+        sizes.addAll(this.data.keySet());
+        Collections.sort(sizes);
 
-        // first search for the next smaller block
-        for (int size: allKeys) {
+        for (int i = sizes.size() - 1; i >= 0; i--) {
+            int size = sizes.get(i);
             if(size < maxSize && this.data.get(size).peek() != null) {
                 return this.data.get(size).poll();
             }
         }
-        // if all smaller queues are empty, search for bigger blocks
-        Collections.sort(allKeys);
-        for (int size: allKeys) {
+
+        for (int i = 0; i < sizes.size(); i++) {
+            int size = sizes.get(i);
             if(size > maxSize && this.data.get(size).peek() != null) {
                 return this.data.get(size).poll();
             }
         }
 
         return null;
-
     }
 
 
@@ -94,14 +95,11 @@ public class CSVService {
             this.data.put(queueSize, new LinkedList<>());
         }
 
-        CSVReader reader = null;
         try {
-            reader = getCsvReader(dataFile);
-
-            // skip first lines
-            for (int i = 0; i < startLine ; i++) {
-                reader.readNext();
-            }
+//            // skip first lines
+//            for (int i = 0; i < startLine ; i++) {
+//                this.csvReader.readNext();
+//            }
 
             // fill up queues
             for (Integer numberOfLines: this.data.keySet()) {
@@ -110,7 +108,7 @@ public class CSVService {
                 while(!allDataRead && queue.size() < this.QUEUE_SIZE) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = startLine; i < startLine + numberOfLines; i++) {
-                        String[] tmpRecord = reader.readNext();
+                        String[] tmpRecord = this.csvReader.readNext();
                         if (tmpRecord != null) {
                             System.out.println(tmpRecord[0]);
                             sb.append(tmpRecord[0].replaceAll("\"", "").replaceAll("\'", ""));
@@ -132,10 +130,16 @@ public class CSVService {
         }
     }
 
-    private static CSVReader getCsvReader(String dataFile) throws FileNotFoundException {
+    private static CSVReader getCsvReader(String dataFile){
         CSVReader reader;
-        InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
+        InputStreamReader inputStreamReader = null;
+        try {
+            inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         reader = new CSVReader(inputStreamReader, '\n');
+
         return reader;
     }
 

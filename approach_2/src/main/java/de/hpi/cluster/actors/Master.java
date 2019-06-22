@@ -108,7 +108,7 @@ public class Master extends AbstractActor {
 	}
 
     private void handle(ConfigMessage message) {
-        this.csvService = new CSVService(message.dataPath);
+        this.csvService = new CSVService(message.dataPath, (int) Math.pow(2,MIN_WORKLOAD));
         this.goldPath = message.goldPath;
     }
 
@@ -176,7 +176,7 @@ public class Master extends AbstractActor {
     private void sendData(ActorRef worker) {
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
         this.log.info("numberOfLines: {}", numberOfLines);
-        String data = this.csvService.readNextDataBlock(numberOfLines);
+        String data = this.csvService.getRecords(numberOfLines);
 
         DataMessage dataMessage = new DataMessage(data);
         worker.tell(dataMessage, this.self());
