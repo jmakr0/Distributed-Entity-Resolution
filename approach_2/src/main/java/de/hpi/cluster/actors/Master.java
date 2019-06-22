@@ -81,9 +81,6 @@ public class Master extends AbstractActor {
 
     private PerformanceTracker performanceTracker = new PerformanceTracker(TIME_THRESHOLD, MIN_WORKLOAD);
 
-    // todo: move this to parser
-    private boolean hasData = true;
-
     @Override
     public void preStart() throws Exception {
         super.preStart();
@@ -183,8 +180,6 @@ public class Master extends AbstractActor {
 
         DataMessage dataMessage = new DataMessage(data);
         worker.tell(dataMessage, this.self());
-
-        this.hasData = !data.isEmpty();
     }
 
     private void handle(ComparisonFinishedMessage comparisonFinishedMessage) {
