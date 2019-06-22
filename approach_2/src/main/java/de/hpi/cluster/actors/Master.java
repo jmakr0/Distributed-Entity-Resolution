@@ -201,7 +201,7 @@ public class Master extends AbstractActor {
             evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
             this.log.info("Duplicates: \"{}\"", this.duplicates);
             this.log.info("All tasks finished, starting shutdown process.");
-            this.startShutdown();
+            this.shutdown();
         }
     }
 
@@ -223,7 +223,7 @@ public class Master extends AbstractActor {
         this.registeredWorkers.add(actor);
     }
 
-    private void startShutdown() {
+    private void shutdown() {
         this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());
     }
 
