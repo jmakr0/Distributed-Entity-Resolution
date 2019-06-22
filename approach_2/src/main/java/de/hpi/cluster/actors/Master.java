@@ -81,9 +81,6 @@ public class Master extends AbstractActor {
 
     private PerformanceTracker performanceTracker = new PerformanceTracker(TIME_THRESHOLD, MIN_WORKLOAD);
 
-    // todo: move this to parser
-    private boolean hasData = true;
-
     @Override
     public void preStart() throws Exception {
         super.preStart();
@@ -111,7 +108,7 @@ public class Master extends AbstractActor {
 	}
 
     private void handle(ConfigMessage message) {
-        this.csvService = new CSVService(message.dataPath);
+        this.csvService = new CSVService(message.dataPath, (int) Math.pow(2,MIN_WORKLOAD));
         this.goldPath = message.goldPath;
     }
 
@@ -151,7 +148,7 @@ public class Master extends AbstractActor {
             this.sendRepartition(worker);
         } else if (masterVersion == workerVersion) {
 
-            if(this.hasData){
+            if(this.csvService.dataAvailable()){
                 this.sendData(worker);
             } else {
                 this.sendSimilarity(worker);
@@ -179,12 +176,10 @@ public class Master extends AbstractActor {
     private void sendData(ActorRef worker) {
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
         this.log.info("numberOfLines: {}", numberOfLines);
-        String data = this.csvService.readNextDataBlock(numberOfLines).getData();
+        String data = this.csvService.getRecords(numberOfLines);
 
         DataMessage dataMessage = new DataMessage(data);
         worker.tell(dataMessage, this.self());
-
-        this.hasData = !data.isEmpty();
     }
 
     private void handle(ComparisonFinishedMessage comparisonFinishedMessage) {
