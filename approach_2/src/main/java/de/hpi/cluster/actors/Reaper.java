@@ -30,6 +30,11 @@ public class Reaper extends AbstractLoggingActor {
 		private static final long serialVersionUID = -5201749681392553264L;
 	}
 
+    public static class WatchMeCleanShutdownMessage implements Serializable {
+
+        private static final long serialVersionUID = -1234567881392553264L;
+    }
+
 	/**
 	 * Find the reaper actor of this actor system and let it watch the given actor.
 	 *
@@ -41,21 +46,28 @@ public class Reaper extends AbstractLoggingActor {
 		defaultReaper.tell(new WatchMeMessage(), actor.getSelf());
 	}
 
+
+    public static void watchForCleanShutdown(AbstractActor actor) {
+        ActorSelection defaultReaper = actor.getContext().getSystem().actorSelection("/user/" + DEFAULT_NAME);
+        defaultReaper.tell(new WatchMeCleanShutdownMessage(), actor.getSelf());
+    }
+
 	// A reference to all actors whose life is watched by this reaper
-	private final Set<ActorRef> watchees = new HashSet<>();
+    private final Set<ActorRef> watchees = new HashSet<>();
+    private final Set<ActorRef> cleanShutdown = new HashSet<>();
 
 	@Override
 	public void preStart() throws Exception {
 		super.preStart();
-		
+
 		// Log the start event
 		log().info("Started {}...", this.getSelf());
 	}
-	
+
 	@Override
 	public void postStop() throws Exception {
 		super.postStop();
-		
+
 		// Log the stop event
 		this.log().info("Stopped {}.", this.getSelf());
 	}
@@ -63,17 +75,18 @@ public class Reaper extends AbstractLoggingActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(WatchMeMessage.class, this::handle)
+                .match(WatchMeMessage.class, this::handle)
+                .match(WatchMeCleanShutdownMessage.class, this::handle)
 				.match(Terminated.class, this::handle)
 				.matchAny(object -> this.log().error(this.getClass().getName() + " received unknown message: " + object.toString()))
 				.build();
 	}
 
 	private void handle(WatchMeMessage message) {
-		
+
 		// Find the sender of this message
 		final ActorRef sender = this.getSender();
-		
+
 		// Watch the sender if it is not already on the watch list
 		if (this.watchees.add(sender)) {
 			this.getContext().watch(sender);
@@ -81,15 +94,29 @@ public class Reaper extends AbstractLoggingActor {
 		}
 	}
 
+	private void handle(WatchMeCleanShutdownMessage message) {
+
+	    // Find the sender of this message
+        final ActorRef sender = this.getSender();
+
+        if (this.cleanShutdown.add(sender)) {
+            this.getContext().watch(sender);
+        }
+    }
+
 	private void handle(Terminated message) {
-		
+
 		// Find the sender of this message
 		final ActorRef sender = this.getSender();
-		
-		// Remove the sender from the watch list reaping its soul and terminate the entire actor system if this was its last actor
+
 		if (this.watchees.remove(sender)) {
 			this.log().info("Reaping {}.", sender);
 			if (this.watchees.isEmpty()) {
+				cleanShutdown();
+			}
+		} else if (this.cleanShutdown.remove(sender)) {
+			assert this.watchees.isEmpty();
+			if (this.cleanShutdown.isEmpty()) {
 				this.log().info("Every local actor has been reaped. Terminating the actor system...");
 				this.getContext().getSystem().terminate();
 			}
@@ -97,4 +124,12 @@ public class Reaper extends AbstractLoggingActor {
 			this.log().error("Got termination message from unwatched {}.", sender);
 		}
 	}
+
+	private void cleanShutdown() {
+        for (ActorRef actor: this.cleanShutdown) {
+            actor.tell(PoisonPill.getInstance(), this.getSelf());
+        }
+    }
 }
+
+
