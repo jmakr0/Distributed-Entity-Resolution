@@ -5,6 +5,7 @@ import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.Master;
+import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
 
@@ -23,6 +24,8 @@ public class ClusterMaster extends ClusterSystem {
 		Cluster.get(system).registerOnMemberUp(new Runnable() {
 			@Override
 			public void run() {
+				system.actorOf(Reaper.props(), Reaper.DEFAULT_NAME);
+
 				system.actorOf(ClusterListener.props(), ClusterListener.DEFAULT_NAME);
 
 				ActorRef master = system.actorOf(Master.props(), Master.DEFAULT_NAME);
