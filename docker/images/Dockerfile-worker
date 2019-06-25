@@ -9,6 +9,7 @@ ENV JAR_NAME=$JAR_NAME
 ENV WORKERS=4
 ENV MASTER_PORT=7877
 ENV WORKER_PORT=7879
+ENV LOG_FILE="log/${ROLE}.log"
 
 EXPOSE $WORKER_PORT
 
@@ -16,4 +17,4 @@ CMD java -jar $JAR_NAME $ROLE \
         -w $WORKERS \
         -p $WORKER_PORT \
         -mh $MASTER_HOST \
-        -mp $MASTER_PORT
+        -mp $MASTER_PORT > $LOG_FILE
