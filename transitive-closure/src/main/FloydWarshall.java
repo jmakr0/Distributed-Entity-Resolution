@@ -1,8 +1,12 @@
 package main;
 
+import java.awt.*;
+import java.util.LinkedList;
+import java.util.List;
+
 public class FloydWarshall {
 
-    public static int[][] floydWarshall(int[][] inputMatrix) {
+    public static int[][] apply(int[][] inputMatrix) {
 
         for (int k = 0; k < inputMatrix.length; k++) {
             for (int i = 0; i < inputMatrix.length; i++) {
@@ -24,4 +28,19 @@ public class FloydWarshall {
 
         return inputMatrix;
     }
+
+    public static List<int [][]> getPivots(int[][] matrix, int blockSize) {
+        List<int[][]> pivots = new LinkedList<>();
+
+        for (int x = 0, y = 0; x < matrix.length && y < matrix.length; x += blockSize, y += blockSize) {
+
+            SubMatrix pivot = new SubMatrix(matrix, new Point(x, y), blockSize);
+
+            pivots.add(pivot.getMatrix());
+        }
+
+        return pivots;
+    }
+
+
 }

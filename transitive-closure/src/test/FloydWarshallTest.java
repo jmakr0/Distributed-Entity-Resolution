@@ -2,20 +2,24 @@ package test;
 
 import main.FloydWarshall;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import static main.FloydWarshall.getPivots;
 
 public class FloydWarshallTest {
 
-    @Test
-    public void testAlgorithm() {
+    int[][] testMatrix = new int[6][6];
 
+    @Before
+    public void before() {
         // Example taken from:
         // Optimierung für Studierende der Informatik (Uni Hamburg)
         // THOMAS ANDREAE
         // Wintersemester 2015/16
-
-        int[][] input = new int[6][6];
-
         int [] line1 = {0                   , 6                 , 1                , 10                , Integer.MAX_VALUE  , Integer.MAX_VALUE};
         int [] line2 = {2                   , 0                 , 4                , Integer.MAX_VALUE , 9                  , Integer.MAX_VALUE};
         int [] line3 = {Integer.MAX_VALUE   , 6                 , 0                , 6                 , 3                  , Integer.MAX_VALUE};
@@ -23,13 +27,16 @@ public class FloydWarshallTest {
         int [] line5 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , Integer.MAX_VALUE, 2                 , 0                  , Integer.MAX_VALUE};
         int [] line6 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , Integer.MAX_VALUE, Integer.MAX_VALUE , 1                  , 0};
 
-        input[0] = line1;
-        input[1] = line2;
-        input[2] = line3;
-        input[3] = line4;
-        input[4] = line5;
-        input[5] = line6;
+        testMatrix[0] = line1;
+        testMatrix[1] = line2;
+        testMatrix[2] = line3;
+        testMatrix[3] = line4;
+        testMatrix[4] = line5;
+        testMatrix[5] = line6;
+    }
 
+    @Test
+    public void testAlgorithm() {
 
         int[][] expectedOutput = new int[6][6];
 
@@ -47,7 +54,7 @@ public class FloydWarshallTest {
         expectedOutput[4] = line11;
         expectedOutput[5] = line12;
 
-        int[][] result = FloydWarshall.floydWarshall(input);
+        int[][] result = FloydWarshall.apply(testMatrix);
 
         for (int i = 0; i < result.length; i++) {
             for (int j = 0; j < result.length; j++) {
@@ -55,4 +62,38 @@ public class FloydWarshallTest {
             }
         }
     }
+
+    @Test
+    public void testPivots() {
+        List<int[][]> pivots = getPivots(testMatrix, 2);
+
+        List<int[][]> expectedPivots = new LinkedList<>();
+
+        int[][] expectedPivot1 = new int[2][2];
+        int[][] expectedPivot2 = new int[2][2];
+        int[][] expectedPivot3 = new int[2][2];
+
+        int [] line1 = {0, 6};
+        int [] line2 = {2, 0};
+        int [] line3 = {0, 6};
+        int [] line4 = {4, 0};
+        int [] line5 = {0, Integer.MAX_VALUE};
+        int [] line6 = {1, 0};
+
+        expectedPivot1[0] = line1;
+        expectedPivot1[1] = line2;
+        expectedPivot2[0] = line3;
+        expectedPivot2[1] = line4;
+        expectedPivot3[0] = line5;
+        expectedPivot3[1] = line6;
+
+        expectedPivots.add(expectedPivot1);
+        expectedPivots.add(expectedPivot2);
+        expectedPivots.add(expectedPivot3);
+
+        Assert.assertArrayEquals(pivots.toArray(), expectedPivots.toArray());
+
+    }
+
+
 }
