@@ -4,6 +4,9 @@ RUN mkdir /app
 RUN mkdir /app/data
 RUN mkdir /app/log
 
+ENV LOG_DIR="log"
+ENV LOG_SUB_DIR
+
 COPY tmp/* /app/
 
 WORKDIR /app

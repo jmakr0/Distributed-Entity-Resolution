@@ -5,29 +5,59 @@ set +e
 # General
 
 TEST_NAME="Test_1"
-TIMEOUT_SEC=200
+TIMEOUT_SEC=50
+
+PATH_DATASET=$(pwd)/../data/restaurant.csv
+PATH_DATASET_GOLD=$(pwd)/../data/restaurant_gold.csv
+DATASET_SIZE_MB=$(du -m $PATH_DATASET | cut -f1)
+
+# Docker settings
+
 SHM_SIZE=512m
-PATH_LOG_DIR=log/$TEST_NAME/$(date +%Y%m%d_%H%M%S)
-PATH_LOG_MOUNT=$(pwd)/testing
-PATH_DATA_MOUNT=$(pwd)/../data
+DOCKER_NETWORK="rdse-network"
+
+PATH_DATA_MOUNT=$(pwd)/testing/data
+
+PATH_LOG_TEST_DIR=$TEST_NAME/$(date +%Y%m%d_%H%M%S)/
+PATH_LOG_MOUNT=$(pwd)/testing/log
+PATH_LOG_DIR=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
+
+WORKER_CPU_SHARES=0
+WORKER_MEMORY=0
 
 # Master settings
 
+MASTER_NODES=1
 MASTER_WORKERS=0
-MASTER_PATH_DATA="data/restaurant.csv"
-MASTER_PATH_GOLD_STANDARD="data/restaurant_gold.csv"
+MASTER_NEW_DATASET_SIZE_MB=0
 
 # Worker settings
 
 WORKER_NODES=1
-WORKER_WORKERS=3
+WORKER_WORKERS=1
 
 # Run test
 
-echo "execute $TEST_NAME"
+echo
+echo "###### $TEST_NAME ######"
+echo
 
-. ./testing/test.sh
+echo "### Initialize ###"
+echo
 
-echo "test is running ..."
+. ./testing/init.sh
 
-# Wait until timeout is done
+echo
+echo "### Run ###"
+echo
+
+. ./testing/run.sh
+
+echo
+echo "### Teardown ###"
+echo
+
+. ./testing/teardown.sh
+
+echo
+echo "### Done ###"

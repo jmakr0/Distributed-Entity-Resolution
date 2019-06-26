@@ -8,9 +8,8 @@ ENV HOST=$MASTER_HOST
 ENV JAR_NAME=$JAR_NAME
 ENV WORKERS=0
 ENV MASTER_PORT=7877
-ENV PATH_DATA="data/restaurant.csv"
-ENV PATH_GOLD_STANDARD="data/restaurant_gold.csv"
-ENV LOG_FILE="log/${ROLE}.log"
+ENV PATH_DATASET="data/data.csv"
+ENV PATH_DATASET_GOLD="data/data_gold.csv"
 
 EXPOSE $MASTER_PORT
 
@@ -18,5 +17,6 @@ CMD java -jar $JAR_NAME $ROLE \
         -w $WORKERS \
         -h $HOST \
         -p $MASTER_PORT \
-        -d $PATH_DATA \
-        -g $PATH_GOLD_STANDARD > $LOG_FILE
+        -d $PATH_DATASET \
+        -g $PATH_DATASET_GOLD > $LOG_DIR/${LOG_SUB_DIR}${ROLE}.log && \ 
+        touch $LOG_DIR/${LOG_SUB_DIR}${ROLE}.done.log
