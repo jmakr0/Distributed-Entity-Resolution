@@ -25,16 +25,19 @@ The log data, which are saved in `testing/log` by default, are not deleted autom
 #### Test_1
 
 Worker nodes: 1
+
 Worker on each node: 1
 
 #### Test_2
 
 Worker nodes: 2
+
 Worker on each node: 3
 
 #### Test_3
 
 Worker nodes: 2
+
 Worker on each node: 3
 
 Dataset size: 10MB
