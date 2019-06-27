@@ -12,7 +12,7 @@ public class DFW {
 
     private SubMatrix pivot;
 
-    private boolean hasData = false;
+    private boolean done = false;
     private int[][] matrix;
     private int blksize;
     private int pivotsMax;
@@ -105,7 +105,7 @@ public class DFW {
     }
 
     private void nextRound() {
-        if(this.hasData && this.triplePending > 0) {
+        if(!this.done && this.triplePending > 0) {
             return;
         }
 
@@ -130,16 +130,20 @@ public class DFW {
         this.work.add(new DFWBlock(this.pivot));
     }
 
+    public boolean isDone() {
+        return this.done;
+    }
+
     public DFWBlock getWork() {
 
         if(!this.work.isEmpty()) {
             DFWBlock work = this.work.remove(0);
-            this.hasData = this.work.isEmpty();
+            this.done = this.work.isEmpty();
 
             return work;
         }
 
-        this.hasData = false;
+        this.done = true;
         return null;
     }
 

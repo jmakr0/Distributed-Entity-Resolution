@@ -1,5 +1,8 @@
 package test;
 
+import main.DFW;
+import main.DFWBlock;
+import main.FloydWarshall;
 import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,65 +20,40 @@ public class DFWTest {
 
     @Before
     public void before() {
-
-        int [] line1 = {0                   , 6                 , 1                , 10                , Integer.MAX_VALUE  , Integer.MAX_VALUE};
-        int [] line2 = {2                   , 0                 , 4                , Integer.MAX_VALUE , 9                  , Integer.MAX_VALUE};
-        int [] line3 = {Integer.MAX_VALUE   , 6                 , 0                , 6                 , 3                  , Integer.MAX_VALUE};
-        int [] line4 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , 4                , 0                 , 4                  , 2};
-        int [] line5 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , Integer.MAX_VALUE, 2                 , 0                  , Integer.MAX_VALUE};
-        int [] line6 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , Integer.MAX_VALUE, Integer.MAX_VALUE , 1                  , 0};
-
-        testMatrix[0] = line1;
-        testMatrix[1] = line2;
-        testMatrix[2] = line3;
-        testMatrix[3] = line4;
-        testMatrix[4] = line5;
-        testMatrix[5] = line6;
+        // Example taken from:
+        // Optimierung für Studierende der Informatik (Uni Hamburg)
+        // THOMAS ANDREAE, Wintersemester 2015/16
+        testMatrix[0] = new int[]{0, 6, 1, 10, Integer.MAX_VALUE, Integer.MAX_VALUE};
+        testMatrix[1] = new int[]{2, 0, 4, Integer.MAX_VALUE, 9, Integer.MAX_VALUE};
+        testMatrix[2] = new int[]{Integer.MAX_VALUE, 6, 0, 6, 3, Integer.MAX_VALUE};
+        testMatrix[3] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, 4, 0, 4, 2};
+        testMatrix[4] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 2, 0, Integer.MAX_VALUE};
+        testMatrix[5] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE , 1, 0};
     }
 
     @Test
-    public void phaseTwoBlocksTest() {
+    public void getWorkTest() {
+        DFW dfw = new DFW(testMatrix, 1);
 
-        int blksize = 2;
+        int[][] expected = new int[6][6];
+        expected[0] = new int[]{0,  6,  1, 6, 4, 8};
+        expected[1] = new int[]{2,  0,  3, 8, 6, 10};
+        expected[2] = new int[]{8,  6,  0, 5, 3, 7};
+        expected[3] = new int[]{12, 10, 4, 0, 3, 2};
+        expected[4] = new int[]{14, 12, 6, 2, 0, 4};
+        expected[5] = new int[]{15, 13, 7, 3, 1, 0};
 
-        SubMatrix pivot = new SubMatrix(testMatrix, 2,2, blksize);
-        Set<List<SubMatrix>> tuples = new HashSet<>();
-//        Set<List<SubMatrix>> tuples = DFW.generateTuples(testMatrix, pivot, blksize);
+        while(!dfw.isDone()) {
+            DFWBlock block = dfw.getWork();
+        }
 
-        SubMatrix tmpBlock;
-        List<SubMatrix> tmpTuple;
+        int[][] result = FloydWarshall.apply(testMatrix);
 
-        tmpBlock = new SubMatrix(testMatrix, 0, 2, blksize);
-        tmpTuple = new LinkedList<>();
-
-        tmpTuple.add(pivot);
-        tmpTuple.add(tmpBlock);
-
-        Assert.assertTrue(tuples.contains(tmpTuple));
-
-        tmpBlock = new SubMatrix(testMatrix, 4, 2, blksize);
-        tmpTuple = new LinkedList<>();
-
-        tmpTuple.add(pivot);
-        tmpTuple.add(tmpBlock);
-
-        Assert.assertTrue(tuples.contains(tmpTuple));
-
-        tmpBlock = new SubMatrix(testMatrix,2, 0, blksize);
-        tmpTuple = new LinkedList<>();
-
-        tmpTuple.add(pivot);
-        tmpTuple.add(tmpBlock);
-
-        Assert.assertTrue(tuples.contains(tmpTuple));
-
-        tmpBlock = new SubMatrix(testMatrix,2, 4, blksize);
-        tmpTuple = new LinkedList<>();
-
-        tmpTuple.add(pivot);
-        tmpTuple.add(tmpBlock);
-
-        Assert.assertTrue(tuples.contains(tmpTuple));
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result.length; j++) {
+                Assert.assertTrue(result[i][j] == expected[i][j]);
+            }
+        }
     }
 
 }

@@ -61,38 +61,4 @@ public class FloydWarshallTest {
         }
     }
 
-    @Test
-    public void testPivots() {
-        List<int[][]> pivots = new LinkedList<>();
-//        List<int[][]> pivots = getPivots(testMatrix, 2);
-
-        List<int[][]> expectedPivots = new LinkedList<>();
-
-        int[][] expectedPivot1 = new int[2][2];
-        int[][] expectedPivot2 = new int[2][2];
-        int[][] expectedPivot3 = new int[2][2];
-
-        int [] line1 = {0, 6};
-        int [] line2 = {2, 0};
-        int [] line3 = {0, 6};
-        int [] line4 = {4, 0};
-        int [] line5 = {0, Integer.MAX_VALUE};
-        int [] line6 = {1, 0};
-
-        expectedPivot1[0] = line1;
-        expectedPivot1[1] = line2;
-        expectedPivot2[0] = line3;
-        expectedPivot2[1] = line4;
-        expectedPivot3[0] = line5;
-        expectedPivot3[1] = line6;
-
-        expectedPivots.add(expectedPivot1);
-        expectedPivots.add(expectedPivot2);
-        expectedPivots.add(expectedPivot3);
-
-        Assert.assertArrayEquals(pivots.toArray(), expectedPivots.toArray());
-
-    }
-
-
 }
