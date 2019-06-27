@@ -1,8 +1,8 @@
 package test;
 
+import main.MatrixConverter;
 import org.junit.Assert;
 import org.junit.Test;
-import main.MatrixConverter;
 
 import java.util.HashSet;
 import java.util.Set;

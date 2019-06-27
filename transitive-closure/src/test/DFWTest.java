@@ -1,12 +1,11 @@
 package test;
 
-import main.DFW;
 import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.awt.*;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -39,13 +38,14 @@ public class DFWTest {
 
         int blksize = 2;
 
-        SubMatrix pivot = new SubMatrix(testMatrix, new Point(2,2), blksize);
-        Set<List<SubMatrix>> tuples = DFW.generateTuples(testMatrix, pivot, blksize);
+        SubMatrix pivot = new SubMatrix(testMatrix, 2,2, blksize);
+        Set<List<SubMatrix>> tuples = new HashSet<>();
+//        Set<List<SubMatrix>> tuples = DFW.generateTuples(testMatrix, pivot, blksize);
 
         SubMatrix tmpBlock;
         List<SubMatrix> tmpTuple;
 
-        tmpBlock = new SubMatrix(testMatrix, new Point(0, 2), blksize);
+        tmpBlock = new SubMatrix(testMatrix, 0, 2, blksize);
         tmpTuple = new LinkedList<>();
 
         tmpTuple.add(pivot);
@@ -53,7 +53,7 @@ public class DFWTest {
 
         Assert.assertTrue(tuples.contains(tmpTuple));
 
-        tmpBlock = new SubMatrix(testMatrix, new Point(4, 2), blksize);
+        tmpBlock = new SubMatrix(testMatrix, 4, 2, blksize);
         tmpTuple = new LinkedList<>();
 
         tmpTuple.add(pivot);
@@ -61,7 +61,7 @@ public class DFWTest {
 
         Assert.assertTrue(tuples.contains(tmpTuple));
 
-        tmpBlock = new SubMatrix(testMatrix, new Point(2, 0), blksize);
+        tmpBlock = new SubMatrix(testMatrix,2, 0, blksize);
         tmpTuple = new LinkedList<>();
 
         tmpTuple.add(pivot);
@@ -69,7 +69,7 @@ public class DFWTest {
 
         Assert.assertTrue(tuples.contains(tmpTuple));
 
-        tmpBlock = new SubMatrix(testMatrix, new Point(2, 4), blksize);
+        tmpBlock = new SubMatrix(testMatrix,2, 4, blksize);
         tmpTuple = new LinkedList<>();
 
         tmpTuple.add(pivot);

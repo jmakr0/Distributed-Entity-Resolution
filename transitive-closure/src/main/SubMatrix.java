@@ -1,50 +1,115 @@
 package main;
 
-import java.awt.*;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SubMatrix {
 
-    public void setMatrix(int[][] matrix) {
-        this.matrix = matrix;
+    private int matrixSize;
+    private int [][] subMatrix;
+    private Set<DFWPosition> neighborPositions;
+    private DFWPosition pos;
+
+    private boolean validPosition(int x, int y) {
+        return x >= 0 && x < this.matrixSize && y >= 0 && y < this.matrixSize;
     }
 
-    int [][] matrix;
+    private Set<DFWPosition> calculateNeighborPositions() {
+        Set<DFWPosition> positions = new HashSet<>();
+        int x = this.getX();
+        int y = this.getY();
+        int blksize = this.subMatrix.length;
 
-    public int[][] getMatrix() {
-        return matrix;
+        // down
+        if(this.validPosition(x + blksize, y)) {
+            positions.add(new DFWPosition(x + blksize, y));
+        }
+
+        // top
+        if(this.validPosition(x - blksize, y)) {
+            positions.add(new DFWPosition(x - blksize, y));
+        }
+
+        // right
+        if(this.validPosition(x, y + blksize)) {
+            positions.add(new DFWPosition(x, y + blksize));
+        }
+
+        // left
+        if(this.validPosition(x, y - blksize)) {
+            positions.add(new DFWPosition(x, y - blksize));
+        }
+
+        return positions;
     }
 
-    public Point getTopLeft() {
-        return topLeft;
+    public SubMatrix(int [][] matrix, int x, int y, int size) {
+        this(matrix, new DFWPosition(x, y), size);
     }
 
-    Point topLeft;
+    public SubMatrix(int [][] matrix, DFWPosition pos, int size) {
+        this.pos = pos;
+        this.matrixSize = matrix.length;
+        this.subMatrix = new int[size][size];
+        this.neighborPositions = this.calculateNeighborPositions();
 
-    public SubMatrix(int [][] matrix, Point topLeft, int size) {
-        this.topLeft = topLeft;
-        this.matrix = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                int subX = i + pos.getX();
+                int subY = j + pos.getY();
 
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                int posX = x + topLeft.x;
-                int posY = y + topLeft.y;
-
-                // note: quadratic matrix
-                if (posX >= matrix.length || posY >= matrix.length) {
-                    this.matrix [x][y] = Integer.MAX_VALUE;
+                // note: quadratic subMatrix
+                if (subX >= matrix.length || subY >= matrix.length) {
+                    this.subMatrix[i][j] = Integer.MAX_VALUE;
                 } else {
-                    this.matrix [x][y] = matrix[posX][posY];
+                    this.subMatrix[i][j] = matrix[subX][subY];
                 }
             }
         }
+    }
+
+    public int[][] getMatrix() {
+        return subMatrix;
+    }
+
+    public Set<DFWPosition> getNeighborPositions() {
+        return neighborPositions;
+    }
+
+    public DFWPosition getDFWPosition() {
+        return this.pos;
+    }
+
+    public int getX() {
+        return this.pos.getX();
+    }
+
+    public int getY() {
+        return this.pos.getY();
+    }
+
+    public boolean sameXTo(SubMatrix subMatrix) {
+        return this.getX() == subMatrix.getX();
+    }
+
+    public boolean sameYTo(SubMatrix subMatrix) {
+        return this.getY() == subMatrix.getY();
+    }
+
+    public int getDistanceX(SubMatrix subMatrix) {
+        return Math.abs(this.getX() - subMatrix.getX());
+    }
+
+    public int getDistanceY(SubMatrix subMatrix) {
+        return Math.abs(this.getY() - subMatrix.getY());
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof SubMatrix) {
             SubMatrix other = (SubMatrix) o;
-            return Arrays.deepEquals(other.matrix, this.matrix);
+            return Arrays.deepEquals(other.subMatrix, this.subMatrix);
         }
 
         return false;
@@ -52,6 +117,7 @@ public class SubMatrix {
 
     @Override
     public int hashCode() {
-        return this.topLeft.hashCode();
+        return this.pos.hashCode();
     }
+
 }
