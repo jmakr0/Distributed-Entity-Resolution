@@ -15,12 +15,15 @@ public class SubMatrixTest {
 
     @Before
     public void before() {
-        this.testMatrix[0] = new int[]{0, 1, 2, 3, 4, 5};
-        this.testMatrix[1] = new int[]{1, 2, 3, 4, 5, 6};
-        this.testMatrix[2] = new int[]{2, 3, 4, 5, 6, 7};
-        this.testMatrix[3] = new int[]{3, 4, 5, 6, 7, 8};
-        this.testMatrix[4] = new int[]{4, 5, 6, 7, 8, 9};
-        this.testMatrix[5] = new int[]{5, 6, 7, 8, 9, 10};
+        //                                  y
+        //                       -----------------------------
+        this.testMatrix[0] = new int[]{0, 1, 2, 3, 4, 5}; // |
+        this.testMatrix[1] = new int[]{1, 2, 3, 4, 5, 6}; // |
+        this.testMatrix[2] = new int[]{2, 3, 4, 5, 6, 7}; // |  x
+        this.testMatrix[3] = new int[]{3, 4, 5, 6, 7, 8}; // |
+        this.testMatrix[4] = new int[]{4, 5, 6, 7, 8, 9}; // |
+        this.testMatrix[5] = new int[]{5, 6, 7, 8, 9, 10};// |
+
     }
 
     @Test
@@ -68,6 +71,30 @@ public class SubMatrixTest {
         expected.add(new DFWPosition(0,2));
 
         Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
+    }
+
+    @Test
+    public void testGetMatrixValue() {
+        SubMatrix sub = new SubMatrix(testMatrix, 2, 4, 2);
+
+        Assert.assertEquals(6, sub.getMatrixValue(2, 4));
+        Assert.assertEquals(7, sub.getMatrixValue(2, 5));
+        Assert.assertEquals(7, sub.getMatrixValue(3, 4));
+        Assert.assertEquals(8, sub.getMatrixValue(3, 5));
+    }
+
+    @Test
+    public void testContains() {
+        SubMatrix sub = new SubMatrix(testMatrix, 2, 4, 2);
+
+        Assert.assertTrue(sub.contains(2, 4));
+        Assert.assertTrue(sub.contains(2, 5));
+        Assert.assertTrue(sub.contains(3, 4));
+        Assert.assertTrue(sub.contains(3, 5));
+
+        Assert.assertFalse(sub.contains(0, 0));
+        Assert.assertFalse(sub.contains(3, 6));
+        Assert.assertFalse(sub.contains(1, 4));
     }
 
 }
