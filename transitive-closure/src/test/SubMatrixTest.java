@@ -47,25 +47,53 @@ public class SubMatrixTest {
     }
 
     @Test
-    public void testNeighbors() {
-        Set<DFWPosition> result = new SubMatrix(testMatrix, 2, 2, 2).getNeighborPositions();
+    public void testPairingPositionsX() {
+        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 2);
+        SubMatrix dataBlock = new SubMatrix(testMatrix, 2, 0, 2);
+
+        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
+
+        Set<DFWPosition> expected = new HashSet<>();
+        expected.add(new DFWPosition(0,2));
+        expected.add(new DFWPosition(4,2));
+
+        Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
+    }
+
+    @Test
+    public void testPairingPositionsY() {
+        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 2);
+        SubMatrix dataBlock = new SubMatrix(testMatrix, 0, 2, 2);
+
+        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
 
         Set<DFWPosition> expected = new HashSet<>();
         expected.add(new DFWPosition(2,0));
-        expected.add(new DFWPosition(0,2));
-        expected.add(new DFWPosition(4,2));
         expected.add(new DFWPosition(2,4));
 
         Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
     }
 
     @Test
-    public void testEdgeNeighbors() {
-        Set<DFWPosition> result = new SubMatrix(testMatrix, 0, 0, 2).getNeighborPositions();
+    public void testEmptyPairingPositions() {
+        // uneven sizes
+        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 3);
+        SubMatrix dataBlock = new SubMatrix(testMatrix, 0, 2, 2);
+        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
+
+        Assert.assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testPairingPositionsEnd() {
+        SubMatrix pivot = new SubMatrix(testMatrix, 4, 4, 2);
+        SubMatrix dataBlock = new SubMatrix(testMatrix, 4, 2, 2);
+
+        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
 
         Set<DFWPosition> expected = new HashSet<>();
-        expected.add(new DFWPosition(2,0));
-        expected.add(new DFWPosition(0,2));
+        expected.add(new DFWPosition(0,4));
+        expected.add(new DFWPosition(2,4));
 
         Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
     }

@@ -17,146 +17,7 @@ public class DFW {
     private int blksize;
     private int pivotsMax;
     private int pivotIndex;
-
-    public DFW(int[][] matrix, int blksize) {
-        double pivots =  (double) matrix.length / blksize;
-
-        this.matrix = matrix;
-        this.blksize = blksize;
-        this.pivotIndex = 0;
-        this.work = new LinkedList<>();
-        this.calculated = new HashSet<>();
-
-        this.pivotsMax = (int) Math.ceil(pivots);
-        this.pivot = this.getNextPivot();
-
-        this.work.add(new DFWBlock(this.pivot));
-    }
-
-    public List<SubMatrix> getWork() {
-
-//        if(!this.work.isEmpty()) {
-////            List<SubMatrix> tuple = this.work.remove(0);
-//            this.hasData = this.work.isEmpty();
-//
-//            return tuple;
-//        }
-//
-//        this.hasData = false;
-        return null;
-    }
-
-    public void dispatch(SubMatrix block) {
-        // todo: maybe apply buildern pattern
-
-        // Pivot got calculated by worker
-        if(this.pivot.equals(block)) {
-            this.generateTuples();
-        } else {
-            this.merge(block);
-            this.calculateTriple(block);
-            this.calculated.add(block.getDFWPosition());
-            this.nextRound();
-        }
-
-        //todo: check if done with pivotMax
-    }
-
-    private void nextRound() {
-        if(this.hasData) {
-            return;
-        }
-
-        this.pivotIndex++;
-        this.pivot = this.getNextPivot();
-//        this.work = this.generateTuples();
-    }
-
-    //todo refactor
-    private void calculateTriple(SubMatrix block) {
-//        SubMatrix posPivot = this.pivot;
-//        SubMatrix posBlock = block;
-//
-//        if(posPivot.getX() == posBlock.getX()) {
-//            int d = (int) Math.abs(posPivot.getY() - posBlock.getY());
-//            Point posPivotTop = new Point((int) posPivot.getX(), (int) posPivot.getY() + d);
-//            Point posPivotDown = new Point((int) posPivot.getX(), (int) posPivot.getY() - d);
-//
-//            // top
-//            if(this.calculated.contains(posPivotTop)){
-//                List<SubMatrix> triple = new LinkedList<>();
-//                SubMatrix block2 = new SubMatrix(this.matrix, posPivotTop, this.blksize);
-//                Point posBlock3 = new Point((int) posPivot.getX() - this.blksize , (int) posPivot.getY() - this.blksize);
-//                SubMatrix block3 = new SubMatrix(this.matrix, posBlock3, this.blksize);
-//
-//                triple.add(block);
-//                triple.add(block2);
-//                triple.add(block3);
-//
-//                this.work.add(triple);
-//            }
-//
-//            // down
-//            if(this.calculated.contains(posPivotDown)){
-//                List<SubMatrix> triple = new LinkedList<>();
-//                SubMatrix block2 = new SubMatrix(this.matrix, posPivotDown, this.blksize);
-//                Point posBlock3 = new Point((int) posPivot.getX() - this.blksize , (int) posPivot.getY() + this.blksize);
-//                SubMatrix block3 = new SubMatrix(this.matrix, posBlock3, this.blksize);
-//
-//                triple.add(block);
-//                triple.add(block2);
-//                triple.add(block3);
-//
-//                this.work.add(triple);
-//            }
-//
-//        } else {
-//            int d = (int) Math.abs(posPivot.getX() - posBlock.getX());
-//            Point posPivotLeft = new Point((int) posPivot.getX() - d, (int) posPivot.getY());
-//            Point posPivotRight = new Point((int) posPivot.getX() + d, (int) posPivot.getY());
-//
-//            // left
-//            if(this.calculated.contains(posPivotLeft)){
-//                List<SubMatrix> triple = new LinkedList<>();
-//                SubMatrix block2 = new SubMatrix(this.matrix, posPivotLeft, this.blksize);
-//                Point posBlock3 = new Point((int) posPivot.getX() - this.blksize , (int) posPivot.getY() + this.blksize);
-//                SubMatrix block3 = new SubMatrix(this.matrix, posBlock3, this.blksize);
-//
-//                triple.add(block);
-//                triple.add(block2);
-//                triple.add(block3);
-//
-//                this.work.add(triple);
-//            }
-//
-//            // right
-//            if(this.calculated.contains(posPivotRight)){
-//                List<SubMatrix> triple = new LinkedList<>();
-//                SubMatrix block2 = new SubMatrix(this.matrix, posPivotRight, this.blksize);
-//                Point posBlock3 = new Point((int) posPivot.getX() + this.blksize , (int) posPivot.getY() + this.blksize);
-//                SubMatrix block3 = new SubMatrix(this.matrix, posBlock3, this.blksize);
-//
-//                triple.add(block);
-//                triple.add(block2);
-//                triple.add(block3);
-//
-//                this.work.add(triple);
-//            }
-//        }
-    }
-
-    private void merge(SubMatrix block) {
-        int x = block.getX();
-        int y = block.getY();
-        int [][] data = block.getMatrix();
-        int size = data.length;
-
-        for (int i = x; i < x + size; i++) {
-            for (int j = y; j < y + size; j++) {
-                this.matrix[i][j] = data[i][j];
-            }
-        }
-    }
+    private int triplePending;
 
     private SubMatrix getNextPivot() {
         if(this.pivotIndex > this.pivotsMax) {
@@ -166,8 +27,10 @@ public class DFW {
         // note: quadratic matrix
         int x = this.blksize * this.pivotIndex;
         int y = x;
+        int size = this.matrix.length;
 
         this.pivotIndex++;
+        this.triplePending = size * size - (size * 2 - 1);
 
         return new SubMatrix(matrix, x, y, this.blksize);
     }
@@ -175,6 +38,7 @@ public class DFW {
     private void generateTuples() {
 
         for (int i = 0; i < this.matrix.length; i+= this.blksize) {
+
             if (i != this.pivot.getX()) {
                 SubMatrix target = new SubMatrix(this.matrix, i, this.pivot.getY(), this.blksize);
                 DFWBlock block = new DFWBlock(target);
@@ -195,31 +59,110 @@ public class DFW {
 
     }
 
+    private void merge(SubMatrix block) {
+        int x = block.getX();
+        int y = block.getY();
+        int [][] data = block.getMatrix();
+        int size = data.length;
 
-//
-//            // phase 2
-//            List<SubMatrix> subMatrices = new LinkedList<>();
-//
-//            for (int i = 0; i < matrix.length; i+=blksize) {
-//                if (i != x) {
-//                    SubMatrix s = new SubMatrix(matrix, new Point(x, i), blksize);
-//                    subMatrices.add(s);
-//                }
-//
-//            }
-//
-//            for (int j = 0; j < matrix.length; j+=blksize) {
-//                if (j != y) {
-//                    SubMatrix s = new SubMatrix(matrix, new Point(j, y), blksize);
-//                    subMatrices.add(s);
-//                }
-//            }
-//
-//
-//
-//        }
+        for (int i = x; i < x + size; i++) {
+            for (int j = y; j < y + size; j++) {
+                this.matrix[i][j] = data[i][j];
+            }
+        }
 
+        this.calculated.add(block.getDFWPosition());
+    }
+
+    private void generateTriple(SubMatrix block) {
+        Set<DFWPosition> pairingPositions = this.pivot.getPairingPositions(block);
+
+        for (DFWPosition pos: pairingPositions) {
+
+            // block is available
+            if(this.calculated.contains(pos)) {
+                DFWBlock work = new DFWBlock(block);
+                SubMatrix path = new SubMatrix(this.matrix, pos, this.blksize);
+                work.addPath(path);
+
+                this.work.add(work);
+            }
+        }
 
     }
 
-//}
+    private boolean isTuple(SubMatrix block) {
+        DFWPosition pos = block.getDFWPosition();
+
+        return !this.pivot.equals(pos) && this.pivot.getPairingPositions(block).contains(pos);
+    }
+
+
+    private boolean isTriple(SubMatrix block) {
+        DFWPosition pos = block.getDFWPosition();
+
+        return !this.pivot.equals(pos) && !this.pivot.getPairingPositions(block).contains(pos);
+    }
+
+    private void nextRound() {
+        if(this.hasData && this.triplePending > 0) {
+            return;
+        }
+
+        this.pivotIndex++;
+        this.pivot = this.getNextPivot();
+        this.work.add(new DFWBlock(this.pivot));
+        this.calculated.clear();
+    }
+
+    public DFW(int[][] matrix, int blksize) {
+        double pivots =  (double) matrix.length / blksize;
+
+        this.matrix = matrix;
+        this.blksize = blksize;
+        this.pivotIndex = 0;
+        this.work = new LinkedList<>();
+        this.calculated = new HashSet<>();
+
+        this.pivotsMax = (int) Math.ceil(pivots);
+        this.pivot = this.getNextPivot();
+
+        this.work.add(new DFWBlock(this.pivot));
+    }
+
+    public DFWBlock getWork() {
+
+        if(!this.work.isEmpty()) {
+            DFWBlock work = this.work.remove(0);
+            this.hasData = this.work.isEmpty();
+
+            return work;
+        }
+
+        this.hasData = false;
+        return null;
+    }
+
+    public void dispatch(SubMatrix block) {
+        // todo: maybe apply builder pattern
+
+        // Pivot got calculated by worker
+        if (this.pivot.equals(block)) {
+
+            this.generateTuples();
+
+        } else if (this.isTuple(block)) {
+
+            this.merge(block);
+            this.generateTriple(block);
+
+        } else if (this.isTriple(block)) {
+
+            this.merge(block);
+            this.triplePending--;
+            this.nextRound();
+
+        }
+    }
+
+}
