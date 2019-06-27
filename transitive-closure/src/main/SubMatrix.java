@@ -127,6 +127,36 @@ public class SubMatrix {
         return positions;
     }
 
+    public boolean contains(int x, int y) {
+        int size = this.subMatrix.length;
+
+        boolean xRange = ((this.getX() + size)) > x && (x >= this.getX());
+        boolean yRange = ((this.getY() + size)) > y && (y >= this.getY());
+        return xRange && yRange;
+    }
+
+    public void setMatrixValue(int x, int y, int update) {
+        int internX = getInternX(x);
+        int internY = getInternY(y);
+
+        subMatrix[internX][internY] = update;
+    }
+
+    public int getMatrixValue(int x, int y) {
+        int internX = getInternX(x);
+        int internY = getInternY(y);
+
+        return subMatrix[internX][internY];
+    }
+
+    private int getInternX(int x) {
+        return x - this.getX();
+    }
+
+    private int getInternY(int y) {
+        return y - this.getY();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof SubMatrix) {
