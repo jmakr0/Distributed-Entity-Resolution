@@ -10,7 +10,6 @@ public class DFW {
 
     private SubMatrix pivot;
 
-    private boolean done = false;
     private int[][] matrix;
     private int blksize;
     private int pivotsMax;
@@ -134,7 +133,6 @@ public class DFW {
         this.calculated.clear();
         this.cross.clear();
         this.cross.addAll(this.calculateCross());
-        this.done = this.pivotIndex > this.pivotsMax;
     }
 
     public DFW(int[][] matrix, int blksize) {
@@ -156,7 +154,7 @@ public class DFW {
     }
 
     public boolean isDone() {
-        return this.done;
+        return this.work.isEmpty() || this.pivotIndex > this.pivotsMax;
     }
 
     public int[][] getMatrix() {
@@ -171,12 +169,10 @@ public class DFW {
             return work;
         }
 
-        this.done = true;
         return null;
     }
 
     public void dispatch(SubMatrix block) {
-        // todo: maybe apply builder pattern
 
         // Pivot got calculated by worker
         if (this.pivot.equals(block)) {
