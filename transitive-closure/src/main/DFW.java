@@ -25,7 +25,7 @@ public class DFW {
         // note: quadratic matrix
         int x = this.blksize * this.pivotIndex;
         int y = x;
-        int size = this.matrix.length;
+        int size = this.pivotsMax;
 
         this.pivotIndex++;
         this.triplePending = size * size - (size * 2 - 1);
@@ -84,7 +84,7 @@ public class DFW {
 
         for (int i = x; i < x + size; i++) {
             for (int j = y; j < y + size; j++) {
-                this.matrix[i][j] = block.getMatrixValue(i, y);
+                this.matrix[i][j] = block.getMatrixValue(i, j);
             }
         }
     }
@@ -123,7 +123,7 @@ public class DFW {
     }
 
     private void nextRound() {
-        if(this.done && this.triplePending > 0) {
+        if(this.triplePending > 0) {
             return;
         }
 
@@ -133,7 +133,7 @@ public class DFW {
         this.calculated.clear();
         this.cross.clear();
         this.cross.addAll(this.calculateCross());
-        this.done = this.pivotIndex == this.pivotsMax;
+        this.done = this.pivotIndex > this.pivotsMax;
     }
 
     public DFW(int[][] matrix, int blksize) {
