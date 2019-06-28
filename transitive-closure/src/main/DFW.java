@@ -80,10 +80,11 @@ public class DFW {
         int x = block.getX();
         int y = block.getY();
         int [][] data = block.getSubMatrix();
+        int max = this.matrix.length;
         int size = data.length;
 
-        for (int i = x; i < x + size; i++) {
-            for (int j = y; j < y + size; j++) {
+        for (int i = x; i < x + size && i < max; i++) {
+            for (int j = y; j < y + size && j < max; j++) {
                 this.matrix[i][j] = block.getMatrixValue(i, j);
             }
         }
@@ -180,6 +181,7 @@ public class DFW {
         // Pivot got calculated by worker
         if (this.pivot.equals(block)) {
 
+            this.merge(block);
             this.generateTuples();
 
         } else if (this.isTuple(block)) {

@@ -33,7 +33,7 @@ public class DFWTest {
 
     @Test
     public void getWorkTest() {
-        DFW dfw = new DFW(testMatrix, 2);
+        DFW dfw = new DFW(testMatrix, 4);
 
         int[][] expected = new int[6][6];
         expected[0] = new int[]{0,  6,  1, 6, 4, 8};
