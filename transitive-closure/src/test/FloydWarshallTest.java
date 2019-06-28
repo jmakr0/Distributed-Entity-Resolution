@@ -5,9 +5,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.LinkedList;
-import java.util.List;
-
 public class FloydWarshallTest {
 
     int[][] testMatrix = new int[6][6];
