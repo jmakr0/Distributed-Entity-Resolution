@@ -137,10 +137,10 @@ public class SubMatrixTest {
         DFWPosition p5 = new DFWPosition(1, 2);
         DFWPosition p6 = new DFWPosition(1, 1);
 
-        Assert.assertEquals(pivot.getTarget(p1, p2), p3);
-        Assert.assertEquals(pivot.getTarget(p2, p1), p3);
-        Assert.assertEquals(pivot.getTarget(p4, p5), p6);
-        Assert.assertEquals(pivot.getTarget(p5, p4), p6);
+        Assert.assertEquals(pivot.getTargetPosition(p1, p2), p3);
+        Assert.assertEquals(pivot.getTargetPosition(p2, p1), p3);
+        Assert.assertEquals(pivot.getTargetPosition(p4, p5), p6);
+        Assert.assertEquals(pivot.getTargetPosition(p5, p4), p6);
     }
 
 }

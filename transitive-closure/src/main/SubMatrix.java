@@ -91,7 +91,7 @@ public class SubMatrix {
         }
     }
 
-    public DFWPosition getTarget(DFWPosition p1, DFWPosition p2){
+    public DFWPosition getTargetPosition(DFWPosition p1, DFWPosition p2){
         int x;
         int y;
 

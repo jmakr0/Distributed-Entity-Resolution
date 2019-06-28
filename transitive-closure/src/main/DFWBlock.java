@@ -8,6 +8,10 @@ public class DFWBlock {
     private SubMatrix target;
     private List<SubMatrix> paths;
 
+    public DFWBlock(SubMatrix target, SubMatrix pivot) {
+        this(target, pivot.getPosition());
+    }
+
     public DFWBlock(SubMatrix target, DFWPosition pivot) {
         this.target = target;
         this.pivot = pivot;

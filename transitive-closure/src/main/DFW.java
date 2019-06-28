@@ -4,36 +4,36 @@ import java.util.*;
 
 public class DFW {
 
-    private List<DFWBlock> work;
+    private List<DFWBlock> pendingBlocks;
     private Set<DFWPosition> calculated;
-    private Set<DFWPosition> cross;
+    private Set<DFWPosition> crossPositions;
 
     private SubMatrix pivot;
+    private int pivotIndex;
+    private int pivotsMax;
 
     private int[][] matrix;
     private int blksize;
-    private int pivotsMax;
-    private int pivotIndex;
-    private int triplePending;
 
-    private SubMatrix getNextPivot() {
+    private int pendingTriplesCount;
+
+    private SubMatrix getNextPivot(int pivotIndex) {
         if(this.pivotIndex > this.pivotsMax) {
             throw new IndexOutOfBoundsException("Next pivot does not exist");
         }
 
         // note: quadratic matrix
-        int x = this.blksize * this.pivotIndex;
+        int x = this.blksize * pivotIndex;
         int y = x;
-        int size = this.pivotsMax;
-
-        this.pivotIndex++;
-        this.triplePending = size * size - (size * 2 - 1);
 
         return new SubMatrix(matrix, x, y, this.blksize);
     }
 
-    private Set<DFWPosition> calculateCross() {
+    private int calculateTripleCount(int pivotSize){
+        return pivotSize * pivotSize - (pivotSize * 2 - 1);
+    }
 
+    private Set<DFWPosition> calculateCrossPositions() {
         Set<DFWPosition> positions = new HashSet<>();
 
         for (int x = 0; x < this.matrix.length; x += this.blksize) {
@@ -57,18 +57,18 @@ public class DFW {
 
             if (i != this.pivot.getX()) {
                 SubMatrix target = new SubMatrix(this.matrix, i, this.pivot.getY(), this.blksize);
-                DFWBlock block = new DFWBlock(target, this.pivot.getPosition());
+                DFWBlock block = new DFWBlock(target, this.pivot);
                 block.addPath(this.pivot);
 
-                this.work.add(block);
+                this.pendingBlocks.add(block);
             }
 
             if (i != this.pivot.getY()) {
                 SubMatrix target = new SubMatrix(matrix, this.pivot.getX(), i, blksize);
-                DFWBlock block = new DFWBlock(target, this.pivot.getPosition());
+                DFWBlock block = new DFWBlock(target, this.pivot);
                 block.addPath(this.pivot);
 
-                this.work.add(block);
+                this.pendingBlocks.add(block);
             }
 
         }
@@ -89,21 +89,23 @@ public class DFW {
         }
     }
 
-    private void generateTriple(SubMatrix block) {
-        Set<DFWPosition> pairingPositions = this.pivot.getPairingPositions(block);
+    private void generateTriple(SubMatrix other) {
+        Set<DFWPosition> pairingPositions = this.pivot.getPairingPositions(other);
 
         for (DFWPosition pos: pairingPositions) {
 
             // block is available
             if(this.calculated.contains(pos)) {
-                DFWPosition targetPos = this.pivot.getTarget(block.getPosition(), pos);
+                DFWPosition targetPos = this.pivot.getTargetPosition(other.getPosition(), pos);
                 SubMatrix target = new SubMatrix(this.matrix, targetPos, this.blksize);
-                DFWBlock work = new DFWBlock(target, this.pivot.getPosition());
-                SubMatrix path = new SubMatrix(this.matrix, pos, this.blksize);
-                work.addPath(block);
-                work.addPath(path);
 
-                this.work.add(work);
+                DFWBlock block = new DFWBlock(target, this.pivot);
+                SubMatrix path = new SubMatrix(this.matrix, pos, this.blksize);
+
+                block.addPath(other);
+                block.addPath(path);
+
+                this.pendingBlocks.add(block);
             }
         }
 
@@ -116,61 +118,65 @@ public class DFW {
     private boolean isTuple(SubMatrix block) {
         DFWPosition pos = block.getPosition();
 
-        return !this.pivot.equals(pos) && this.cross.contains(pos);
+        return !this.pivot.equals(pos) && this.crossPositions.contains(pos);
     }
 
 
     private boolean isTriple(SubMatrix block) {
         DFWPosition pos = block.getPosition();
 
-        return !this.pivot.equals(pos) && !this.cross.contains(pos);
+        return !this.pivot.equals(pos) && !this.crossPositions.contains(pos);
     }
 
-    private void nextRound() {
-        if(this.triplePending > 0) {
+    private void nextPhase() {
+        if(this.pendingTriplesCount > 0) {
             return;
         }
 
-        this.pivot = this.getNextPivot();
-        this.work.add(new DFWBlock(this.pivot, this.pivot.getPosition()));
+        this.pivot = this.getNextPivot(this.pivotIndex);
+        this.pivotIndex++;
+        this.pendingTriplesCount = this.calculateTripleCount(this.pivotsMax);
+
+        this.pendingBlocks.add(new DFWBlock(this.pivot, this.pivot));
 
         this.calculated.clear();
-        this.cross.clear();
-        this.cross.addAll(this.calculateCross());
+        this.crossPositions.clear();
+        this.crossPositions.addAll(this.calculateCrossPositions());
     }
 
     public DFW(int[][] matrix, int blksize) {
-        double pivots =  (double) matrix.length / blksize;
-
         this.matrix = matrix;
         this.blksize = blksize;
         this.pivotIndex = 0;
-        this.work = new LinkedList<>();
+
+        this.pendingBlocks = new LinkedList<>();
         this.calculated = new HashSet<>();
-        this.cross = new HashSet<>();
+        this.crossPositions = new HashSet<>();
 
-        this.pivotsMax = (int) Math.ceil(pivots);
-        this.pivot = this.getNextPivot();
+        this.pivotsMax = (int) Math.ceil((double) matrix.length / blksize);
+        this.pivot = this.getNextPivot(this.pivotIndex);
+        this.pivotIndex++;
+        this.pendingTriplesCount = this.calculateTripleCount(this.pivotsMax);
 
-        this.cross.addAll(this.calculateCross());
+        this.crossPositions.addAll(this.calculateCrossPositions());
 
-        this.work.add(new DFWBlock(this.pivot, this.pivot.getPosition()));
+        this.pendingBlocks.add(new DFWBlock(this.pivot, this.pivot));
     }
 
-    public boolean isDone() {
-        return this.work.isEmpty() || this.pivotIndex > this.pivotsMax;
+    public boolean calculated() {
+        return this.pendingBlocks.isEmpty() || this.pivotIndex > this.pivotsMax;
     }
 
     public int[][] getMatrix() {
         return this.matrix;
     }
 
-    public DFWBlock getWork() {
+    public DFWBlock getBlock() {
 
-        if(!this.work.isEmpty()) {
-            DFWBlock work = this.work.remove(0);
+        if(!this.pendingBlocks.isEmpty()) {
+            DFWBlock block = this.pendingBlocks.remove(0);
 
-            return work;
+            return block;
         }
 
         return null;
@@ -178,7 +184,6 @@ public class DFW {
 
     public void dispatch(SubMatrix block) {
 
-        // Pivot got calculated by worker
         if (this.isPivot(block)) {
 
             this.merge(block);
@@ -193,8 +198,8 @@ public class DFW {
         } else if (this.isTriple(block)) {
 
             this.merge(block);
-            this.triplePending--;
-            this.nextRound();
+            this.pendingTriplesCount--;
+            this.nextPhase();
 
         }
     }

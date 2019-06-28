@@ -2,8 +2,6 @@ package test;
 
 import main.DFW;
 import main.DFWBlock;
-import main.FloydWarshall;
-import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,8 +37,8 @@ public class DFWTest {
     private int[][] calculate(int blksize) {
         DFW dfw = new DFW(testMatrix, blksize);
 
-        while(!dfw.isDone()) {
-            DFWBlock block = dfw.getWork();
+        while(!dfw.calculated()) {
+            DFWBlock block = dfw.getBlock();
             block.calculate();
             dfw.dispatch(block.getTarget());
         }
@@ -72,6 +70,13 @@ public class DFWTest {
     @Test
     public void blocksize4Test() {
         int[][] result = this.calculate(4);
+
+        Assert.assertTrue(Arrays.deepEquals(testMatrixExpected, result));
+    }
+
+    @Test
+    public void blocksize5Test() {
+        int[][] result = this.calculate(5);
 
         Assert.assertTrue(Arrays.deepEquals(testMatrixExpected, result));
     }
