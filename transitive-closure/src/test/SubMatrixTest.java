@@ -34,7 +34,7 @@ public class SubMatrixTest {
         expected[0] = new int[]{2, 3};
         expected[1] = new int[]{3, 4};
 
-        Assert.assertArrayEquals(expected, result.getMatrix());
+        Assert.assertArrayEquals(expected, result.getSubMatrix());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class SubMatrixTest {
         expected[1] = new int[]{9, 10, Integer.MAX_VALUE};
         expected[2] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
 
-        Assert.assertArrayEquals(expected, result.getMatrix());
+        Assert.assertArrayEquals(expected, result.getSubMatrix());
     }
 
     @Test
@@ -123,6 +123,24 @@ public class SubMatrixTest {
         Assert.assertFalse(sub.contains(0, 0));
         Assert.assertFalse(sub.contains(3, 6));
         Assert.assertFalse(sub.contains(1, 4));
+    }
+
+    @Test
+    public void testTarget() {
+        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 1);
+
+        DFWPosition p1 = new DFWPosition(2, 5);
+        DFWPosition p2 = new DFWPosition(4, 2);
+        DFWPosition p3 = new DFWPosition(4, 5);
+
+        DFWPosition p4 = new DFWPosition(2, 1);
+        DFWPosition p5 = new DFWPosition(1, 2);
+        DFWPosition p6 = new DFWPosition(1, 1);
+
+        Assert.assertEquals(pivot.getTarget(p1, p2), p3);
+        Assert.assertEquals(pivot.getTarget(p2, p1), p3);
+        Assert.assertEquals(pivot.getTarget(p4, p5), p6);
+        Assert.assertEquals(pivot.getTarget(p5, p4), p6);
     }
 
 }

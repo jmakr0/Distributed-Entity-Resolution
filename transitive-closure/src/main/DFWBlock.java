@@ -14,12 +14,6 @@ public class DFWBlock {
         this.paths = new LinkedList<>();
     }
 
-    // TODO: remove this constructor!
-    public DFWBlock(SubMatrix target) {
-        this.target = target;
-        this.paths = new LinkedList<>();
-    }
-
     public SubMatrix getTarget() {
         return target;
     }
@@ -37,7 +31,7 @@ public class DFWBlock {
         int targetX = (int) target.getX();
         int targetY = (int) target.getY();
 
-        int size = target.getMatrix().length;
+        int size = target.getSubMatrix().length;
 
         for (int k = this.pivot.getX(); k < size + this.pivot.getX(); k++) {
             for (int x = targetX; x < targetX + size; x++) {

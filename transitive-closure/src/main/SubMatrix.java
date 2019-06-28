@@ -93,8 +93,37 @@ public class SubMatrix {
         }
     }
 
-    // todo: getSubMatrix
-    public int[][] getMatrix() {
+    public DFWPosition getTarget(DFWPosition p1, DFWPosition p2){
+        int x = 0;
+        int y = 0;
+
+        // same x
+        if(this.getX() == p1.getX()) {
+            y = p1.getY();
+            int dx = Math.abs(this.getX() - p2.getX());
+
+            if (p2.getX() > this.getX()) {
+                x = p1.getX() + dx;
+            } else {
+                x = p1.getX() - dx;
+            }
+        }
+        // same y
+        else {
+            x = p1.getX();
+            int dy = Math.abs(this.getY() - p2.getY());
+
+            if (p2.getY() > this.getY()) {
+                y = p1.getY() + dy;
+            } else {
+                y = p1.getY() - dy;
+            }
+        }
+
+        return new DFWPosition(x, y);
+    }
+
+    public int[][] getSubMatrix() {
         return subMatrix;
     }
 
@@ -161,7 +190,7 @@ public class SubMatrix {
     public boolean equals(Object o) {
         if (o instanceof SubMatrix) {
             SubMatrix other = (SubMatrix) o;
-            return Arrays.deepEquals(other.subMatrix, this.subMatrix);
+            return this.getX() == other.getX() && this.getY() == other.getY() && Arrays.deepEquals(other.subMatrix, this.subMatrix);
         }
 
         return false;

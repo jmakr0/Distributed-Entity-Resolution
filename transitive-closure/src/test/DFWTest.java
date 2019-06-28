@@ -45,9 +45,11 @@ public class DFWTest {
 
         while(!dfw.isDone()) {
             DFWBlock block = dfw.getWork();
+            block.calculate();
+            dfw.dispatch(block.getTarget());
         }
 
-        int[][] result = FloydWarshall.apply(testMatrix);
+        int[][] result = dfw.getMatrix();
 
         for (int i = 0; i < result.length; i++) {
             for (int j = 0; j < result.length; j++) {

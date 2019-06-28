@@ -7,10 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 public class DFWBlockTest {
 
@@ -45,7 +42,7 @@ public class DFWBlockTest {
 
         dfwBlock.calculate();
 
-        int[][] targetMatrix = dfwBlock.getTarget().getMatrix();
+        int[][] targetMatrix = dfwBlock.getTarget().getSubMatrix();
 
         int[][] expected = new int[2][2];
         expected[0] = new int[]{2, 1};
@@ -68,7 +65,7 @@ public class DFWBlockTest {
 
         dfwBlock.calculate();
 
-        int[][] targetMatrix = dfwBlock.getTarget().getMatrix();
+        int[][] targetMatrix = dfwBlock.getTarget().getSubMatrix();
 
         int[][] expected = new int[2][2];
         expected[0] = new int[]{0, 5};
