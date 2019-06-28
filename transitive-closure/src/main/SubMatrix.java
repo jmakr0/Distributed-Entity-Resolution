@@ -137,6 +137,10 @@ public class SubMatrix {
         return this.position.getY();
     }
 
+    public int getSubMatrixSize() {
+        return this.subMatrixSize;
+    }
+
     public Set<DFWPosition> getPairingPositions(SubMatrix other) {
         boolean sameSize = this.subMatrixSize == other.subMatrixSize;
         boolean sameX = this.position.sameX(other.getX());

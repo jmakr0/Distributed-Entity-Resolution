@@ -6,71 +6,15 @@ import java.util.List;
 public class DFWBlock {
     private DFWPosition pivot;
     private SubMatrix target;
-    private List<SubMatrix> paths;
-
-    public DFWBlock(SubMatrix target, SubMatrix pivot) {
-        this(target, pivot.getPosition());
-    }
-
-    public DFWBlock(SubMatrix target, DFWPosition pivot) {
-        this.target = target;
-        this.pivot = pivot;
-        this.paths = new LinkedList<>();
-    }
-
-    public SubMatrix getTarget() {
-        return target;
-    }
-
-    public List<SubMatrix> getPaths() {
-        return paths;
-    }
-
-    public void addPath(SubMatrix path){
-        this.paths.add(path);
-    }
-
-    public void calculate() {
-
-        int targetX = (int) target.getX();
-        int targetY = (int) target.getY();
-
-        int size = target.getSubMatrix().length;
-
-        for (int k = this.pivot.getX(); k < size + this.pivot.getX(); k++) {
-            for (int x = targetX; x < targetX + size; x++) {
-                for (int y = targetY; y < targetY + size; y++) {
-                    if ((x != k) && (y != k)) {
-                        int currentValue = target.getMatrixValue(x, y);
-                        // we do not know which of submatrix in "paths" has the needed value/index
-                        int one = this.getValues(x, k);
-                        int two = this.getValues(k, y);
-                        int newPath = one + two;
-//                        // check int overflow !!
-                        if (one == Integer.MAX_VALUE || two == Integer.MAX_VALUE) {
-                            newPath = Integer.MAX_VALUE;
-                        }
-                        int update = Math.min(currentValue, newPath);
-                        target.setMatrixValue(x, y, update);
-                    }
-                }
-            }
-        }
-    }
-
-    private int getValues(int x, int y) {
-        SubMatrix responsibleMatrix = getResponsibleMatrix(x, y);
-        return responsibleMatrix.getMatrixValue(x, y);
-    }
+    private List<SubMatrix> subMatrices;
 
     private SubMatrix getResponsibleMatrix(int x, int y) {
         List<SubMatrix> searchSpace = new LinkedList<>();
         searchSpace.add(this.target);
-        searchSpace.addAll(this.paths);
+        searchSpace.addAll(this.subMatrices);
 
-        for (int i = 0; i < searchSpace.size(); i++) {
-            SubMatrix sub = searchSpace.get(i);
-            if (sub.contains(x,y)) {
+        for (SubMatrix sub : searchSpace) {
+            if (sub.contains(x, y)) {
                 return sub;
             }
         }
@@ -79,4 +23,57 @@ public class DFWBlock {
         assert false;
         return null;
     }
+
+    private int getValue(int x, int y) {
+        SubMatrix responsibleMatrix = getResponsibleMatrix(x, y);
+
+        assert responsibleMatrix != null;
+        return responsibleMatrix.getMatrixValue(x, y);
+    }
+
+    public DFWBlock(SubMatrix target, SubMatrix pivot) {
+        this(target, pivot.getPosition());
+    }
+
+    public DFWBlock(SubMatrix target, DFWPosition pivot) {
+        this.target = target;
+        this.pivot = pivot;
+        this.subMatrices = new LinkedList<>();
+    }
+
+    public SubMatrix getTarget() {
+        return target;
+    }
+
+    public void addSubMatrix(SubMatrix submatrix){
+        this.subMatrices.add(submatrix);
+    }
+
+    public void calculate() {
+        int pivotX = this.pivot.getX();
+        int targetX = target.getX();
+        int targetY = target.getY();
+        int size = target.getSubMatrixSize();
+
+        for (int k = pivotX; k < size + pivotX; k++) {
+            for (int x = targetX; x < targetX + size; x++) {
+                for (int y = targetY; y < targetY + size; y++) {
+                    if ((x != k) && (y != k)) {
+                        int currentValue = target.getMatrixValue(x, y);
+                        int value1 = this.getValue(x, k);
+                        int value2 = this.getValue(k, y);
+                        int newValue = value1 + value2;
+
+                        // check int overflow
+                        if (value1 == Integer.MAX_VALUE || value2 == Integer.MAX_VALUE) {
+                            newValue = Integer.MAX_VALUE;
+                        }
+
+                        target.setMatrixValue(x, y, Math.min(currentValue, newValue));
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -38,7 +38,7 @@ public class DFWBlockTest {
         SubMatrix path = new SubMatrix(this.testMatrix, 2, 2, 2);
 
         DFWBlock dfwBlock = new DFWBlock(target, pivot);
-        dfwBlock.addPath(path);
+        dfwBlock.addSubMatrix(path);
 
         dfwBlock.calculate();
 
@@ -60,8 +60,8 @@ public class DFWBlockTest {
         SubMatrix p2 = new SubMatrix(this.testMatrix, 6, 2, 2);
 
         DFWBlock dfwBlock = new DFWBlock(target, pivot);
-        dfwBlock.addPath(p1);
-        dfwBlock.addPath(p2);
+        dfwBlock.addSubMatrix(p1);
+        dfwBlock.addSubMatrix(p2);
 
         dfwBlock.calculate();
 
@@ -71,7 +71,7 @@ public class DFWBlockTest {
         expected[0] = new int[]{0, 5};
         expected[1] = new int[]{3, 0};
 
-            Assert.assertTrue(Arrays.deepEquals(expected, targetMatrix));
+        Assert.assertTrue(Arrays.deepEquals(expected, targetMatrix));
     }
 
 }

@@ -58,7 +58,7 @@ public class DFW {
             if (i != this.pivot.getX()) {
                 SubMatrix target = new SubMatrix(this.matrix, i, this.pivot.getY(), this.blksize);
                 DFWBlock block = new DFWBlock(target, this.pivot);
-                block.addPath(this.pivot);
+                block.addSubMatrix(this.pivot);
 
                 this.pendingBlocks.add(block);
             }
@@ -66,7 +66,7 @@ public class DFW {
             if (i != this.pivot.getY()) {
                 SubMatrix target = new SubMatrix(matrix, this.pivot.getX(), i, blksize);
                 DFWBlock block = new DFWBlock(target, this.pivot);
-                block.addPath(this.pivot);
+                block.addSubMatrix(this.pivot);
 
                 this.pendingBlocks.add(block);
             }
@@ -102,8 +102,8 @@ public class DFW {
                 DFWBlock block = new DFWBlock(target, this.pivot);
                 SubMatrix path = new SubMatrix(this.matrix, pos, this.blksize);
 
-                block.addPath(other);
-                block.addPath(path);
+                block.addSubMatrix(other);
+                block.addSubMatrix(path);
 
                 this.pendingBlocks.add(block);
             }

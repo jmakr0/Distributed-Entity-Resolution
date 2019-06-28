@@ -16,21 +16,13 @@ public class FloydWarshallTest {
     public void before() {
         // Example taken from:
         // Optimierung für Studierende der Informatik (Uni Hamburg)
-        // THOMAS ANDREAE
-        // Wintersemester 2015/16
-        int [] line1 = {0                   , 6                 , 1                , 10                , Integer.MAX_VALUE  , Integer.MAX_VALUE};
-        int [] line2 = {2                   , 0                 , 4                , Integer.MAX_VALUE , 9                  , Integer.MAX_VALUE};
-        int [] line3 = {Integer.MAX_VALUE   , 6                 , 0                , 6                 , 3                  , Integer.MAX_VALUE};
-        int [] line4 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , 4                , 0                 , 4                  , 2};
-        int [] line5 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , Integer.MAX_VALUE, 2                 , 0                  , Integer.MAX_VALUE};
-        int [] line6 = {Integer.MAX_VALUE   , Integer.MAX_VALUE , Integer.MAX_VALUE, Integer.MAX_VALUE , 1                  , 0};
-
-        testMatrix[0] = line1;
-        testMatrix[1] = line2;
-        testMatrix[2] = line3;
-        testMatrix[3] = line4;
-        testMatrix[4] = line5;
-        testMatrix[5] = line6;
+        // THOMAS ANDREAE, Wintersemester 2015/16
+        testMatrix[0] = new int[]{0, 6, 1, 10, Integer.MAX_VALUE, Integer.MAX_VALUE};
+        testMatrix[1] = new int[]{2, 0, 4, Integer.MAX_VALUE, 9, Integer.MAX_VALUE};
+        testMatrix[2] = new int[]{Integer.MAX_VALUE, 6, 0, 6, 3, Integer.MAX_VALUE};
+        testMatrix[3] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, 4, 0, 4, 2};
+        testMatrix[4] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 2, 0, Integer.MAX_VALUE};
+        testMatrix[5] = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE , 1, 0};
     }
 
     @Test
