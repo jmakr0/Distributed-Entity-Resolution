@@ -18,6 +18,14 @@ public class DFWPosition {
         return y;
     }
 
+    public boolean sameX(int x) {
+        return this.x == x;
+    }
+
+    public boolean sameY(int y) {
+        return this.y == y;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof DFWPosition) {

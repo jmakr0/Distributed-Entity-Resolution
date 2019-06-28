@@ -57,7 +57,7 @@ public class DFW {
 
             if (i != this.pivot.getX()) {
                 SubMatrix target = new SubMatrix(this.matrix, i, this.pivot.getY(), this.blksize);
-                DFWBlock block = new DFWBlock(target, this.pivot.getDFWPosition());
+                DFWBlock block = new DFWBlock(target, this.pivot.getPosition());
                 block.addPath(this.pivot);
 
                 this.work.add(block);
@@ -65,7 +65,7 @@ public class DFW {
 
             if (i != this.pivot.getY()) {
                 SubMatrix target = new SubMatrix(matrix, this.pivot.getX(), i, blksize);
-                DFWBlock block = new DFWBlock(target, this.pivot.getDFWPosition());
+                DFWBlock block = new DFWBlock(target, this.pivot.getPosition());
                 block.addPath(this.pivot);
 
                 this.work.add(block);
@@ -96,9 +96,9 @@ public class DFW {
 
             // block is available
             if(this.calculated.contains(pos)) {
-                DFWPosition targetPos = this.pivot.getTarget(block.getDFWPosition(), pos);
+                DFWPosition targetPos = this.pivot.getTarget(block.getPosition(), pos);
                 SubMatrix target = new SubMatrix(this.matrix, targetPos, this.blksize);
-                DFWBlock work = new DFWBlock(target, this.pivot.getDFWPosition());
+                DFWBlock work = new DFWBlock(target, this.pivot.getPosition());
                 SubMatrix path = new SubMatrix(this.matrix, pos, this.blksize);
                 work.addPath(block);
                 work.addPath(path);
@@ -109,15 +109,19 @@ public class DFW {
 
     }
 
+    private boolean isPivot(SubMatrix block) {
+        return this.pivot.equals(block);
+    }
+
     private boolean isTuple(SubMatrix block) {
-        DFWPosition pos = block.getDFWPosition();
+        DFWPosition pos = block.getPosition();
 
         return !this.pivot.equals(pos) && this.cross.contains(pos);
     }
 
 
     private boolean isTriple(SubMatrix block) {
-        DFWPosition pos = block.getDFWPosition();
+        DFWPosition pos = block.getPosition();
 
         return !this.pivot.equals(pos) && !this.cross.contains(pos);
     }
@@ -128,7 +132,7 @@ public class DFW {
         }
 
         this.pivot = this.getNextPivot();
-        this.work.add(new DFWBlock(this.pivot, this.pivot.getDFWPosition()));
+        this.work.add(new DFWBlock(this.pivot, this.pivot.getPosition()));
 
         this.calculated.clear();
         this.cross.clear();
@@ -150,7 +154,7 @@ public class DFW {
 
         this.cross.addAll(this.calculateCross());
 
-        this.work.add(new DFWBlock(this.pivot, this.pivot.getDFWPosition()));
+        this.work.add(new DFWBlock(this.pivot, this.pivot.getPosition()));
     }
 
     public boolean isDone() {
@@ -175,7 +179,7 @@ public class DFW {
     public void dispatch(SubMatrix block) {
 
         // Pivot got calculated by worker
-        if (this.pivot.equals(block)) {
+        if (this.isPivot(block)) {
 
             this.merge(block);
             this.generateTuples();
@@ -184,7 +188,7 @@ public class DFW {
 
             this.merge(block);
             this.generateTriple(block);
-            this.calculated.add(block.getDFWPosition());
+            this.calculated.add(block.getPosition());
 
         } else if (this.isTriple(block)) {
 
