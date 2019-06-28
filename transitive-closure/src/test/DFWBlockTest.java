@@ -83,12 +83,12 @@ public class DFWBlockTest {
         SubMatrix p2 = new SubMatrix(this.testMatrix, 2, 6, 2);
 
         DFWBlock dfwBlock = new DFWBlock(target, pivot);
-        dfwBlock.addPath(p1);
-        dfwBlock.addPath(p2);
+        dfwBlock.addSubMatrix(p1);
+        dfwBlock.addSubMatrix(p2);
 
         dfwBlock.calculate();
 
-        int[][] targetMatrix = dfwBlock.getTarget().getMatrix();
+        int[][] targetMatrix = dfwBlock.getTarget().getSubMatrix();
 
         int[][] expected = new int[2][2];
         expected[0] = new int[]{2, 2};
