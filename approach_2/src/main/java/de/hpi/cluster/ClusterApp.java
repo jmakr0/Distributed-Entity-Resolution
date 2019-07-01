@@ -33,8 +33,7 @@ public class ClusterApp {
                     ClusterMaster.start(ACTOR_SYSTEM_NAME, masterCommand.workers, masterCommand.host, masterCommand.port, masterCommand.workers, masterCommand.inputPath, masterCommand.goldPath);
                     break;
                 case ClusterWorker.WORKER_ROLE:
-//                    ClusterWorker.start(ACTOR_SYSTEM_NAME, workerCommand.workers, workerCommand.host, workerCommand.port, workerCommand.masterhost, workerCommand.masterport);
-                    ClusterWorker.start(ACTOR_SYSTEM_NAME, 200, workerCommand.host, workerCommand.port, workerCommand.masterhost, workerCommand.masterport);
+                    ClusterWorker.start(ACTOR_SYSTEM_NAME, workerCommand.workers, workerCommand.host, workerCommand.port, workerCommand.masterhost, workerCommand.masterport);
                     break;
                 default:
                     throw new AssertionError();
