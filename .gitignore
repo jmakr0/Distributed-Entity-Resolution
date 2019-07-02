@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Compiled class file
 *.class
 
@@ -27,3 +26,9 @@ hs_err_pid*
 .idea
 */target/*
 */out/*
+
+# Mac files
+.DS_Store
+
+# intelliJ
+*.iml
