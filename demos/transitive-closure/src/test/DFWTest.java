@@ -88,4 +88,15 @@ public class DFWTest {
         Assert.assertTrue(Arrays.deepEquals(testMatrixExpected, result));
     }
 
+    @Test
+    public void calculatedTest() {
+        // block size is bigger than matrix!
+        DFW dfw = new DFW(testMatrix, 8);
+
+        // request pivot for calculation
+        dfw.getBlock();
+
+        Assert.assertTrue(dfw.calculated() == false);
+    }
+
 }
