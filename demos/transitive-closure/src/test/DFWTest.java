@@ -93,10 +93,18 @@ public class DFWTest {
         // block size is bigger than matrix!
         DFW dfw = new DFW(testMatrix, 8);
 
-        // request pivot for calculation, dont calculate it, it's still pending
-        dfw.getBlock();
+        // request pivot for calculation
+        DFWBlock block = dfw.getBlock();
 
+        // pivot is still pending...
         Assert.assertFalse(dfw.calculated());
+
+        block.calculate();
+        dfw.dispatch(block.getTarget());
+
+        // Should done
+        Assert.assertTrue(dfw.calculated());
+
     }
 
 }
