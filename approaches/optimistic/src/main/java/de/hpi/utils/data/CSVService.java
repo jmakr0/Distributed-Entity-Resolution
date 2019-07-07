@@ -1,6 +1,5 @@
 package de.hpi.utils.data;
 
-import akka.stream.impl.fusing.Collect;
 import au.com.bytecode.opencsv.CSVReader;
 import de.hpi.utils.helper.SetOperations;
 
@@ -15,19 +14,34 @@ public class CSVService {
 
     private int startLine = 1;
     private String dataFile;
+    private char separator;
     private boolean allDataRead = false;
     private Map<Integer, Queue<String>> data;
     private Set<Integer> queueSizes;
     private final int QUEUE_SIZE = 5;
     private CSVReader csvReader;
 
-    public CSVService(String dataFile, int minBlockSize) {
-        this.csvReader = getCsvReader(dataFile);
+    public CSVService(String dataFile, char separator, int minBlockSize) {
+        this.separator = separator;
+        this.csvReader = createCsvReader();
         this.dataFile = dataFile;
         this.data = new HashMap<>();
         this.queueSizes = new HashSet<>();
         this.queueSizes.add(minBlockSize);
         this.fillQueues();
+    }
+
+    private CSVReader createCsvReader(){
+        CSVReader reader;
+        InputStreamReader inputStreamReader = null;
+        try {
+            inputStreamReader = new InputStreamReader(new FileInputStream(this.dataFile), StandardCharsets.UTF_8);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        reader = new CSVReader(inputStreamReader, this.separator);
+
+        return reader;
     }
 
     public boolean dataAvailable() {
@@ -130,25 +144,14 @@ public class CSVService {
         }
     }
 
-    private static CSVReader getCsvReader(String dataFile){
-        CSVReader reader;
-        InputStreamReader inputStreamReader = null;
-        try {
-            inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        reader = new CSVReader(inputStreamReader, '\n');
 
-        return reader;
-    }
 
     public static Set<Set<Integer>> readRestaurantGoldStandard(String dataFile, String splitSymbol) {
         Set<Set<Integer>> goldStandard = new HashSet<Set<Integer>>();
 
         CSVReader reader = null;
         try {
-            reader = getCsvReader(dataFile);
+            reader = createCsvReader();
 
             // first line is header
             String[] tmpRecord = reader.readNext();

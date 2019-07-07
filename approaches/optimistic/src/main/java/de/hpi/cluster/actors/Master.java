@@ -116,7 +116,7 @@ public class Master extends AbstractActor {
 	}
 
     private void handle(ConfigMessage message) {
-        this.csvService = new CSVService(message.dataPath, (int) Math.pow(2,MIN_WORKLOAD));
+        this.csvService = new CSVService(message.dataPath, '\n', (int) Math.pow(2,MIN_WORKLOAD));
         this.goldPath = message.goldPath;
     }
 
