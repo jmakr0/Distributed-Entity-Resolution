@@ -9,7 +9,6 @@ import java.util.*;
 
 public class CSVService {
 
-    private int startLine = 1;
     private boolean allDataRead = false;
     private Map<Integer, Queue<String>> data;
     private Set<Integer> queueSizes;
@@ -100,10 +99,9 @@ public class CSVService {
 
                 while(!allDataRead && queue.size() < this.QUEUE_SIZE) {
                     StringBuilder sb = new StringBuilder();
-                    for (int i = startLine; i < startLine + numberOfLines; i++) {
+                    for (int i = 0; i < numberOfLines; i++) {
                         String[] tmpRecord = this.csvReader.readNext();
                         if (tmpRecord != null) {
-                            System.out.println(tmpRecord[0]);
                             sb.append(tmpRecord[0].replaceAll("\"", "").replaceAll("\'", ""));
                             sb.append("\n");
                         } else {
@@ -112,7 +110,6 @@ public class CSVService {
                         }
                     }
                     queue.add(sb.toString());
-                    startLine += numberOfLines;
                 }
             }
 
