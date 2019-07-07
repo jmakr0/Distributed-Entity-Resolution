@@ -2,7 +2,6 @@ package de.hpi.utils.data;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;

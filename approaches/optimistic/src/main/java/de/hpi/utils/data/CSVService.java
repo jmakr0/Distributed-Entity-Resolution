@@ -3,11 +3,8 @@ package de.hpi.utils.data;
 import au.com.bytecode.opencsv.CSVReader;
 import de.hpi.utils.helper.SetOperations;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class CSVService {
@@ -26,8 +23,6 @@ public class CSVService {
         this.queueSizes.add(minBlockSize);
         this.fillQueues();
     }
-
-
 
     public boolean dataAvailable() {
         if (allQueuesEmpty()) {

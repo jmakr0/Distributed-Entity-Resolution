@@ -10,14 +10,14 @@ import java.nio.charset.StandardCharsets;
 public class CSVReaderFactory {
 
     public static CSVReader createCSVReader(String dataFile, char separator) {
-        CSVReader reader;
+        CSVReader reader = null;
         InputStreamReader inputStreamReader = null;
         try {
             inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
+            reader = new CSVReader(inputStreamReader, separator);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        reader = new CSVReader(inputStreamReader, separator);
 
         return reader;
     }
