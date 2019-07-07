@@ -70,7 +70,7 @@ public class CSVService {
                     for (int i = 0; i < numberOfLines; i++) {
                         String[] tmpRecord = this.csvReader.readNext();
                         if (tmpRecord != null) {
-                            sb.append(tmpRecord[0].replaceAll("\"", "").replaceAll("\'", ""));
+                            sb.append(tmpRecord[0]);
                             sb.append("\n");
                         } else {
                             allDataRead = true;
