@@ -16,11 +16,16 @@ public class CSVService {
     private final int QUEUE_SIZE = 5;
     private CSVReader csvReader;
 
-    public CSVService(String dataFile, char separator, int minBlockSize) {
+    public CSVService(String dataFile, boolean hasHeader, char separator, int minBlockSize) {
         this.csvReader = CSVReaderFactory.createCSVReader(dataFile, separator);
         this.data = new HashMap<>();
         this.queueSizes = new HashSet<>();
         this.queueSizes.add(minBlockSize);
+
+        if (hasHeader) {
+            skipHeader();
+        }
+
         this.fillQueues();
     }
 
@@ -90,12 +95,6 @@ public class CSVService {
         }
 
         try {
-//            // skip first lines
-//            for (int i = 0; i < startLine ; i++) {
-//                this.csvReader.readNext();
-//            }
-
-            // fill up queues
             for (Integer numberOfLines: this.data.keySet()) {
                 Queue<String> queue = this.data.get(numberOfLines);
 
@@ -117,8 +116,14 @@ public class CSVService {
                 }
             }
 
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void skipHeader() {
+        try {
+            this.csvReader.readNext();
         } catch (IOException e) {
             e.printStackTrace();
         }
