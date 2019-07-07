@@ -100,8 +100,7 @@ public class CSVService {
     }
 
     private String getNextFittingDataBlock(int maxSize) {
-        List<Integer> sizes = new LinkedList<>();
-        sizes.addAll(this.data.keySet());
+        List<Integer> sizes = new LinkedList<>(this.data.keySet());
         Collections.sort(sizes);
 
         for (int i = sizes.size() - 1; i >= 0; i--) {
@@ -111,9 +110,8 @@ public class CSVService {
             }
         }
 
-        for (int i = 0; i < sizes.size(); i++) {
-            int size = sizes.get(i);
-            if(size > maxSize && this.data.get(size).peek() != null) {
+        for (int size : sizes) {
+            if (size > maxSize && this.data.get(size).peek() != null) {
                 return this.data.get(size).poll();
             }
         }
