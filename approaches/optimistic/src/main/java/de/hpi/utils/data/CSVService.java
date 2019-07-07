@@ -9,17 +9,22 @@ import java.util.*;
 
 public class CSVService {
 
-    private boolean allDataRead = false;
+    private final int QUEUE_SIZE = 5;
+
+    private boolean allDataRead;
     private Map<Integer, Queue<String>> data;
     private Set<Integer> queueSizes;
-    private final int QUEUE_SIZE = 5;
     private CSVReader csvReader;
 
     public CSVService(String dataFile, boolean hasHeader, char separator, int minBlockSize) {
-        this.csvReader = CSVReaderFactory.createCSVReader(dataFile, separator);
+        this.allDataRead = false;
+
         this.data = new HashMap<>();
+
         this.queueSizes = new HashSet<>();
         this.queueSizes.add(minBlockSize);
+
+        this.csvReader = CSVReaderFactory.createCSVReader(dataFile, separator);
 
         if (hasHeader) {
             skipHeader();
@@ -37,15 +42,6 @@ public class CSVService {
         }
     }
 
-    private boolean allQueuesEmpty() {
-        for (Queue<String> dataQueue: this.data.values()) {
-            if (dataQueue.size() > 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public String getRecords(int lines) {
         this.queueSizes.add(lines);
 
@@ -58,35 +54,7 @@ public class CSVService {
         return this.data.get(lines).poll();
     }
 
-    private boolean sizeAvailable(int maxSize) {
-        return this.data.get(maxSize) != null && this.data.get(maxSize).peek() != null;
-    }
-
-    private String getNextFittingDataBlock(int maxSize) {
-        List<Integer> sizes = new LinkedList<>();
-        sizes.addAll(this.data.keySet());
-        Collections.sort(sizes);
-
-        for (int i = sizes.size() - 1; i >= 0; i--) {
-            int size = sizes.get(i);
-            if(size < maxSize && this.data.get(size).peek() != null) {
-                return this.data.get(size).poll();
-            }
-        }
-
-        for (int i = 0; i < sizes.size(); i++) {
-            int size = sizes.get(i);
-            if(size > maxSize && this.data.get(size).peek() != null) {
-                return this.data.get(size).poll();
-            }
-        }
-
-        return null;
-    }
-
-
-    public void fillQueues() {
-        // create new queues
+    private void fillQueues() {
         Set<Integer> currentQueueSizes = this.data.keySet();
         Set<Integer> missingSizes = SetOperations.setDiff(this.queueSizes, currentQueueSizes);
         for (int queueSize: missingSizes) {
@@ -116,6 +84,41 @@ public class CSVService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean allQueuesEmpty() {
+        for (Queue<String> dataQueue: this.data.values()) {
+            if (dataQueue.size() > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean sizeAvailable(int maxSize) {
+        return this.data.get(maxSize) != null && this.data.get(maxSize).peek() != null;
+    }
+
+    private String getNextFittingDataBlock(int maxSize) {
+        List<Integer> sizes = new LinkedList<>();
+        sizes.addAll(this.data.keySet());
+        Collections.sort(sizes);
+
+        for (int i = sizes.size() - 1; i >= 0; i--) {
+            int size = sizes.get(i);
+            if(size < maxSize && this.data.get(size).peek() != null) {
+                return this.data.get(size).poll();
+            }
+        }
+
+        for (int i = 0; i < sizes.size(); i++) {
+            int size = sizes.get(i);
+            if(size > maxSize && this.data.get(size).peek() != null) {
+                return this.data.get(size).poll();
+            }
+        }
+
+        return null;
     }
 
     private void skipHeader() {
