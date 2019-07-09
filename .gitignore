@@ -27,6 +27,7 @@ hs_err_pid*
 */target/*
 */out/*
 META-INF
+target
 
 # Mac files
 .DS_Store
