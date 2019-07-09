@@ -1,6 +1,8 @@
 package de.hpi.cluster.actors;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.CurrentClusterState;
 import akka.cluster.ClusterEvent.MemberUp;
@@ -9,17 +11,16 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.actors.listeners.MetricsListener;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.ddd.dd.DuplicateDetector;
 import de.hpi.ddd.dd.SimpleDuplicateDetector;
-import de.hpi.ddd.partition.Md5HashRouter;
 import de.hpi.ddd.similarity.UniversalComparator;
 import de.hpi.ddd.similarity.numeric.AbsComparator;
 import de.hpi.ddd.similarity.numeric.NumberComparator;
 import de.hpi.ddd.similarity.strings.JaroWinklerComparator;
 import de.hpi.ddd.similarity.strings.StringComparator;
+import de.hpi.partitioning.Md5HashRouter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

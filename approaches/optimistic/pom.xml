@@ -98,10 +98,14 @@
             <artifactId>java-string-similarity</artifactId>
             <version>1.2.1</version>
         </dependency>
+<!--		our local jar libraries-->
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>19.0</version>
+			<groupId>der.rdse.hpi.de</groupId>
+			<artifactId>Partitioning</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/../shared/Partitioning/target/Partitioning-1.0-jar-with-dependencies.jar</systemPath>
+<!--			<systemPath>${basedir}/approaches/shared/Partitioning/target/Partitioning-1.0-jar-with-dependencies.jar</systemPath>-->
 		</dependency>
 	</dependencies>
 

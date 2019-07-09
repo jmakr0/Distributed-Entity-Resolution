@@ -11,7 +11,9 @@ import de.hpi.ddd.evaluation.GoldStandardEvaluator;
 import de.hpi.ddd.partition.Md5HashRouter;
 import de.hpi.utils.data.GoldReader;
 import de.hpi.utils.perfromance.PerformanceTracker;
+import de.hpi.partitioning.Md5HashRouter;
 import de.hpi.utils.data.CSVService;
+import de.hpi.utils.perfromance.PerformanceTracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
