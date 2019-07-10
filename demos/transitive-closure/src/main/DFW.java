@@ -21,7 +21,7 @@ public class DFW {
     private int pendingTriplesCount;
 
     private SubMatrix getNextPivot(int pivotIndex) {
-        if(this.pivotIndex > this.pivotsMax) {
+        if(pivotIndex > this.pivotsMax) {
             throw new IndexOutOfBoundsException("Next pivot does not exist");
         }
 
@@ -136,15 +136,17 @@ public class DFW {
             return;
         }
 
+        this.calculated.clear();
+        this.crossPositions.clear();
+
         this.pivot = this.getNextPivot(this.pivotIndex);
         this.pivotIndex++;
         this.pendingTriplesCount = this.calculateTripleCount(this.pivotsMax);
 
-        this.pendingBlocks.add(new DFWBlock(this.pivot, this.pivot));
-
-        this.calculated.clear();
-        this.crossPositions.clear();
-        this.crossPositions.addAll(this.calculateCrossPositions());
+        if(!this.calculated()) {
+            this.pendingBlocks.add(new DFWBlock(this.pivot, this.pivot));
+            this.crossPositions.addAll(this.calculateCrossPositions());
+        }
     }
 
     public DFW(int[][] matrix, int blksize) {
@@ -167,7 +169,7 @@ public class DFW {
     }
 
     public boolean calculated() {
-        return this.pendingBlocks.isEmpty() || this.pivotIndex > this.pivotsMax;
+        return this.pivotIndex > this.pivotsMax;
     }
 
     public int[][] getMatrix() {
@@ -187,24 +189,24 @@ public class DFW {
 
     public void dispatch(SubMatrix block) {
 
+        this.merge(block);
+
         if (this.isPivot(block)) {
 
-            this.merge(block);
             this.generateTuples();
 
         } else if (this.isTuple(block)) {
 
-            this.merge(block);
             this.generateTriple(block);
             this.calculated.add(block.getPosition());
 
         } else if (this.isTriple(block)) {
 
-            this.merge(block);
             this.pendingTriplesCount--;
-            this.nextPhase();
 
         }
+
+        this.nextPhase();
     }
 
 }
