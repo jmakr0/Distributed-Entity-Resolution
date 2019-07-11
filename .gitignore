@@ -26,8 +26,7 @@ hs_err_pid*
 .idea
 target
 */out/*
-META-INF
-target
+*/classes/*
 
 # Mac files
 .DS_Store
