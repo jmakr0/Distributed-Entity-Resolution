@@ -24,7 +24,7 @@ hs_err_pid*
 
 # IntelliJ Files
 .idea
-*/target/*
+target
 */out/*
 
 # Mac files
