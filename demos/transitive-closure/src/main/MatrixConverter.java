@@ -18,7 +18,7 @@ public class MatrixConverter {
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix.length; j++) {
                 if (i == j) {
-                    // from a node to itself the distance is 0
+                    // from position node to itself the distance is 0
                     matrix[i][j] = 0;
                 } else {
                     matrix[i][j] = Integer.MAX_VALUE;
