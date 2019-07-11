@@ -10,10 +10,10 @@ export MASTER_HOST="rdse-master"
 # get current app
 
 mkdir tmp
-cd ../approach_2
+cd ../approaches/optimistic
 mvn clean verify
 cd -
-cp ../approach_2/target/$JAR_NAME tmp/
+cp ../approaches/optimistic/target/$JAR_NAME tmp/
 
 # build image
 
