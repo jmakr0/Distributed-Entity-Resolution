@@ -106,9 +106,6 @@ public class Worker extends AbstractActor {
 
         this.cluster.unsubscribe(this.self());
 
-        ActorSelection actors = this.getContext().getSystem().actorSelection("*");
-        actors.tell(PoisonPill.getInstance(), ActorRef.noSender());
-
         // Log the stop event
         this.log.info("Stopped {}.", this.getSelf());
     }

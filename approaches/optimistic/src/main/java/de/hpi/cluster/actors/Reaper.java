@@ -117,11 +117,8 @@ public class Reaper extends AbstractLoggingActor {
 		} else if (this.shutdowns.remove(sender)) {
 			assert this.watchees.isEmpty();
 			if (this.shutdowns.isEmpty()) {
-				// dirty way to kill all actors that are living until this point
-				ActorSelection actors = this.getContext().getSystem().actorSelection("*");
-				actors.tell(PoisonPill.getInstance(), ActorRef.noSender());
 				this.log().info("Every local actor has been reaped. Terminating the actor system...");
-				this.getContext().getSystem().terminate();
+				this.context().system().terminate();
 			}
 		} else {
 			this.log().error("Got termination message from unwatched {}.", sender);
