@@ -21,6 +21,7 @@ public class DFWCoordinatorTest {
         dfwCoordinator.calculated(pivot0);
         dfwCoordinator.calculated(blk10);
         dfwCoordinator.calculated(blk01);
+        dfwCoordinator.calculated(pivot1);
     }
 
     @Test
