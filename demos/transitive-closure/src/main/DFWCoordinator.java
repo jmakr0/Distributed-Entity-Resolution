@@ -1,25 +1,40 @@
 package main;
 
-import javafx.scene.input.KeyCode;
-
 import java.util.*;
 
 public class DFWCoordinator {
-    
+
+    class Block {
+        DFWPosition position;
+        Set<DFWPosition> dependsOn = new HashSet<>();
+        Set<Block> next = new HashSet<>();
+
+        @Override
+        public boolean equals(Object o) {
+            return this.position.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.position.hashCode();
+        }
+    }
 
     private Queue<DFWPosition> pending;
-    private Map<DFWPosition, Queue<Set<DFWPosition>>> blocks;
+    private List<Block> blocks;
 
     public DFWCoordinator(int matrixSize, int blksize) {
         this.pending = new LinkedList<>();
-        this.blocks = this.generateBlocks(matrixSize, blksize);
+        this.blocks = new LinkedList<>();
 
-        this.generateDependencies(matrixSize, blksize);
+        Block start = this.generateDependencies(matrixSize, blksize);
+        this.pending.add(start.position);
+        this.blocks.add(start);
     }
 
 
     public void calculated(DFWPosition position) {
-        List<DFWPosition> positions = getNextPositions(position);
+        Set<DFWPosition> positions = getNextPositions(position);
         this.pending.addAll(positions);
     }
 
@@ -49,72 +64,65 @@ public class DFWCoordinator {
         return blocks;
     }
 
-    private void addDependency(DFWPosition target, DFWPosition position) {
-        Set<DFWPosition> blk = new HashSet<>();
+    private Block generateDependencies(int matrixSize, int blksize) {
 
-        blk.add(position);
+        Block tail = new Block();
+        tail.position = new DFWPosition(0, 0);
 
-        this.blocks.get(target).add(blk);
-    }
-
-    private void addDependency(DFWPosition target, Set<DFWPosition> positions) {
-        Set<DFWPosition> blks = new HashSet<>();
-        positions.forEach(position -> blks.add(position));
-
-        this.blocks.get(target).add(blks);
-    }
-
-    private void generateDependencies(int matrixSize, int blksize) {
-        int phase = 0;
-        Map<Integer, Map<DFWPosition, Set<DFWPosition>>> dependencies = new HashMap<>();
-        DFWPosition previousPivot = null;
+        Block pivot = tail;
+        Block nextPivot = null;
 
         for (int k = 0; k < matrixSize; k += blksize) {
 
-            DFWPosition pivot = new DFWPosition(k, k);
-
-//            dependencies.add(pivot);
+            DFWPosition pivotPosition = new DFWPosition(k, k);
 
             // tuples
             for (int i = 0; i < matrixSize; i += blksize) {
 
                 if(i != k) {
-                    DFWPosition tupleX1 = new DFWPosition(i, k);
-                    DFWPosition tupleY1 = new DFWPosition(k, i);
+                    Block x = new Block();
+                    Block y = new Block();
 
-                    addDependency(tupleX1, pivot);
-                    addDependency(tupleY1, pivot);
+                    x.position = new DFWPosition(i, k);
+                    y.position = new DFWPosition(k, i);
+
+                    x.dependsOn.add(pivotPosition);
+                    y.dependsOn.add(pivotPosition);
+
+                    pivot.next.add(x);
+                    pivot.next.add(y);
 
                     // triples
-                    for (int j = 0; j < i + blksize; j += blksize) {
+                    for (int j = 0; j < matrixSize; j += blksize) {
 
                         if (j != k) {
-                            DFWPosition tupleX2 = new DFWPosition(j, k);
-                            DFWPosition tupleY2 = new DFWPosition(k, j);
-                            Set<DFWPosition> depX;
-                            Set<DFWPosition> depY;
+                            Block xy = new Block();
+                            Block yx = new Block();
 
-                            if (previousPivot == null) {
-                                depX = new HashSet<>();
-                                depY = new HashSet<>();
+                            DFWPosition posX =  new DFWPosition(k, j);
+                            DFWPosition posY =  new DFWPosition(i, k);
+
+                            xy.position = new DFWPosition(j, i);
+                            yx.position = new DFWPosition(i, j);
+
+                            xy.dependsOn.add(posX);
+                            xy.dependsOn.add(posY);
+
+                            // same position is next pivot
+                            if (xy.position.equals(yx.position)) {
+                                x.next.add(xy);
+                                y.next.add(xy);
+
+                                if (nextPivot == null && j > k) {
+                                    nextPivot = xy;
+                                }
+
                             } else {
-                                depX = dependencies.get(phase - 1).get(tupleX2);
-                                depY = dependencies.get(phase - 1).get(tupleY2);
-                            }
+                                yx.dependsOn.add(posX);
+                                yx.dependsOn.add(posY);
 
-                            dep.add(pivot);
-                            dep.add(tupleX2);
-                            dep.add(tupleY2);
-
-                            DFWPosition tripleX = new DFWPosition(j, i);
-                            DFWPosition tripleY = new DFWPosition(i, j);
-
-                            addDependency(tripleX, dep);
-                            dependencies.put(pivot, dep);
-
-                            if (!tripleX.equals(tripleY)) {
-                                addDependency(tripleY, dep);
-                                dependencies.put(pivot, dep);
+                                x.next.add(yx);
+                                y.next.add(xy);
                             }
 
                         }
@@ -124,28 +132,45 @@ public class DFWCoordinator {
 
             }
 
-            previousPivot = pivot;
-            phase ++;
+            pivot = nextPivot;
+            nextPivot = null;
 
         }
 
+        return tail;
+
     }
 
-    private List<DFWPosition> getNextPositions(DFWPosition position) {
-        List<DFWPosition> result = new LinkedList<>();
+    private Set<DFWPosition> getNextPositions(DFWPosition position) {
+        Set<DFWPosition> result = new HashSet<>();
+        Set<Block> nextBlocks = new HashSet<>();
 
-        this.blocks.forEach((blk, dependencies) -> {
-            Set<DFWPosition> next = dependencies.element();
+        Iterator blkItr = this.blocks.iterator();
 
-            if (next.contains(position)) {
-                next.remove(position);
+        while (blkItr.hasNext()) {
+            Block blk = (Block)blkItr.next();
+
+            Iterator nextItr = blk.next.iterator();
+
+            while (nextItr.hasNext()) {
+                Block nextBlk = (Block)nextItr.next();
+                nextBlk.dependsOn.remove(position);
+
+                if (nextBlk.dependsOn.isEmpty()) {
+                    nextBlocks.add(nextBlk);
+                    nextItr.remove();
+                }
             }
 
-            if (next.isEmpty()) {
-                result.add(blk);
-                dependencies.remove();
+            if (blk.next.isEmpty()) {
+                blkItr.remove();
             }
-        });
+
+        }
+
+        this.blocks.addAll(nextBlocks);
+
+        nextBlocks.forEach(block -> result.add(block.position));
 
         return result;
     }
