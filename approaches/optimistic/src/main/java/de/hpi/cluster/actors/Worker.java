@@ -264,7 +264,7 @@ public class Worker extends AbstractActor {
 
         while (iterator.hasNext()) {
             Map.Entry<String,List<String[]>> entry = iterator.next();
-            ActorRef peer = this.router.getObjectForKey(entry.getValue().toString());
+            ActorRef peer = this.router.responsibleActor(entry.getValue().toString());
 
             if(peer.compareTo(this.self()) != 0) {
                 peer.tell(new ParsedDataMessage(entry.getKey(), entry.getValue(), this.router), this.self());
@@ -276,7 +276,7 @@ public class Worker extends AbstractActor {
 
     private void distributeDataToWorkers(Map<String, List<String[]>> parsedData) {
         for(String key: parsedData.keySet()) {
-            ActorRef responsibleWorker = this.router.getObjectForKey(key);
+            ActorRef responsibleWorker = this.router.responsibleActor(key);
             List<String[]> pd = parsedData.get(key);
 
             if(responsibleWorker.compareTo(this.self()) == 0) {

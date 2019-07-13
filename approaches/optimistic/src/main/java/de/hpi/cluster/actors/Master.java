@@ -130,7 +130,7 @@ public class Master extends AbstractActor {
 
         this.addWorker(worker);
 
-        this.router.addNewObject(worker);
+        this.router.putOnHashring(worker);
 
         this.log.info("Router version: " + this.router.getVersion());
 

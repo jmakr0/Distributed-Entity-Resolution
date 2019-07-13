@@ -39,9 +39,14 @@ public class Md5HashRouter {
      */
     public Md5HashRouter(Md5HashRouter router) {
         this.mapping = new HashMap<ActorRef, List<Integer>>();
+        this.mappingIndex = new HashMap<>();
 
         for (ActorRef key:router.mapping.keySet()) {
             this.mapping.put(key, router.mapping.get(key));
+        }
+
+        for (Integer key:router.mappingIndex.keySet()) {
+            this.mappingIndex.put(key, router.mappingIndex.get(key));
         }
 
         this.numberOfBuckets = router.numberOfBuckets;

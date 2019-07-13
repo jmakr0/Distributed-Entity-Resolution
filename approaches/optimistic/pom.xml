@@ -105,7 +105,6 @@
 			<version>1.0</version>
 			<scope>system</scope>
 			<systemPath>${basedir}/../shared/Partitioning/target/Partitioning-1.0-jar-with-dependencies.jar</systemPath>
-<!--			<systemPath>${basedir}/approaches/shared/Partitioning/target/Partitioning-1.0-jar-with-dependencies.jar</systemPath>-->
 		</dependency>
 	</dependencies>
 
