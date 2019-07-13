@@ -13,6 +13,7 @@ import java.util.List;
 import static com.google.common.hash.Hashing.consistentHash;
 import static com.google.common.hash.Hashing.md5;
 
+// TODO clean up this test
 public class HashRouterTest {
 
     List<Integer> blockingKeys;

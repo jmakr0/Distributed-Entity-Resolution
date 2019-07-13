@@ -10,14 +10,33 @@ import java.util.*;
 import static com.google.common.hash.Hashing.consistentHash;
 import static com.google.common.hash.Hashing.md5;
 
+/**
+ * This object is responsible to manage an consistent hashRing.
+ * A constant number of buckets is is placed on the hashRing and i mapped to a flexible number of actors represented
+ * represented by a ActorRef
+ * As a Hash function MD5 is used
+ * For the hash calculation as well as for the consistent hashing itself we use the com.google.common.hash library
+ */
 public class Md5HashRouter {
 
     private Map<ActorRef, List<Integer>> mapping;
+    // an index to speedup the responsibility lookup
+    private Map<Integer, ActorRef> mappingIndex;
     private int numberOfBuckets;
     private int version;
 
     Random r = new Random();
 
+    /**
+     * This default Constructor is needed for serialization
+     */
+    public Md5HashRouter() {}
+
+    /**
+     * TODO check if we need this constructor (Kryo serialization issues)
+     * THis Constructor is used to create a copy of a given MD5HashRouter
+     * @param router the router to create a copy of
+     */
     public Md5HashRouter(Md5HashRouter router) {
         this.mapping = new HashMap<ActorRef, List<Integer>>();
 
@@ -29,41 +48,35 @@ public class Md5HashRouter {
         this.version = router.version;
     }
 
-    public Md5HashRouter() {
-
-    }
-
+    /**
+     * Inits a new MD5HashRouter dividing the keyspace of the MD5 hashring
+     * @param buckets the number of buckets in the hashring
+     */
     public Md5HashRouter(int buckets) {
         this.numberOfBuckets = buckets;
         this.mapping = new HashMap<>();
     }
 
-    public ActorRef getObjectForKey(String key) {
-        HashFunction hashFunc = md5();
-        HashCode hashCode = hashFunc.hashString(key, Charset.defaultCharset());
-        int bucket = consistentHash(hashCode, this.numberOfBuckets);
-        for (ActorRef obj: mapping.keySet()) {
-            if(mapping.get(obj).contains(bucket)) {
-                return obj;
-            }
-        }
-        // This line should never be executed
-        return null;
-    }
-
-    public void addNewObject(ActorRef object) {
-        int numberOfObjects = mapping.keySet().size() + 1;
-        List<Integer> newBucketList = new LinkedList<>();
+    /**
+     * Puts a new Actor on the hashRing so that it becomes responsible for a number of buckets
+     * @param actorRef the actor
+     */
+    public void putOnHashring(ActorRef actorRef) {
+        // with every new ActorRef that is added to the hashRing we increment the version
         this.version ++;
 
-        // if the object is the first that is added, we have to init the bucket list = [0,...,buckets-1]
-        if (numberOfObjects == 1) {
+        int numberOfActors = mapping.keySet().size() + 1;
+        List<Integer> newBucketList = new LinkedList<>();
+
+        // if the actor is the first that is added, we have to init the bucket list = [0,...,buckets-1]
+        if (numberOfActors == 1) {
             for (int i = 0; i < numberOfBuckets; i++) {
                 newBucketList.add(i);
             }
         } else {
-            int stealCount = numberOfBuckets / numberOfObjects;
-
+            // to reach a nearly equal distribution we first calculate the number of buckets each actor should hold
+            int stealCount = numberOfBuckets / numberOfActors;
+            // then we "steal" buckets from workers that hold ne highest number of buckets
             for (int i = 0; i < stealCount; i++) {
                 ActorRef mostBuckets = mostBuckets();
                 List<Integer> bucketList = mapping.get(mostBuckets);
@@ -71,25 +84,53 @@ public class Md5HashRouter {
                 newBucketList.add(freeBucket);
             }
         }
-        mapping.put(object, newBucketList);
+        mapping.put(actorRef, newBucketList);
+
+        buildIndex();
+    }
+
+    /**
+     * This method is used to query which of the registered Actors is responsible for a given Key
+     * @param key the key
+     * @return the actor that is responsible for the given key
+     */
+    public ActorRef responsibleActor(String key) {
+        HashFunction hashFunc = md5();
+        HashCode hashCode = hashFunc.hashString(key, Charset.defaultCharset());
+        int bucket = consistentHash(hashCode, this.numberOfBuckets);
+        return this.mappingIndex.get(bucket);
+    }
+
+    /**
+     * getter for the version property
+     * @return the current version of the Router
+     */
+    public Integer getVersion() {
+        return version;
     }
 
     private ActorRef mostBuckets() {
-        List<ActorRef> objects = new LinkedList<ActorRef>(mapping.keySet());
+        List<ActorRef> actors = new LinkedList<ActorRef>(mapping.keySet());
         Comparator<ActorRef> comparator = new Comparator<ActorRef>() {
             @Override
-            public int compare(ActorRef o1, ActorRef o2) {
-                Integer numberOfBuckets1 = mapping.get(o1).size();
-                Integer numberOfBuckets2 = mapping.get(o2).size();
+            public int compare(ActorRef a1, ActorRef a2) {
+                Integer numberOfBuckets1 = mapping.get(a1).size();
+                Integer numberOfBuckets2 = mapping.get(a2).size();
                 return numberOfBuckets1.compareTo(numberOfBuckets2);
             }
         };
 
-        objects.sort(comparator);
-        return objects.get(objects.size()-1);
+        actors.sort(comparator);
+        return actors.get(actors.size()-1);
     }
 
-    public Integer getVersion() {
-        return version;
+    private void buildIndex() {
+        this.mappingIndex = new HashMap<>();
+        for (ActorRef actor: mapping.keySet()) {
+            List<Integer> bucketList = mapping.get(actor);
+            for (Integer bucket: bucketList) {
+                this.mappingIndex.put(bucket, actor);
+            }
+        }
     }
 }
