@@ -1,13 +1,12 @@
-package de.hpi.ddd.evaluation;
+package de.hpi.evaluation;
 
-
-import de.hpi.utils.helper.SetOperations;
+import de.hpi.rdse.der.setoperations.SetOperations;
 
 import java.util.Set;
 
 public class ConsoleOutputEvaluator implements GoldStandardEvaluator {
 
-    public void evaluateAgainstGoldStandard(Set<Set<Integer>> duplicates, Set<Set<Integer>> goldStandard) {
+    public void evaluate(Set<Set<Integer>> duplicates, Set<Set<Integer>> goldStandard) {
         Set<Set<Integer>> truePositives = SetOperations.intersection(duplicates,goldStandard);
         Set<Set<Integer>> false_positives = SetOperations.setDiff(duplicates,goldStandard);
         Set<Set<Integer>> false_negatives = SetOperations.setDiff(goldStandard,duplicates);

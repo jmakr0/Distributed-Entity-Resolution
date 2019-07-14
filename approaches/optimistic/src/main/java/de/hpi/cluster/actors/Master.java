@@ -11,6 +11,8 @@ import de.hpi.ddd.evaluation.GoldStandardEvaluator;
 import de.hpi.ddd.partition.Md5HashRouter;
 import de.hpi.utils.data.GoldReader;
 import de.hpi.utils.perfromance.PerformanceTracker;
+import de.hpi.evaluation.ConsoleOutputEvaluator;
+import de.hpi.evaluation.GoldStandardEvaluator;
 import de.hpi.partitioning.Md5HashRouter;
 import de.hpi.utils.data.CSVService;
 import de.hpi.utils.perfromance.PerformanceTracker;
@@ -201,7 +203,7 @@ public class Master extends AbstractActor {
             // evaluate results
             Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(this.goldPath);
             GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
-            evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
+            evaluator.evaluate(duplicates, goldStandard);
             this.log.info("Duplicates: \"{}\"", this.duplicates);
             this.log.info("All tasks finished, starting shutdown process.");
             this.shutdown();

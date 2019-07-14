@@ -1,7 +1,7 @@
 package de.hpi.utils.data;
 
 import au.com.bytecode.opencsv.CSVReader;
-import de.hpi.utils.helper.SetOperations;
+import de.hpi.rdse.der.setoperations.SetOperations;
 
 import java.io.IOException;
 import java.util.*;

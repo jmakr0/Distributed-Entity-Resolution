@@ -1,6 +1,5 @@
-package test.de.hpi.utils.helper;
+package de.hpi.rdse.der.setoperations;
 
-import de.hpi.utils.helper.SetOperations;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -1,4 +1,4 @@
-package de.hpi.ddd.evaluation;
+package de.hpi.evaluation;
 
 import java.util.Set;
 
@@ -9,6 +9,6 @@ public interface GoldStandardEvaluator {
      * @param duplicates the duplicates that were found
      * @param goldStandard the gold standard
      */
-    void evaluateAgainstGoldStandard(Set<Set<Integer>> duplicates, Set<Set<Integer>> goldStandard);
+    void evaluate(Set<Set<Integer>> duplicates, Set<Set<Integer>> goldStandard);
 
 }
