@@ -1,4 +1,4 @@
-package de.hpi.ddd.similarity.strings;
+package de.hpi.der.similarity.string;
 
 import info.debatty.java.stringsimilarity.NGram;
 

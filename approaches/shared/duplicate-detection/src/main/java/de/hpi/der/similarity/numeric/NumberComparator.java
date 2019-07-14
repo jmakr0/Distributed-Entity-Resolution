@@ -1,4 +1,4 @@
-package de.hpi.ddd.similarity.numeric;
+package de.hpi.der.similarity.numeric;
 
 public interface NumberComparator {
 

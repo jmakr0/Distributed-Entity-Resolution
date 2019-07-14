@@ -13,13 +13,13 @@ import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
-import de.hpi.ddd.dd.DuplicateDetector;
-import de.hpi.ddd.dd.SimpleDuplicateDetector;
-import de.hpi.ddd.similarity.UniversalComparator;
-import de.hpi.ddd.similarity.numeric.AbsComparator;
-import de.hpi.ddd.similarity.numeric.NumberComparator;
-import de.hpi.ddd.similarity.strings.JaroWinklerComparator;
-import de.hpi.ddd.similarity.strings.StringComparator;
+import de.hpi.der.dude.DuplicateDetector;
+import de.hpi.der.dude.SimpleDuplicateDetector;
+import de.hpi.der.similarity.UniversalComparator;
+import de.hpi.der.similarity.numeric.AbsComparator;
+import de.hpi.der.similarity.numeric.NumberComparator;
+import de.hpi.der.similarity.string.JaroWinklerComparator;
+import de.hpi.der.similarity.string.StringComparator;
 import de.hpi.partitioning.Md5HashRouter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -328,7 +328,7 @@ public class Worker extends AbstractActor {
         DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
 
         for (String key: data.keySet()) {
-            Set<Set<Integer>> duplicates = duDetector.findDuplicatesForBlock(data.get(key));
+            Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
                 this.log.info("Duplicate {}", duplicates);
 

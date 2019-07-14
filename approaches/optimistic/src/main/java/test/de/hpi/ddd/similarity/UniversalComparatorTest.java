@@ -1,10 +1,10 @@
 package test.de.hpi.ddd.similarity;
 
-import de.hpi.ddd.similarity.UniversalComparator;
-import de.hpi.ddd.similarity.numeric.AbsComparator;
-import de.hpi.ddd.similarity.numeric.NumberComparator;
-import de.hpi.ddd.similarity.strings.JaroWinklerComparator;
-import de.hpi.ddd.similarity.strings.StringComparator;
+import de.hpi.der.similarity.UniversalComparator;
+import de.hpi.der.similarity.numeric.AbsComparator;
+import de.hpi.der.similarity.numeric.NumberComparator;
+import de.hpi.der.similarity.string.JaroWinklerComparator;
+import de.hpi.der.similarity.string.StringComparator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,9 +29,9 @@ public class UniversalComparatorTest {
     }
 
     @Test
-    public void compareSlightlyDifferenzArraysTest() {
+    public void compareSlightlyDifferentArraysTest() {
         String[] a1 = {"Nils", "Straßenburq", "23"};
-        String[] a2 = {"Nils", "Straßenburg", "23"};
+        String[] a2 = {"Nils", "Strassenburg", "23"};
 
         Assert.assertTrue(1 != uvc.compare(a1,a2));
         Assert.assertTrue(0.9 <= uvc.compare(a1,a2));

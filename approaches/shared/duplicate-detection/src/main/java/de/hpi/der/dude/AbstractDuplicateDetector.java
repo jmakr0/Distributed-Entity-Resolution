@@ -1,9 +1,8 @@
-package de.hpi.ddd.dd;
+package de.hpi.der.dude;
 
+import de.hpi.der.similarity.UniversalComparator;
 
-import de.hpi.ddd.similarity.UniversalComparator;
-
-public abstract class AbstractDuplicateDetector implements DuplicateDetector{
+public abstract class AbstractDuplicateDetector implements DuplicateDetector {
 
     UniversalComparator comparator;
     double similarityThreshold;

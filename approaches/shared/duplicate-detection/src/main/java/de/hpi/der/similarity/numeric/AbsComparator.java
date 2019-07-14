@@ -1,4 +1,4 @@
-package de.hpi.ddd.similarity.numeric;
+package de.hpi.der.similarity.numeric;
 
 public class AbsComparator implements NumberComparator {
 
@@ -34,7 +34,7 @@ public class AbsComparator implements NumberComparator {
     }
 
     private double scaleDiffToZeroOneInterval(double diff) {
-        // Formular: output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
+        // Formula: output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
         return 1 - (0 + ((1 - 0) / (intervalEnd - intervalStart)) * (diff - intervalStart));
     }
 }

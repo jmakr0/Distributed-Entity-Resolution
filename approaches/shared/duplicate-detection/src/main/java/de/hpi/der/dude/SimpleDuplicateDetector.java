@@ -1,23 +1,19 @@
-package de.hpi.ddd.dd;
+package de.hpi.der.dude;
 
-
-import de.hpi.ddd.similarity.UniversalComparator;
-import de.hpi.utils.helper.Combinations;
+import de.hpi.der.combinations.Combinations;
+import de.hpi.der.similarity.UniversalComparator;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * WARNING: This duplicate detector only works for duplicate classes of size 2!
- */
 public class SimpleDuplicateDetector extends AbstractDuplicateDetector {
 
     public SimpleDuplicateDetector(UniversalComparator comparator, double similarityThreshold) {
         super(comparator, similarityThreshold);
     }
 
-    public Set<Set<Integer>> findDuplicatesForBlock(List<String[]> records) {
+    public Set<Set<Integer>> findDuplicates(List<String[]> records) {
         Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
 
         List<int[]> indexCombinations = Combinations.generateCombinations(records.size(), 2);

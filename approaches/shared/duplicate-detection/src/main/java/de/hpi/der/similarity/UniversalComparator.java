@@ -1,8 +1,7 @@
-package de.hpi.ddd.similarity;
+package de.hpi.der.similarity;
 
-
-import de.hpi.ddd.similarity.numeric.NumberComparator;
-import de.hpi.ddd.similarity.strings.StringComparator;
+import de.hpi.der.similarity.numeric.NumberComparator;
+import de.hpi.der.similarity.string.StringComparator;
 
 public class UniversalComparator {
 
