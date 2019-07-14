@@ -100,32 +100,24 @@
         </dependency>
 <!--		our local jar libraries-->
 		<dependency>
-			<groupId>der.rdse.hpi.de</groupId>
+			<groupId>de.hpi.rdse.der</groupId>
 			<artifactId>Partitioning</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/../shared/Partitioning/target/Partitioning-1.0-jar-with-dependencies.jar</systemPath>
 		</dependency>
 		<dependency>
-			<groupId>der.rdse.hpi.de</groupId>
-			<artifactId>duplicate-detection</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/../shared/duplicate-detection/target/duplicate-detection-1.0-jar-with-dependencies.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>der.rdse.hpi.de</groupId>
+			<groupId>de.hpi.rdse.der</groupId>
 			<artifactId>evaluation</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/../shared/evaluation/target/evaluation-1.0.jar</systemPath>
 		</dependency>
 		<dependency>
-			<groupId>der.rdse.hpi.de</groupId>
+			<groupId>de.hpi.rdse.der</groupId>
+			<artifactId>duplicate-detection</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.hpi.rdse.der</groupId>
 			<artifactId>setoperations</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/../shared/set-operations/target/setoperations-1.0.jar</systemPath>
 		</dependency>
 	</dependencies>
 

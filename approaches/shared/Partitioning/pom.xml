@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>der.rdse.hpi.de</groupId>
+    <groupId>de.hpi.rdse.der</groupId>
     <artifactId>Partitioning</artifactId>
     <version>1.0</version>
     <build>
@@ -12,6 +12,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -30,7 +31,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        de.hpi.partitioning.Md5HashRouter
+                                        de.hpi.rdse.der.partitioning.Md5HashRouter
                                     </mainClass>
                                 </manifest>
                             </archive>
