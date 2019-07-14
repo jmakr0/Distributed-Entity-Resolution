@@ -1,6 +1,5 @@
-package test.de.hpi.ddd.similarity;
+package de.hpi.der.similarity;
 
-import de.hpi.der.similarity.UniversalComparator;
 import de.hpi.der.similarity.numeric.AbsComparator;
 import de.hpi.der.similarity.numeric.NumberComparator;
 import de.hpi.der.similarity.string.JaroWinklerComparator;

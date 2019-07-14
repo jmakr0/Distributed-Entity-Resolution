@@ -1,7 +1,5 @@
-package test.de.hpi.ddd.similarity.numeric;
+package de.hpi.der.similarity.numeric;
 
-import de.hpi.der.similarity.numeric.AbsComparator;
-import de.hpi.der.similarity.numeric.NumberComparator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
