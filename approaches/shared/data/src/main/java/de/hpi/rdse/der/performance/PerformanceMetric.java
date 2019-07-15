@@ -1,4 +1,4 @@
-package de.hpi.utils.perfromance;
+package de.hpi.rdse.der.performance;
 
 public class PerformanceMetric {
 

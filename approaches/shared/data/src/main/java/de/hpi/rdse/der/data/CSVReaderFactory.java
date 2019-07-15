@@ -1,4 +1,4 @@
-package de.hpi.utils.data;
+package de.hpi.rdse.der.data;
 
 import au.com.bytecode.opencsv.CSVReader;
 
