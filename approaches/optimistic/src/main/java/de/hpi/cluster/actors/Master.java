@@ -9,6 +9,7 @@ import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
 import de.hpi.ddd.evaluation.ConsoleOutputEvaluator;
 import de.hpi.ddd.evaluation.GoldStandardEvaluator;
 import de.hpi.ddd.partition.Md5HashRouter;
+import de.hpi.utils.data.GoldReader;
 import de.hpi.utils.perfromance.PerformanceTracker;
 import de.hpi.utils.data.CSVService;
 import lombok.AllArgsConstructor;
@@ -116,7 +117,7 @@ public class Master extends AbstractActor {
 	}
 
     private void handle(ConfigMessage message) {
-        this.csvService = new CSVService(message.dataPath, (int) Math.pow(2,MIN_WORKLOAD));
+        this.csvService = new CSVService(message.dataPath, true, '\n', (int) Math.pow(2,MIN_WORKLOAD));
         this.goldPath = message.goldPath;
     }
 
@@ -196,7 +197,7 @@ public class Master extends AbstractActor {
 
         if (this.workers.isEmpty()) {
             // evaluate results
-            Set<Set<Integer>> goldStandard = CSVService.readRestaurantGoldStandard(this.goldPath, ",");
+            Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(this.goldPath);
             GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
             evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
             this.log.info("Duplicates: \"{}\"", this.duplicates);

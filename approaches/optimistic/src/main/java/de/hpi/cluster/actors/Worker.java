@@ -222,7 +222,8 @@ public class Worker extends AbstractActor {
         String[] lines = {};
 
         if (!dataMessage.data.isEmpty()) {
-            lines = dataMessage.data.split("\n");
+            String data = cleanData(dataMessage.data);
+            lines = data.split("\n");
         }
         List<String[]> records = new LinkedList<>();
 
@@ -247,6 +248,12 @@ public class Worker extends AbstractActor {
         this.log.info("data size: {}",this.data.keySet().size());
 
         this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
+    }
+
+    private String cleanData(String data) {
+
+        return data.replaceAll("\"", "")
+                    .replaceAll("\'", "");
     }
 
     private void repartition() {
