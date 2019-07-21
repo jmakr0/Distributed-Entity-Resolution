@@ -1,5 +1,8 @@
 package de.hpi.rdse.der.similarity.numeric;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 public class AbsComparator implements NumberComparator {
 
     double intervalStart;
@@ -19,6 +22,15 @@ public class AbsComparator implements NumberComparator {
     public AbsComparator(double intervalStart, double intervalEnd) {
         this.intervalStart = intervalStart;
         this.intervalEnd = intervalEnd;
+    }
+
+    public AbsComparator(Config config) {
+        this.intervalStart = config.getDouble("similarity.abs-comparator.interval-start");
+        this.intervalStart = config.getDouble("similarity.abs-comparator.interval-end");
+    }
+
+    public AbsComparator() {
+       this(ConfigFactory.load("default"));
     }
 
     public double compare(double n1, double n2) {
