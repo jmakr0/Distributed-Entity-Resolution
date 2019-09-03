@@ -36,9 +36,6 @@ public class ClusterListener extends AbstractActor {
 		super.preStart();
 
 		this.cluster.subscribe(this.self(), MemberEvent.class, UnreachableMember.class);
-
-		// Register at this actor system's reaper
-		Reaper.watchForShutdown(this);
 	}
 
 	@Override
