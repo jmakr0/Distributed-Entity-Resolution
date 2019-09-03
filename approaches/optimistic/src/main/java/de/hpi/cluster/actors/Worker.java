@@ -83,8 +83,6 @@ public class Worker extends AbstractActor {
 
     // todo: put this into ONE object
     private double similarityThreshold;
-    private double numberComparisonIntervalStart;
-    private double numberComparisonIntervalEnd;
 
     private Md5HashRouter router;
     private Map<String, List<String[]>> data = new HashMap<>();
@@ -142,8 +140,6 @@ public class Worker extends AbstractActor {
 
         this.blocking = registerAckMessage.blocking;
         this.similarityThreshold = registerAckMessage.similarityThreshold;
-        this.numberComparisonIntervalStart = registerAckMessage.numberComparisonIntervalStart;
-        this.numberComparisonIntervalEnd = registerAckMessage.numberComparisonIntervalEnd;
         this.setRouter(registerAckMessage.router, "RegisterAckMessage");
 
 //        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
@@ -322,10 +318,10 @@ public class Worker extends AbstractActor {
         this.log.info("number of data keys: {}", this.data.keySet().size());
 
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator(this.numberComparisonIntervalStart,this.numberComparisonIntervalEnd);
+        NumberComparator nComparator = new AbsComparator();
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator);
 
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
