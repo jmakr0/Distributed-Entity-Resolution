@@ -3,6 +3,7 @@ package de.hpi.cluster;
 import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import com.typesafe.config.Config;
+import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.MetricsListener;
 
@@ -21,6 +22,8 @@ public class ClusterWorker extends ClusterSystem {
 		Cluster.get(system).registerOnMemberUp(new Runnable() {
 			@Override
 			public void run() {
+				system.actorOf(Reaper.props(), Reaper.DEFAULT_NAME);
+
 				system.actorOf(MetricsListener.props(), MetricsListener.DEFAULT_NAME);
 
 				for (int i = 0; i < workers; i++)

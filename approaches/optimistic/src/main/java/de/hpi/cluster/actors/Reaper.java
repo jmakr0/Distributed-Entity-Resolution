@@ -30,11 +30,6 @@ public class Reaper extends AbstractLoggingActor {
 		private static final long serialVersionUID = -5201749681392553264L;
 	}
 
-
-    public static class WatchMeShutdownMessage implements Serializable {
-        private static final long serialVersionUID = -1234567881392553264L;
-    }
-
 	/**
 	 * Find the reaper actor of this actor system and let it watch the given actor.
 	 *
@@ -46,15 +41,8 @@ public class Reaper extends AbstractLoggingActor {
 		defaultReaper.tell(new WatchMeMessage(), actor.getSelf());
 	}
 
-
-  public static void watchForShutdown(AbstractActor actor) {
-     ActorSelection defaultReaper = actor.getContext().getSystem().actorSelection("/user/" + DEFAULT_NAME);
-     defaultReaper.tell(new WatchMeShutdownMessage(), actor.getSelf());
-  }
-
 	// A reference to all actors whose life is watched by this reaper
-  private final Set<ActorRef> watchees = new HashSet<>();
-  private final Set<ActorRef> shutdowns = new HashSet<>();
+	private final Set<ActorRef> watchees = new HashSet<>();
 
 	@Override
 	public void preStart() throws Exception {
@@ -75,8 +63,7 @@ public class Reaper extends AbstractLoggingActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-        .match(WatchMeMessage.class, this::handle)
-        .match(WatchMeShutdownMessage.class, this::handle)
+				.match(WatchMeMessage.class, this::handle)
 				.match(Terminated.class, this::handle)
 				.matchAny(object -> this.log().error(this.getClass().getName() + " received unknown message: " + object.toString()))
 				.build();
@@ -94,16 +81,6 @@ public class Reaper extends AbstractLoggingActor {
 		}
 	}
 
-
-	private void handle(WatchMeShutdownMessage message) {
-	    // Find the sender of this message
-        final ActorRef sender = this.getSender();
-
-        if (this.shutdowns.add(sender)) {
-            this.getContext().watch(sender);
-        }
-    }
-
 	private void handle(Terminated message) {
 
 		// Find the sender of this message
@@ -112,24 +89,13 @@ public class Reaper extends AbstractLoggingActor {
 		if (this.watchees.remove(sender)) {
 			this.log().info("Reaping {}.", sender);
 			if (this.watchees.isEmpty()) {
-				shutdown();
-			}
-		} else if (this.shutdowns.remove(sender)) {
-			assert this.watchees.isEmpty();
-			if (this.shutdowns.isEmpty()) {
 				this.log().info("Every local actor has been reaped. Terminating the actor system...");
-				this.getContext().getSystem().terminate();
+				this.context().system().terminate();
 			}
 		} else {
 			this.log().error("Got termination message from unwatched {}.", sender);
 		}
 	}
-
-	private void shutdown() {
-        for (ActorRef actor: this.shutdowns) {
-            actor.tell(PoisonPill.getInstance(), this.getSelf());
-        }
-    }
 }
 
 
