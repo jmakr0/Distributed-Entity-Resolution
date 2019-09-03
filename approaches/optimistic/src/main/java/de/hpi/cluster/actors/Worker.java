@@ -1,6 +1,8 @@
 package de.hpi.cluster.actors;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.CurrentClusterState;
 import akka.cluster.ClusterEvent.MemberUp;
@@ -9,17 +11,16 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.actors.listeners.MetricsListener;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
-import de.hpi.ddd.dd.DuplicateDetector;
-import de.hpi.ddd.dd.SimpleDuplicateDetector;
-import de.hpi.ddd.partition.Md5HashRouter;
-import de.hpi.ddd.similarity.UniversalComparator;
-import de.hpi.ddd.similarity.numeric.AbsComparator;
-import de.hpi.ddd.similarity.numeric.NumberComparator;
-import de.hpi.ddd.similarity.strings.JaroWinklerComparator;
-import de.hpi.ddd.similarity.strings.StringComparator;
+import de.hpi.rdse.der.dude.DuplicateDetector;
+import de.hpi.rdse.der.dude.SimpleDuplicateDetector;
+import de.hpi.rdse.der.partitioning.Md5HashRouter;
+import de.hpi.rdse.der.similarity.UniversalComparator;
+import de.hpi.rdse.der.similarity.numeric.AbsComparator;
+import de.hpi.rdse.der.similarity.numeric.NumberComparator;
+import de.hpi.rdse.der.similarity.string.JaroWinklerComparator;
+import de.hpi.rdse.der.similarity.string.StringComparator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -82,8 +83,6 @@ public class Worker extends AbstractActor {
 
     // todo: put this into ONE object
     private double similarityThreshold;
-    private double numberComparisonIntervalStart;
-    private double numberComparisonIntervalEnd;
 
     private Md5HashRouter router;
     private Map<String, List<String[]>> data = new HashMap<>();
@@ -141,8 +140,6 @@ public class Worker extends AbstractActor {
 
         this.blocking = registerAckMessage.blocking;
         this.similarityThreshold = registerAckMessage.similarityThreshold;
-        this.numberComparisonIntervalStart = registerAckMessage.numberComparisonIntervalStart;
-        this.numberComparisonIntervalEnd = registerAckMessage.numberComparisonIntervalEnd;
         this.setRouter(registerAckMessage.router, "RegisterAckMessage");
 
 //        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
@@ -263,7 +260,7 @@ public class Worker extends AbstractActor {
 
         while (iterator.hasNext()) {
             Map.Entry<String,List<String[]>> entry = iterator.next();
-            ActorRef peer = this.router.getObjectForKey(entry.getValue().toString());
+            ActorRef peer = this.router.responsibleActor(entry.getValue().toString());
 
             if(peer.compareTo(this.self()) != 0) {
                 peer.tell(new ParsedDataMessage(entry.getKey(), entry.getValue(), this.router), this.self());
@@ -275,7 +272,7 @@ public class Worker extends AbstractActor {
 
     private void distributeDataToWorkers(Map<String, List<String[]>> parsedData) {
         for(String key: parsedData.keySet()) {
-            ActorRef responsibleWorker = this.router.getObjectForKey(key);
+            ActorRef responsibleWorker = this.router.responsibleActor(key);
             List<String[]> pd = parsedData.get(key);
 
             if(responsibleWorker.compareTo(this.self()) == 0) {
@@ -321,13 +318,13 @@ public class Worker extends AbstractActor {
         this.log.info("number of data keys: {}", this.data.keySet().size());
 
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator(this.numberComparisonIntervalStart,this.numberComparisonIntervalEnd);
+        NumberComparator nComparator = new AbsComparator();
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator);
 
         for (String key: data.keySet()) {
-            Set<Set<Integer>> duplicates = duDetector.findDuplicatesForBlock(data.get(key));
+            Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
                 this.log.info("Duplicate {}", duplicates);
 

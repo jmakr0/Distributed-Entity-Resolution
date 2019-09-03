@@ -6,12 +6,12 @@ import akka.event.LoggingAdapter;
 import de.hpi.cluster.actors.Worker.DataMessage;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
-import de.hpi.ddd.evaluation.ConsoleOutputEvaluator;
-import de.hpi.ddd.evaluation.GoldStandardEvaluator;
-import de.hpi.ddd.partition.Md5HashRouter;
-import de.hpi.utils.data.GoldReader;
-import de.hpi.utils.perfromance.PerformanceTracker;
-import de.hpi.utils.data.CSVService;
+import de.hpi.rdse.der.data.CSVService;
+import de.hpi.rdse.der.data.GoldReader;
+import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
+import de.hpi.rdse.der.evaluation.GoldStandardEvaluator;
+import de.hpi.rdse.der.partitioning.Md5HashRouter;
+import de.hpi.rdse.der.performance.PerformanceTracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -128,7 +128,7 @@ public class Master extends AbstractActor {
 
         this.addWorker(worker);
 
-        this.router.addNewObject(worker);
+        this.router.putOnHashring(worker);
 
         this.log.info("Router version: " + this.router.getVersion());
 
@@ -199,7 +199,7 @@ public class Master extends AbstractActor {
             // evaluate results
             Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(this.goldPath);
             GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
-            evaluator.evaluateAgainstGoldStandard(duplicates, goldStandard);
+            evaluator.evaluate(duplicates, goldStandard);
             this.log.info("Duplicates: \"{}\"", this.duplicates);
             this.log.info("All tasks finished, starting shutdown process.");
             this.shutdown();
