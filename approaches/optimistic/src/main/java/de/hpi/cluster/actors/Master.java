@@ -7,13 +7,8 @@ import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
 import de.hpi.cluster.actors.Worker.DataMessage;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
-import de.hpi.ddd.evaluation.ConsoleOutputEvaluator;
-import de.hpi.ddd.evaluation.GoldStandardEvaluator;
-import de.hpi.ddd.partition.Md5HashRouter;
 import de.hpi.ddd.transitiveClosure.DFWBlock;
 import de.hpi.ddd.transitiveClosure.TransitiveClosure;
-import de.hpi.utils.perfromance.PerformanceTracker;
-import de.hpi.utils.data.CSVService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -96,7 +91,7 @@ public class Master extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private final int NUMBER_OF_BUCKETS = 500;
-    private final double SIMILARITY_THRESHOLD = 0.3;
+    private final double SIMILARITY_THRESHOLD = 0.9;
     private final double NUMBER_INTERVAL_START = 5;
     private final double NUMBER_INTERVAL_END = 30;
     private final long TIME_THRESHOLD = 5000;
@@ -107,6 +102,7 @@ public class Master extends AbstractActor {
 
     private Set<ActorRef> workers = new HashSet<>();
     // todo: see if we really need this list, currently we do
+    private Set<ActorRef> registeredWorkers = new HashSet<>();
     private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
     private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
 
@@ -131,7 +127,7 @@ public class Master extends AbstractActor {
     public void postStop() throws Exception {
         super.postStop();
 
-        for (ActorRef worker : this.readyForDFWWork) {
+        for (ActorRef worker : this.registeredWorkers) {
             worker.tell(PoisonPill.getInstance(), this.self());
         }
 
@@ -158,7 +154,7 @@ public class Master extends AbstractActor {
     }
 
     private void handle(ConfigMessage message) {
-        this.csvService = new CSVService(message.dataPath, (int) Math.pow(2,MIN_WORKLOAD));
+        this.csvService = new CSVService(message.dataPath, true, '\n', (int) Math.pow(2,MIN_WORKLOAD));
         this.goldPath = message.goldPath;
     }
 
@@ -169,7 +165,7 @@ public class Master extends AbstractActor {
 
         this.addWorker(worker);
 
-        this.router.addNewObject(worker);
+        this.router.putOnHashring(worker);
 
         this.log.info("Router version: " + this.router.getVersion());
 
@@ -348,7 +344,7 @@ public class Master extends AbstractActor {
 
     private void addWorker(ActorRef actor) {
         this.workers.add(actor);
-        this.readyForDFWWork.add(actor);
+        this.registeredWorkers.add(actor);
     }
 
     private void shutdown() {
