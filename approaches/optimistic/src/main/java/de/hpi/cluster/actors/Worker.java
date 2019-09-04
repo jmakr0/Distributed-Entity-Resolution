@@ -13,6 +13,14 @@ import de.hpi.cluster.actors.listeners.MetricsListener;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.ddd.transitiveClosure.DFWBlock;
+import de.hpi.rdse.der.dude.DuplicateDetector;
+import de.hpi.rdse.der.dude.SimpleDuplicateDetector;
+import de.hpi.rdse.der.partitioning.Md5HashRouter;
+import de.hpi.rdse.der.similarity.UniversalComparator;
+import de.hpi.rdse.der.similarity.numeric.AbsComparator;
+import de.hpi.rdse.der.similarity.numeric.NumberComparator;
+import de.hpi.rdse.der.similarity.string.JaroWinklerComparator;
+import de.hpi.rdse.der.similarity.string.StringComparator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
