@@ -1,8 +1,6 @@
 package de.hpi.cluster.actors;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
+import akka.actor.*;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.CurrentClusterState;
 import akka.cluster.ClusterEvent.MemberUp;
@@ -11,16 +9,18 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
+import de.hpi.cluster.actors.listeners.MetricsListener;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
-import de.hpi.rdse.der.dude.DuplicateDetector;
-import de.hpi.rdse.der.dude.SimpleDuplicateDetector;
-import de.hpi.rdse.der.partitioning.Md5HashRouter;
-import de.hpi.rdse.der.similarity.UniversalComparator;
-import de.hpi.rdse.der.similarity.numeric.AbsComparator;
-import de.hpi.rdse.der.similarity.numeric.NumberComparator;
-import de.hpi.rdse.der.similarity.string.JaroWinklerComparator;
-import de.hpi.rdse.der.similarity.string.StringComparator;
+import de.hpi.ddd.dd.DuplicateDetector;
+import de.hpi.ddd.dd.SimpleDuplicateDetector;
+import de.hpi.ddd.partition.Md5HashRouter;
+import de.hpi.ddd.similarity.UniversalComparator;
+import de.hpi.ddd.similarity.numeric.AbsComparator;
+import de.hpi.ddd.similarity.numeric.NumberComparator;
+import de.hpi.ddd.similarity.strings.JaroWinklerComparator;
+import de.hpi.ddd.similarity.strings.StringComparator;
+import de.hpi.ddd.transitiveClosure.DFWBlock;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -78,11 +78,20 @@ public class Worker extends AbstractActor {
         private static final long serialVersionUID = -5431818188868861534L;
     }
 
+    @Data @AllArgsConstructor
+    public static class DFWWorkMessage implements Serializable {
+        private static final long serialVersionUID = -1943426365861861534L;
+        private DFWWorkMessage() {}
+        protected DFWBlock block;
+    }
+
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
     private final Cluster cluster = Cluster.get(this.context().system());
 
     // todo: put this into ONE object
     private double similarityThreshold;
+    private double numberComparisonIntervalStart;
+    private double numberComparisonIntervalEnd;
 
     private Md5HashRouter router;
     private Map<String, List<String[]>> data = new HashMap<>();
@@ -119,6 +128,7 @@ public class Worker extends AbstractActor {
                 .match(DataMessage.class, this::handle)
                 .match(ParsedDataMessage.class, this::handle)
                 .match(SimilarityMessage.class, this::handle)
+                .match(DFWWorkMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -140,6 +150,8 @@ public class Worker extends AbstractActor {
 
         this.blocking = registerAckMessage.blocking;
         this.similarityThreshold = registerAckMessage.similarityThreshold;
+        this.numberComparisonIntervalStart = registerAckMessage.numberComparisonIntervalStart;
+        this.numberComparisonIntervalEnd = registerAckMessage.numberComparisonIntervalEnd;
         this.setRouter(registerAckMessage.router, "RegisterAckMessage");
 
 //        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
@@ -185,10 +197,10 @@ public class Worker extends AbstractActor {
 
 //    private void sendData(ActorRef peer) {
 
-        // todo:
-        // get data for peer
-        // delete peer from sendQueue
-        // send data to peer
+    // todo:
+    // get data for peer
+    // delete peer from sendQueue
+    // send data to peer
 
 //        Iterator<Map.Entry<String,List<String[]>>> iterator = this.data.entrySet().iterator();
 //
@@ -219,8 +231,7 @@ public class Worker extends AbstractActor {
         String[] lines = {};
 
         if (!dataMessage.data.isEmpty()) {
-            String data = cleanData(dataMessage.data);
-            lines = data.split("\n");
+            lines = dataMessage.data.split("\n");
         }
         List<String[]> records = new LinkedList<>();
 
@@ -247,12 +258,6 @@ public class Worker extends AbstractActor {
         this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
     }
 
-    private String cleanData(String data) {
-
-        return data.replaceAll("\"", "")
-                    .replaceAll("\'", "");
-    }
-
     private void repartition() {
         this.log.info("Repartition");
 
@@ -260,7 +265,7 @@ public class Worker extends AbstractActor {
 
         while (iterator.hasNext()) {
             Map.Entry<String,List<String[]>> entry = iterator.next();
-            ActorRef peer = this.router.responsibleActor(entry.getValue().toString());
+            ActorRef peer = this.router.getObjectForKey(entry.getValue().toString());
 
             if(peer.compareTo(this.self()) != 0) {
                 peer.tell(new ParsedDataMessage(entry.getKey(), entry.getValue(), this.router), this.self());
@@ -272,7 +277,7 @@ public class Worker extends AbstractActor {
 
     private void distributeDataToWorkers(Map<String, List<String[]>> parsedData) {
         for(String key: parsedData.keySet()) {
-            ActorRef responsibleWorker = this.router.responsibleActor(key);
+            ActorRef responsibleWorker = this.router.getObjectForKey(key);
             List<String[]> pd = parsedData.get(key);
 
             if(responsibleWorker.compareTo(this.self()) == 0) {
@@ -318,13 +323,13 @@ public class Worker extends AbstractActor {
         this.log.info("number of data keys: {}", this.data.keySet().size());
 
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator();
+        NumberComparator nComparator = new AbsComparator(this.numberComparisonIntervalStart,this.numberComparisonIntervalEnd);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator);
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
 
         for (String key: data.keySet()) {
-            Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
+            Set<Set<Integer>> duplicates = duDetector.findDuplicatesForBlock(data.get(key));
             if (!duplicates.isEmpty()) {
                 this.log.info("Duplicate {}", duplicates);
 
@@ -333,6 +338,14 @@ public class Worker extends AbstractActor {
         }
 
         this.sender().tell(new Master.ComparisonFinishedMessage(), this.self());
+    }
+
+    private void handle(DFWWorkMessage dfwWorkMessage) {
+        DFWBlock block = dfwWorkMessage.block;
+        block.calculate();
+
+//        this.log.info("tell DFWWorkFinishedMessage");
+        this.sender().tell(new Master.DFWWorkFinishedMessage(block), this.self());
     }
 
     private void register(Member member) {
