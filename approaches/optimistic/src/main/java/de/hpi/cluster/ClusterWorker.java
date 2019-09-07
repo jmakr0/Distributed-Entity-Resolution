@@ -15,10 +15,10 @@ public class ClusterWorker extends ClusterSystem {
 
 	public static void start(String actorSystemName, Config config) {
 		int workers = config.getInt("der.cluster.worker.worker-actors");
-		String host = config.getString("der.cluster.worker.default-host-address");
+		String host = config.getString("der.cluster.worker.host-address");
 		int port = config.getInt("der.cluster.worker.port");
 		int masterPort = config.getInt("der.cluster.master.port");
-		String masterHost = config.getString("der.cluster.master.default-host-address");
+		String masterHost = config.getString("der.cluster.master.host-address");
 
 		start(actorSystemName, workers, host, port, masterHost, masterPort);
 	}

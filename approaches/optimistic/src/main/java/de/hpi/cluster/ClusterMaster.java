@@ -17,7 +17,7 @@ public class ClusterMaster extends ClusterSystem {
 
 	public static void start(String actorSystemName, Config config) {
 		int workers = config.getInt("der.cluster.master.worker-actors");
-		String host = config.getString("der.cluster.master.default-host-address");
+		String host = config.getString("der.cluster.master.host-address");
 		int port = config.getInt("der.cluster.master.port");
 		String inputPath = config.getString("der.data.input.path");
 		String goldPath = config.getString("der.data.gold-standard.path");
