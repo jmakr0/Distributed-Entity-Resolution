@@ -38,8 +38,6 @@ public class DFWPosition {
 
     @Override
     public int hashCode() {
-        String hash = x + "-" + y;
-
-        return hash.hashCode();
+        return (x + "-" + y).hashCode();
     }
 }

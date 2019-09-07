@@ -9,6 +9,7 @@ public class DFW {
 
     private DFWCoordinator dfwCoordinator;
 
+
 //    private List<DFWBlock> pendingBlocks;
 //    private Set<DFWPosition> calculated;
 //    private Set<DFWPosition> crossPositions;
@@ -58,9 +59,7 @@ public class DFW {
         if(this.dfwCoordinator.isNotDone()) {
             DFWPosition nextPosition = this.dfwCoordinator.getNext();
             DFWPosition pivotPosition = this.dfwCoordinator.getPivot(nextPosition);
-
             SubMatrix target = new SubMatrix(this.matrix, nextPosition, this.blksize);
-//            SubMatrix pivot = new SubMatrix(this.matrix, pivotPosition, this.blksize);
 
             return new DFWBlock(target, pivotPosition);
         }
