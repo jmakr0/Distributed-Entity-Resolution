@@ -15,7 +15,7 @@
 		- input
 			- **path** = restaurant.csv
 			- **has-header** = true
-			- line-separator = '\\n'
+			- **line-separator** = '\\n'
 			- **max-queue-size** = 5
 		- gold-standard
 			- **path** = restaurant_gold.csv

@@ -161,8 +161,7 @@ public class Master extends AbstractActor {
         this.goldPath = this.config.getString("der.data.gold-standard.path");
         String data = this.config.getString("der.data.input.path");
         boolean hasHeader = this.config.getBoolean("der.data.input.has-header");
-        // TODO get separator from config
-        char separator = '\n';
+        char separator = this.config.getString("der.data.input.line-separator").charAt(0);
         int minWorkload = this.config.getInt("der.performance-tracker.min-workload");
         int maxQueueSize = this.config.getInt("der.data.input.max-queue-size");
 
