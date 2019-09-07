@@ -8,17 +8,18 @@ import java.util.*;
 
 public class CSVService {
 
-    private final int QUEUE_SIZE = 5;
-
     private boolean allDataRead;
     private Map<Integer, Queue<String>> data;
+    private int maxQueuSize;
     private Set<Integer> queueSizes;
     private CSVReader csvReader;
 
-    public CSVService(String dataFile, boolean hasHeader, char separator, int minBlockSize) {
+    public CSVService(String dataFile, boolean hasHeader, char separator, int minBlockSize, int maxQueueSize) {
         this.allDataRead = false;
 
         this.data = new HashMap<>();
+
+        this.maxQueuSize = maxQueueSize;
 
         this.queueSizes = new HashSet<>();
         this.queueSizes.add(minBlockSize);
@@ -64,7 +65,7 @@ public class CSVService {
             for (Integer numberOfLines: this.data.keySet()) {
                 Queue<String> queue = this.data.get(numberOfLines);
 
-                while(!allDataRead && queue.size() < this.QUEUE_SIZE) {
+                while(!allDataRead && queue.size() < this.maxQueuSize) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < numberOfLines; i++) {
                         String[] tmpRecord = this.csvReader.readNext();

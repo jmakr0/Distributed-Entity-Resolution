@@ -329,16 +329,14 @@ public class Worker extends AbstractActor {
         this.log.info("number of data keys: {}", this.data.keySet().size());
 
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator();
+        NumberComparator nComparator = new AbsComparator(this.numberComparisonIntervalStart, this.numberComparisonIntervalEnd);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator);
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
 
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
-                this.log.info("Duplicate {}", duplicates);
-
                 this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
         }

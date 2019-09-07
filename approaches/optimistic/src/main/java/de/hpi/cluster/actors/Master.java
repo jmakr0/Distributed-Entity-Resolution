@@ -17,6 +17,7 @@ import de.hpi.rdse.der.partitioning.Md5HashRouter;
 import de.hpi.rdse.der.performance.PerformanceTracker;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import com.typesafe.config.Config;
 
 import java.io.Serializable;
 import java.util.*;
@@ -33,8 +34,7 @@ public class Master extends AbstractActor {
     public static class ConfigMessage implements Serializable {
         private static final long serialVersionUID = -7330958742629706627L;
         private ConfigMessage() {}
-        private String dataPath;
-        private String goldPath;
+        private Config config;
     }
 
     @Data @AllArgsConstructor
@@ -96,13 +96,7 @@ public class Master extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-    private final int NUMBER_OF_BUCKETS = 500;
-    private final double SIMILARITY_THRESHOLD = 0.9;
-    private final double NUMBER_INTERVAL_START = 5;
-    private final double NUMBER_INTERVAL_END = 30;
-    private final long TIME_THRESHOLD = 5000;
-    private final int MIN_WORKLOAD = 1;
-    private final int BLOCK_SIZE = 100;
+    private Config config;
 
     private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
 
@@ -116,11 +110,13 @@ public class Master extends AbstractActor {
 
     private CSVService csvService;
     private String goldPath;
-    private Md5HashRouter router = new Md5HashRouter(NUMBER_OF_BUCKETS);
+    private Md5HashRouter router;
 
     private ActorRef tcMaster;
 
-    private PerformanceTracker performanceTracker = new PerformanceTracker(TIME_THRESHOLD, MIN_WORKLOAD);
+    private PerformanceTracker performanceTracker;
+
+    private int fwBlockSize;
 
     @Override
     public void preStart() throws Exception {
@@ -160,8 +156,25 @@ public class Master extends AbstractActor {
     }
 
     private void handle(ConfigMessage message) {
-        this.csvService = new CSVService(message.dataPath, true, '\n', (int) Math.pow(2,MIN_WORKLOAD));
-        this.goldPath = message.goldPath;
+        this.config = message.config;
+
+        this.goldPath = this.config.getString("der.data.gold-standard.path");
+        String data = this.config.getString("der.data.input.path");
+        boolean hasHeader = this.config.getBoolean("der.data.input.has-header");
+        // TODO get separator from config
+        char separator = '\n';
+        int minWorkload = this.config.getInt("der.performance-tracker.min-workload");
+        int maxQueueSize = this.config.getInt("der.data.input.max-queue-size");
+
+        this.csvService = new CSVService(data, hasHeader, separator, (int) Math.pow(2,minWorkload), maxQueueSize);
+
+        int numberOfBuckets = this.config.getInt("der.hash-router.number-of-buckets");
+        this.router = new Md5HashRouter(numberOfBuckets);
+
+        int timeThreshold = this.config.getInt("der.performance-tracker.time-threshold");
+        this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload);
+
+        this.fwBlockSize = this.config.getInt("der.transitive-closure.block-size");
     }
 
     private void handle(RegisterMessage registerMessage) {
@@ -179,11 +192,15 @@ public class Master extends AbstractActor {
 
         Md5HashRouter routerCopy = new Md5HashRouter(this.router);
 
+        double similarityThreshold = config.getDouble("der.duplicate-detection.similarity-threshold");
+        int intervalStart = config.getInt("der.similarity.abs-comparator.interval-start");
+        int intervalEnd = config.getInt("der.similarity.abs-comparator.interval-end");
+
         worker.tell(new Worker.RegisterAckMessage(
                         new NameBlocking(),
-                        SIMILARITY_THRESHOLD,
-                        NUMBER_INTERVAL_START,
-                        NUMBER_INTERVAL_END,
+                        similarityThreshold,
+                        intervalStart,
+                        intervalEnd,
                         routerCopy),
                 this.self()
         );
@@ -260,7 +277,7 @@ public class Master extends AbstractActor {
         this.log.info("Calculate Transitive Closure");
         this.tcMaster = context().actorOf(TCMaster.props(), TCMaster.DEFAULT_NAME);
 
-        tcMaster.tell(new TCMaster.CalculateMessage(this.duplicates, this.BLOCK_SIZE), this.self());
+        tcMaster.tell(new TCMaster.CalculateMessage(this.duplicates, this.fwBlockSize), this.self());
     }
 
     private void evaluateDuplicates() {
