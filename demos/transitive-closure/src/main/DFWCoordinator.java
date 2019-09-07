@@ -12,7 +12,7 @@ public class DFWCoordinator {
     class Block {
         int round = 0;
         DFWPosition position;
-        Map<Integer, Set<Block>> dependsOn = new HashMap<>();
+        Map<Integer, Set<Block>> dependencies = new HashMap<>();
         Map<Integer, Set<Block>> next = new HashMap<>();
 
         @Override
@@ -55,9 +55,9 @@ public class DFWCoordinator {
 
     public boolean isNotDone() {
         Block blk = this.blocks.get(process.end);
-        int round = blk.dependsOn.size() -1;
+        int round = blk.dependencies.size() -1;
 
-        return !this.pending.isEmpty() || !blk.dependsOn.get(round).isEmpty();
+        return !this.pending.isEmpty() || !blk.dependencies.get(round).isEmpty();
     }
 
     private Map<DFWPosition, Block> generateBlocks(int matrixSize, int blksize) {
@@ -75,6 +75,10 @@ public class DFWCoordinator {
     }
 
     private void setDependency(int round, DFWPosition from, DFWPosition to) {
+        if (round < 0) {
+            return;
+        }
+
         Block blkFrom = this.blocks.get(from);
         Block blkTo = this.blocks.get(to);
 
@@ -82,12 +86,34 @@ public class DFWCoordinator {
             blkFrom.next.put(round, new HashSet<>());
         }
 
-        if (!blkTo.dependsOn.containsKey(round)) {
-            blkTo.dependsOn.put(round, new HashSet<>());
+        if (!blkTo.dependencies.containsKey(round)) {
+            blkTo.dependencies.put(round, new HashSet<>());
         }
 
         blkFrom.next.get(round).add(blkTo);
-        blkTo.dependsOn.get(round).add(blkFrom);
+        blkTo.dependencies.get(round).add(blkFrom);
+    }
+
+    private void setPriorDependency(int round, DFWPosition position) {
+        int priorRound = round - 1;
+
+        if (priorRound < 0) {
+            return;
+        }
+
+        Block blk = this.blocks.get(position);
+
+        if (!blk.next.containsKey(round)) {
+            blk.next.put(round, new HashSet<>());
+        }
+
+        if (!blk.dependencies.containsKey(round)) {
+            blk.dependencies.put(round, new HashSet<>());
+        }
+
+        // the block depends on itself to get calculated
+        blk.next.get(round).add(blk);
+        blk.dependencies.get(round).add(blk);
     }
 
     private Process generateDependencies(int matrixSize, int blksize) {
@@ -111,8 +137,16 @@ public class DFWCoordinator {
                     DFWPosition x = new DFWPosition(i, k);
                     DFWPosition y = new DFWPosition(k, i);
 
-                    this.setDependency(round, pivot, x);
-                    this.setDependency(round, pivot, y);
+                    this.setPriorDependency(round, x);
+                    this.setPriorDependency(round, y);
+
+//                    if (k == 0) {
+                        this.setDependency(round, pivot, x);
+                        this.setDependency(round, pivot, y);
+//                    } else {
+//                        this.setDependency(round - 1, pivot, x);
+//                        this.setDependency(round - 1 , pivot, y);
+//                    }
 
                     // triples
                     for (int j = 0; j < matrixSize; j += blksize) {
@@ -157,9 +191,9 @@ public class DFWCoordinator {
         if (blk.next.containsKey(round)) {
 
             for (Block nextBlk : blk.next.get(round)) {
-                nextBlk.dependsOn.get(round).remove(blk);
+                nextBlk.dependencies.get(round).remove(blk);
 
-                if (nextBlk.dependsOn.get(round).isEmpty()) {
+                if (nextBlk.dependencies.get(round).isEmpty()) {
                     result.add(nextBlk.position);
                 }
 
