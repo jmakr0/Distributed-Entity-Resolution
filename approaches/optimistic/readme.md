@@ -3,10 +3,10 @@
 ## Configuration
 
 To make our solution easily configurable we introduced a configuration file.
-Per default the [default.conf](/src/main/resources/default.conf) file is used.
+Per default the [default.conf](approaches/optimistic/src/main/resources/default.conf) file is used.
 
 #### Use a custom configuration
-* copy the [default.conf](/src/main/resources/default.conf) and rename it (e.g. `my-config`) and edit it
+* copy the [default.conf](src/main/resources/default.conf) and rename it (e.g. `my-config`) and edit it
 * when starting a `master` or `worker` instance use the command line parameter `-c`(or `-config`) (e.g. `master my-config`)
 
 
