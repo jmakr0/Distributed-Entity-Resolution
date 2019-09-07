@@ -4,11 +4,6 @@ import java.util.*;
 
 public class DFWCoordinator {
 
-    class Process {
-        DFWPosition start;
-        DFWPosition end;
-    }
-
     class Block {
         int round = 0;
         DFWPosition position;
@@ -26,27 +21,34 @@ public class DFWCoordinator {
         }
     }
 
-    private Process process;
-    private Map<DFWPosition, Block> blocks;
+    private int maxRounds;
+    private int pendingResponses = 0;
     private Queue<DFWPosition> pending;
+    private Map<DFWPosition, Block> blocks;
 
     public DFWCoordinator(int matrixSize, int blksize) {
+        DFWPosition start = new DFWPosition(0, 0);
         this.pending = new LinkedList<>();
 
         this.blocks = this.generateBlocks(matrixSize, blksize);
-        this.process = this.generateDependencies(matrixSize, blksize);
 
-        this.pending.add(process.start);
+        this.generateDependencies(matrixSize, blksize);
+
+        this.maxRounds = (matrixSize / blksize) -1;
+        this.pending.add(start);
     }
 
 
     public void calculated(DFWPosition position) {
         List<DFWPosition> positions = getNextPositions(position);
         this.pending.addAll(positions);
+        this.pendingResponses --;
     }
 
     public DFWPosition getNext() {
         if (isNotDone()) {
+            this.pendingResponses ++;
+
             return this.pending.poll();
         }
 
@@ -54,10 +56,7 @@ public class DFWCoordinator {
     }
 
     public boolean isNotDone() {
-        Block blk = this.blocks.get(process.end);
-        int round = blk.dependencies.size() -1;
-
-        return !this.pending.isEmpty() || !blk.dependencies.get(round).isEmpty();
+        return !this.pending.isEmpty() || this.pendingResponses > 0;
     }
 
     private Map<DFWPosition, Block> generateBlocks(int matrixSize, int blksize) {
@@ -74,11 +73,23 @@ public class DFWCoordinator {
         return blocks;
     }
 
-    private void setDependency(int round, DFWPosition from, DFWPosition to) {
-        if (round < 0) {
+    private void setDependency(int round, DFWPosition position) {
+        int priorRound = round - 1;
+
+        if (priorRound < 0) {
             return;
         }
 
+        Block blk = this.blocks.get(position);
+
+        if (!blk.dependencies.containsKey(round)) {
+            blk.dependencies.put(round, new HashSet<>());
+        }
+
+        blk.dependencies.get(round).add(blk);
+    }
+
+    private void setDependency(int round, DFWPosition from, DFWPosition to) {
         Block blkFrom = this.blocks.get(from);
         Block blkTo = this.blocks.get(to);
 
@@ -94,41 +105,12 @@ public class DFWCoordinator {
         blkTo.dependencies.get(round).add(blkFrom);
     }
 
-    private void setPriorDependency(int round, DFWPosition position) {
-        int priorRound = round - 1;
-
-        if (priorRound < 0) {
-            return;
-        }
-
-        Block blk = this.blocks.get(position);
-
-        if (!blk.next.containsKey(round)) {
-            blk.next.put(round, new HashSet<>());
-        }
-
-        if (!blk.dependencies.containsKey(round)) {
-            blk.dependencies.put(round, new HashSet<>());
-        }
-
-        // the block depends on itself to get calculated
-        blk.next.get(round).add(blk);
-        blk.dependencies.get(round).add(blk);
-    }
-
-    private Process generateDependencies(int matrixSize, int blksize) {
-        final Process process = new Process();
+    private void generateDependencies(int matrixSize, int blksize) {
         int round = 0;
 
         for (int k = 0; k < matrixSize; k += blksize) {
 
             DFWPosition pivot = new DFWPosition(k, k);
-
-            if (round == 0) {
-                process.start = pivot;
-            } else if (k + blksize >= matrixSize) {
-                process.end = pivot;
-            }
 
             // tuples
             for (int i = 0; i < matrixSize; i += blksize) {
@@ -137,16 +119,11 @@ public class DFWCoordinator {
                     DFWPosition x = new DFWPosition(i, k);
                     DFWPosition y = new DFWPosition(k, i);
 
-                    this.setPriorDependency(round, x);
-                    this.setPriorDependency(round, y);
+                    this.setDependency(round, x);
+                    this.setDependency(round, y);
 
-//                    if (k == 0) {
-                        this.setDependency(round, pivot, x);
-                        this.setDependency(round, pivot, y);
-//                    } else {
-//                        this.setDependency(round - 1, pivot, x);
-//                        this.setDependency(round - 1 , pivot, y);
-//                    }
+                    this.setDependency(round, pivot, x);
+                    this.setDependency(round, pivot, y);
 
                     // triples
                     for (int j = 0; j < matrixSize; j += blksize) {
@@ -162,10 +139,8 @@ public class DFWCoordinator {
                             this.setDependency(round, y, x1);
 
                             if (!x1.equals(y1)) {
-
                                 this.setDependency(round, crossX, y1);
                                 this.setDependency(round, crossY, x1);
-
                             }
 
                         }
@@ -178,8 +153,6 @@ public class DFWCoordinator {
             round ++;
 
         }
-
-        return process;
     }
 
     private List<DFWPosition> getNextPositions(DFWPosition position) {
@@ -195,6 +168,10 @@ public class DFWCoordinator {
 
                 if (nextBlk.dependencies.get(round).isEmpty()) {
                     result.add(nextBlk.position);
+
+                    if (!nextBlk.dependencies.containsKey(round + 1) && round < this.maxRounds) {
+                        nextBlk.round ++;
+                    }
                 }
 
             }
@@ -202,6 +179,15 @@ public class DFWCoordinator {
         }
 
         blk.round ++;
+
+        if (blk.dependencies.containsKey(blk.round)) {
+            // remove itself for the next round
+            blk.dependencies.get(blk.round).remove(blk);
+            // ready for the next round
+            if (blk.dependencies.get(blk.round).isEmpty()) {
+                result.add(blk.position);
+            }
+        }
 
         return result;
     }

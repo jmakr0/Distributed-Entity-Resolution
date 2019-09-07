@@ -10,19 +10,19 @@ public class DFWPosition {
         this.y = y;
     }
 
-    public int getX() {
+    int getX() {
         return x;
     }
 
-    public int getY() {
+    int getY() {
         return y;
     }
 
-    public boolean sameX(int x) {
+    boolean sameX(int x) {
         return this.x == x;
     }
 
-    public boolean sameY(int y) {
+    boolean sameY(int y) {
         return this.y == y;
     }
 
