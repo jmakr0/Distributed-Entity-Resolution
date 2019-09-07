@@ -22,6 +22,7 @@ public class DFWCoordinator {
     }
 
     private int maxRounds;
+    private int blksize;
     private int pendingResponses = 0;
     private Queue<DFWPosition> pending;
     private Map<DFWPosition, Block> blocks;
@@ -34,6 +35,7 @@ public class DFWCoordinator {
 
         this.generateDependencies(matrixSize, blksize);
 
+        this.blksize = blksize;
         this.maxRounds = (matrixSize / blksize) -1;
         this.pending.add(start);
     }
@@ -53,6 +55,14 @@ public class DFWCoordinator {
         }
 
         return null;
+    }
+
+    public DFWPosition getPivot(DFWPosition position) {
+        Block blk = this.blocks.get(position);
+        int round = blk.round;
+        int blkSize = this.blksize;
+
+        return new DFWPosition(round * blkSize, round * blkSize);
     }
 
     public boolean isNotDone() {
