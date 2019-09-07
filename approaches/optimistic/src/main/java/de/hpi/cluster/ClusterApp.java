@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 public class ClusterApp {
 
     public static final String ACTOR_SYSTEM_NAME = "der-optimistic";
-    public static final String DEFAULT_CONFIG = "config";
+    public static final String DEFAULT_CONFIG = "default";
 
     public static void main(String[] args) {
 
