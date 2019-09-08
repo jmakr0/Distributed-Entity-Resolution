@@ -8,6 +8,7 @@ In order to try out different ways of distributing the process of entity resolut
 * **evaluation**: Provides code to evaluate the results of the entity resolution process against the corresponding *gold standard* by using _accuracy_, _recall_, and _F1-score_ as metrics.
 * **partitioning**: Provides the logic for the hash partitioning.
 * **set-operations**: Provides simple set operation functionalities that are used for example for the calculation of the F1-score.
+* **transitive-closure**: TODO
 
 ## Use the libraries
 The code base of the shared projects is imported into the `monolith` and `optimistic` approach using maven.
