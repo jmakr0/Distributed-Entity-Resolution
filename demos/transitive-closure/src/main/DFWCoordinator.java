@@ -33,8 +33,10 @@ public class DFWCoordinator {
             if (!this.previous.containsKey(round)) {
                 return;
             }
-            this.previous.get(round).remove(blk);
-            this.setDependedOn(blk);
+            if (this.previous.get(round).contains(blk)) {
+                this.previous.get(round).remove(blk);
+                this.setDependedOn(round, blk);
+            }
         }
 
         @Override
@@ -59,12 +61,12 @@ public class DFWCoordinator {
             this.previous.get(round).add(this);
         }
 
-        private void setDependedOn(Block blk) {
-            if (!this.dependedOn.containsKey(this.round)) {
-                this.dependedOn.put(this.round, new HashSet<>());
+        private void setDependedOn(int round, Block blk) {
+            if (!this.dependedOn.containsKey(round)) {
+                this.dependedOn.put(round, new HashSet<>());
             }
 
-            this.dependedOn.get(this.round).add(blk);
+            this.dependedOn.get(round).add(blk);
         }
     }
 

@@ -31,8 +31,14 @@ public class DFWBlock {
         return responsibleMatrix.getMatrixValue(x, y);
     }
 
-    public DFWBlock(SubMatrix target, SubMatrix pivot) {
-        this(target, pivot.getPosition());
+//    public DFWBlock(SubMatrix target, SubMatrix pivot) {
+//        this(target, pivot.getPosition());
+//    }
+
+    public DFWBlock(SubMatrix target, DFWPosition pivot, List<SubMatrix> data) {
+        this.target = target;
+        this.pivot = pivot;
+        this.subMatrices = data;
     }
 
     public DFWBlock(SubMatrix target, DFWPosition pivot) {

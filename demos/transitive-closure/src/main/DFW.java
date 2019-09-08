@@ -1,5 +1,7 @@
 package main;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class DFW {
@@ -54,17 +56,22 @@ public class DFW {
 
         if(this.dfwCoordinator.isNotDone()) {
             DFWPosition nextPosition = this.dfwCoordinator.getNext();
-            DFWPosition pivotPosition = this.dfwCoordinator.getPivotFromPosition(nextPosition);
-            Set<DFWPosition> dependencies = this.dfwCoordinator.getDependenciesFromPosition(nextPosition);
 
-            SubMatrix target = new SubMatrix(this.matrix, nextPosition, this.blksize);
-
-            System.out.println(dependencies);
-
-            return new DFWBlock(target, pivotPosition);
+            return this.getNextBlock(nextPosition);
         }
 
         return null;
+    }
+
+    private DFWBlock getNextBlock(DFWPosition position) {
+        DFWPosition pivot = this.dfwCoordinator.getPivotFromPosition(position);
+        SubMatrix target = new SubMatrix(this.matrix, position, this.blksize);
+        Set<DFWPosition> dependencies = this.dfwCoordinator.getDependenciesFromPosition(position);
+        List<SubMatrix> subMatrices = new LinkedList<>();
+
+        dependencies.forEach(d -> subMatrices.add(new SubMatrix(this.matrix, d, this.blksize)));
+
+        return new DFWBlock(target, pivot, subMatrices);
     }
 
     public void dispatch(SubMatrix block) {
