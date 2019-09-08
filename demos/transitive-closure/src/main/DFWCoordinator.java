@@ -205,8 +205,7 @@ public class DFWCoordinator {
 
         if (hasDependenciesNextRound && dependsOnBlk && round < maxRounds) {
             // remove itself for the next round
-//            blk.removePrevious(round + 1, blk);
-            blk.previous.get(round + 1).remove(blk);
+            blk.removePrevious(round + 1, blk);
             // ready for the next round
             if (blk.previous.get(round + 1).isEmpty()) {
                 result.add(blk.position);
