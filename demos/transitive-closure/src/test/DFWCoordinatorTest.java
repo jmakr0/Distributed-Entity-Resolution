@@ -15,7 +15,7 @@ import java.util.Set;
 public class DFWCoordinatorTest {
 
     private int matrixSize = 6;
-    private int blkSize = 4;
+    private int blkSize = 3;
     private Map<Integer, Set<DFWPosition>> testMatrix = new HashMap<>();
 
     @Before

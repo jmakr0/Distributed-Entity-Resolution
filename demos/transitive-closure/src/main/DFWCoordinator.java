@@ -77,15 +77,16 @@ public class DFWCoordinator {
     private Map<DFWPosition, Block> blocks;
 
     public DFWCoordinator(int matrixSize, int blksize) {
+        int paddedMatrixSize = (int) Math.ceil((double) matrixSize / blksize) * blksize;
         DFWPosition start = new DFWPosition(0, 0);
         this.pending = new LinkedList<>();
 
-        this.blocks = this.generateBlocks(matrixSize, blksize);
+        this.blocks = this.generateBlocks(paddedMatrixSize, blksize);
 
-        this.generateDependencies(matrixSize, blksize);
+        this.generateDependencies(paddedMatrixSize, blksize);
 
         this.blksize = blksize;
-        this.maxRounds = (matrixSize / blksize) -1;
+        this.maxRounds = (paddedMatrixSize / blksize) -1;
         this.pending.add(start);
     }
 
