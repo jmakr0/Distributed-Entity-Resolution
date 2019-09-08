@@ -37,8 +37,8 @@ The config file defines the following fields:
 		- **min-workload**: A natural number indicating the minimum workload a worker should get regardless of his current performance. (The size of the workload is defined as follows: `number_of_rows_in_data_chunk = workload^2) 
 	- similarity 
 		- abs-comparator
-			- **interval-start**: The distance between two given numbers that is minimum required so that similarity != 1.` (Note: for more details see: [AbsComparator](../shared/duplicate-detection/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java)) 
-			- **interval-end**: The distance between two given numbers that is so high such that we set similarity = 0.  (Note: for more details see: [AbsComparator](../shared/duplicate-detection/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java))
+			- **interval-start**: The distance between two given numbers that is minimum required so that similarity != 1.` (Note: for more details see: [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java)) 
+			- **interval-end**: The distance between two given numbers that is so high such that we set similarity = 0.  (Note: for more details see: [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java))
 			
 			Example for interval-start and interval-end: 
 			

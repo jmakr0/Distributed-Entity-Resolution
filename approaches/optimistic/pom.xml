@@ -104,7 +104,7 @@
 
 		<dependency>
 			<groupId>de.hpi.rdse.der</groupId>
-			<artifactId>duplicate-detection</artifactId>
+			<artifactId>entity-resolution</artifactId>
 			<version>1.0</version>
 		</dependency>
 
