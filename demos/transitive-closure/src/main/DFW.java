@@ -1,17 +1,13 @@
 package main;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 public class DFW {
 
     private DFWCoordinator dfwCoordinator;
 
-
 //    private List<DFWBlock> pendingBlocks;
-//    private Set<DFWPosition> calculated;
+//    private Set<DFWPosition> dependedOn;
 //    private Set<DFWPosition> crossPositions;
 //
 //    private SubMatrix pivot;
@@ -32,7 +28,7 @@ public class DFW {
 //        this.pivotIndex = 0;
 //
 //        this.pendingBlocks = new LinkedList<>();
-//        this.calculated = new HashSet<>();
+//        this.dependedOn = new HashSet<>();
 //        this.crossPositions = new HashSet<>();
 //
 //        this.pivotsMax = (int) Math.ceil((double) matrix.length / blksize);
@@ -58,8 +54,12 @@ public class DFW {
 
         if(this.dfwCoordinator.isNotDone()) {
             DFWPosition nextPosition = this.dfwCoordinator.getNext();
-            DFWPosition pivotPosition = this.dfwCoordinator.getPivot(nextPosition);
+            DFWPosition pivotPosition = this.dfwCoordinator.getPivotFromPosition(nextPosition);
+            Set<DFWPosition> dependencies = this.dfwCoordinator.getDependenciesFromPosition(nextPosition);
+
             SubMatrix target = new SubMatrix(this.matrix, nextPosition, this.blksize);
+
+            System.out.println(dependencies);
 
             return new DFWBlock(target, pivotPosition);
         }
@@ -80,7 +80,7 @@ public class DFW {
 //        } else if (this.isTuple(block)) {
 //
 //            this.generateTriple(block);
-//            this.calculated.add(block.getPosition());
+//            this.dependedOn.add(block.getPosition());
 //
 //        } else if (this.isTriple(block)) {
 //
@@ -169,7 +169,7 @@ public class DFW {
 //        for (DFWPosition pos: pairingPositions) {
 //
 //            // block is available
-//            if(this.calculated.contains(pos)) {
+//            if(this.dependedOn.contains(pos)) {
 //                DFWPosition targetPos = this.pivot.getTargetPosition(other.getPosition(), pos);
 //                SubMatrix target = new SubMatrix(this.matrix, targetPos, this.blksize);
 //
@@ -207,14 +207,14 @@ public class DFW {
 //            return;
 //        }
 //
-//        this.calculated.clear();
+//        this.dependedOn.clear();
 //        this.crossPositions.clear();
 //
 //        this.pivot = this.getNextPivot(this.pivotIndex);
 //        this.pivotIndex++;
 //        this.pendingTriplesCount = this.calculateTripleCount(this.pivotsMax);
 //
-//        if(!this.calculated()) {
+//        if(!this.dependedOn()) {
 //            this.pendingBlocks.add(new DFWBlock(this.pivot, this.pivot));
 //            this.crossPositions.addAll(this.calculateCrossPositions());
 //        }
