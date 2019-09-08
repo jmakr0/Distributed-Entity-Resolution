@@ -1,5 +1,6 @@
 package test;
 
+import main.DFWBlock;
 import main.DFWCoordinator;
 import main.DFWPosition;
 import org.junit.Assert;
@@ -78,6 +79,42 @@ public class DFWCoordinatorTest {
         Assert.assertTrue(this.testMatrix.isEmpty());
     }
 
+    @Test
+    public void dependencies() {
+        DFWCoordinator dfwCoordinator = new DFWCoordinator(matrixSize, blkSize);
 
+        int round = 0;
+        DFWPosition pos;
 
+        while (dfwCoordinator.isNotDone()) {
+            pos = dfwCoordinator.getNext();
+
+            Set<DFWPosition> dependencies = dfwCoordinator.getDependenciesFromPosition(pos);
+            Set<DFWPosition> expectedDependencies = calculateDependencies(pos, round);
+            Assert.assertEquals(expectedDependencies, dependencies);
+
+            this.testMatrix.get(round).remove(pos);
+
+            dfwCoordinator.calculated(pos);
+
+            if (this.testMatrix.get(round).isEmpty()) {
+                this.testMatrix.remove(round);
+                round++;
+            }
+        }
+
+        Assert.assertTrue(this.testMatrix.isEmpty());
+    }
+
+    private Set<DFWPosition> calculateDependencies(DFWPosition position, int round) {
+        Set<DFWPosition> dependencies = new HashSet<>();
+
+        dependencies.add(new DFWPosition(position.getX(), round));
+        dependencies.add(new DFWPosition(round, position.getY()));
+
+        // the own position should not be a dependency
+        dependencies.remove(position);
+
+        return dependencies;
+    }
 }
