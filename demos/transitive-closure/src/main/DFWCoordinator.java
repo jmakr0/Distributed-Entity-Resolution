@@ -200,11 +200,13 @@ public class DFWCoordinator {
 
         int round = blk.round;
         boolean hasDependenciesNextRound = blk.previous.containsKey(round + 1);
+        boolean dependsOnBlk = hasDependenciesNextRound && blk.previous.get(round + 1).contains(blk);
         boolean isNextPivot = !hasDependenciesNextRound;
 
-        if (hasDependenciesNextRound && round < maxRounds) {
+        if (hasDependenciesNextRound && dependsOnBlk && round < maxRounds) {
             // remove itself for the next round
-            blk.removePrevious(round + 1, blk);
+//            blk.removePrevious(round + 1, blk);
+            blk.previous.get(round + 1).remove(blk);
             // ready for the next round
             if (blk.previous.get(round + 1).isEmpty()) {
                 result.add(blk.position);
