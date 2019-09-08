@@ -15,7 +15,7 @@ import java.util.Set;
 public class DFWCoordinatorTest {
 
     private int matrixSize = 6;
-    private int blkSize = 1;
+    private int blkSize = 4;
     private Map<Integer, Set<DFWPosition>> testMatrix = new HashMap<>();
 
     @Before
@@ -109,8 +109,8 @@ public class DFWCoordinatorTest {
     private Set<DFWPosition> calculateDependencies(DFWPosition position, int round) {
         Set<DFWPosition> dependencies = new HashSet<>();
 
-        dependencies.add(new DFWPosition(position.getX(), round));
-        dependencies.add(new DFWPosition(round, position.getY()));
+        dependencies.add(new DFWPosition(position.getX(), round*blkSize));
+        dependencies.add(new DFWPosition(round*blkSize, position.getY()));
 
         // the own position should not be a dependency
         dependencies.remove(position);
