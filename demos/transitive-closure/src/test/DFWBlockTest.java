@@ -1,13 +1,16 @@
 package test;
 
+import javafx.geometry.Pos;
 import main.DFWBlock;
-import main.DFWPosition;
+import main.Position;
 import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DFWBlockTest {
 
@@ -31,14 +34,17 @@ public class DFWBlockTest {
 
     @Test
     public void testCalculateTargetPlusOne() {
-        SubMatrix target = new SubMatrix(testMatrix, 6,2, 2);
-        DFWPosition pivot = new DFWPosition(2,2);
+        Position pos = new Position(6, 2);
+        Position pivot = new Position(2,2);
+
+        SubMatrix target = new SubMatrix(testMatrix, pos, 2);
+        List<SubMatrix> subMatrices = new LinkedList<>();
 
         // in this case the only path is the pivot element
-        SubMatrix path = new SubMatrix(this.testMatrix, 2, 2, 2);
+        SubMatrix path = new SubMatrix(this.testMatrix, pivot, 2);
+        subMatrices.add(path);
 
-        DFWBlock dfwBlock = new DFWBlock(target, pivot);
-        dfwBlock.addSubMatrix(path);
+        DFWBlock dfwBlock = new DFWBlock(target, pivot, subMatrices);
 
         dfwBlock.calculate();
 
@@ -53,15 +59,21 @@ public class DFWBlockTest {
 
     @Test
     public void testCalculateTargetPlusTwoInCross() {
-        SubMatrix target = new SubMatrix(testMatrix, 6,6, 2);
-        DFWPosition pivot = new DFWPosition(2,2);
+        Position pivot = new Position(2,2);
+        Position pos = new Position(6, 6);
+        Position pos1 = new Position(2, 6);
+        Position pos2 = new Position(6, 2);
+        List<SubMatrix> subMatrices = new LinkedList<>();
 
-        SubMatrix p1 = new SubMatrix(this.testMatrix, 2, 6, 2);
-        SubMatrix p2 = new SubMatrix(this.testMatrix, 6, 2, 2);
+        SubMatrix target = new SubMatrix(testMatrix, pos, 2);
 
-        DFWBlock dfwBlock = new DFWBlock(target, pivot);
-        dfwBlock.addSubMatrix(p1);
-        dfwBlock.addSubMatrix(p2);
+        SubMatrix sub1 = new SubMatrix(this.testMatrix, pos1, 2);
+        SubMatrix sub2 = new SubMatrix(this.testMatrix, pos2, 2);
+
+        subMatrices.add(sub1);
+        subMatrices.add(sub2);
+
+        DFWBlock dfwBlock = new DFWBlock(target, pivot, subMatrices);
 
         dfwBlock.calculate();
 
@@ -76,15 +88,20 @@ public class DFWBlockTest {
 
     @Test
     public void testCalculateTargetPlusTwoOutOfCross() {
-        SubMatrix target = new SubMatrix(testMatrix, 0,6, 2);
-        DFWPosition pivot = new DFWPosition(2,2);
+        Position pivot = new Position(2,2);
+        Position pos = new Position(0, 6);
+        Position pos1 = new Position(0, 2);
+        Position pos2 = new Position(2, 6);
+        List<SubMatrix> subMatrices = new LinkedList<>();
 
-        SubMatrix p1 = new SubMatrix(this.testMatrix, 0, 2, 2);
-        SubMatrix p2 = new SubMatrix(this.testMatrix, 2, 6, 2);
+        SubMatrix target = new SubMatrix(testMatrix, pos, 2);
+        SubMatrix sub1 = new SubMatrix(this.testMatrix, pos1, 2);
+        SubMatrix sub2 = new SubMatrix(this.testMatrix, pos2, 2);
 
-        DFWBlock dfwBlock = new DFWBlock(target, pivot);
-        dfwBlock.addSubMatrix(p1);
-        dfwBlock.addSubMatrix(p2);
+        subMatrices.add(sub1);
+        subMatrices.add(sub2);
+
+        DFWBlock dfwBlock = new DFWBlock(target, pivot, subMatrices);
 
         dfwBlock.calculate();
 
