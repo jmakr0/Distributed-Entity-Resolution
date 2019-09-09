@@ -8,10 +8,6 @@ public class SubMatrix {
     private int subMatrixSize;
     private int [][] subMatrix;
 
-    public SubMatrix(int [][] matrix, int x, int y, int size) {
-        this(matrix, new Position(x, y), size);
-    }
-
     public SubMatrix(int [][] matrix, Position position, int size) {
         this.position = position;
         this.subMatrixSize = size;
@@ -59,14 +55,14 @@ public class SubMatrix {
         return xRange && yRange;
     }
 
-    public void setMatrixValue(int x, int y, int update) {
+    public void setValue(int x, int y, int update) {
         int internX = this.getInternX(x);
         int internY = this.getInternY(y);
 
         subMatrix[internX][internY] = update;
     }
 
-    public int getMatrixValue(int x, int y) {
+    public int getValue(int x, int y) {
         int internX = getInternX(x);
         int internY = getInternY(y);
 

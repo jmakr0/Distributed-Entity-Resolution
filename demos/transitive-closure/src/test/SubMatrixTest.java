@@ -1,5 +1,6 @@
 package test;
 
+import main.Position;
 import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,7 +25,8 @@ public class SubMatrixTest {
 
     @Test
     public void testFill() {
-        SubMatrix result = new SubMatrix(testMatrix, 1, 1, 2);
+        Position pos = new Position(1, 1);
+        SubMatrix result = new SubMatrix(testMatrix, pos, 2);
 
         int [][] expected = new int [2][2];
         expected[0] = new int[]{2, 3};
@@ -35,7 +37,8 @@ public class SubMatrixTest {
 
     @Test
     public void testFillOverflow() {
-        SubMatrix result = new SubMatrix(testMatrix, 4,4, 3);
+        Position pos = new Position(4, 4);
+        SubMatrix result = new SubMatrix(testMatrix, pos, 3);
 
         int [][] expected = new int [3][3];
         expected[0] = new int[]{8, 9, Integer.MAX_VALUE};
@@ -47,17 +50,19 @@ public class SubMatrixTest {
 
     @Test
     public void testGetMatrixValue() {
-        SubMatrix sub = new SubMatrix(testMatrix, 2, 4, 2);
+        Position pos = new Position(2, 4);
+        SubMatrix sub = new SubMatrix(testMatrix, pos, 2);
 
-        Assert.assertEquals(6, sub.getMatrixValue(2, 4));
-        Assert.assertEquals(7, sub.getMatrixValue(2, 5));
-        Assert.assertEquals(7, sub.getMatrixValue(3, 4));
-        Assert.assertEquals(8, sub.getMatrixValue(3, 5));
+        Assert.assertEquals(6, sub.getValue(2, 4));
+        Assert.assertEquals(7, sub.getValue(2, 5));
+        Assert.assertEquals(7, sub.getValue(3, 4));
+        Assert.assertEquals(8, sub.getValue(3, 5));
     }
 
     @Test
     public void testContains() {
-        SubMatrix sub = new SubMatrix(testMatrix, 2, 4, 2);
+        Position pos = new Position(2, 4);
+        SubMatrix sub = new SubMatrix(testMatrix, pos, 2);
 
         Assert.assertTrue(sub.contains(2, 4));
         Assert.assertTrue(sub.contains(2, 5));

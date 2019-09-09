@@ -16,8 +16,8 @@ public class DFW {
         this.dfwCoordinator = new DFWCoordinator(matrix.length, blksize);
     }
 
-    public boolean calculated() {
-        return !this.dfwCoordinator.isNotDone();
+    public boolean isCalculated() {
+        return this.dfwCoordinator.isDone();
     }
 
     public int[][] getMatrix() {
@@ -25,8 +25,7 @@ public class DFW {
     }
 
     public DFWBlock getBlock() {
-
-        if(this.dfwCoordinator.isNotDone()) {
+        if(!this.dfwCoordinator.isDone()) {
             Position nextPosition = this.dfwCoordinator.getNext();
 
             return this.getNextBlock(nextPosition);
@@ -35,10 +34,15 @@ public class DFW {
         return null;
     }
 
+    public void dispatch(SubMatrix block) {
+        this.dfwCoordinator.calculated(block.getPosition());
+        this.merge(block);
+    }
+
     private DFWBlock getNextBlock(Position position) {
-        Position pivot = this.dfwCoordinator.getPivotFromPosition(position);
+        Position pivot = this.dfwCoordinator.getPivot(position);
         SubMatrix target = new SubMatrix(this.matrix, position, this.blksize);
-        Set<Position> dependencies = this.dfwCoordinator.getDependenciesFromPosition(position);
+        Set<Position> dependencies = this.dfwCoordinator.getDependencies(position);
         List<SubMatrix> subMatrices = new LinkedList<>();
 
         dependencies.forEach(d -> subMatrices.add(new SubMatrix(this.matrix, d, this.blksize)));
@@ -46,21 +50,16 @@ public class DFW {
         return new DFWBlock(target, pivot, subMatrices);
     }
 
-    public void dispatch(SubMatrix block) {
-        this.dfwCoordinator.calculated(block.getPosition());
-        this.merge(block);
-    }
-
-    private void merge(SubMatrix block) {
-        int x = block.getX();
-        int y = block.getY();
-        int [][] data = block.getSubMatrix();
+    private void merge(SubMatrix subMatrix) {
+        int x = subMatrix.getX();
+        int y = subMatrix.getY();
+        int [][] data = subMatrix.getSubMatrix();
         int max = this.matrix.length;
         int size = data.length;
 
         for (int i = x; i < x + size && i < max; i++) {
             for (int j = y; j < y + size && j < max; j++) {
-                this.matrix[i][j] = block.getMatrixValue(i, j);
+                this.matrix[i][j] = subMatrix.getValue(i, j);
             }
         }
     }

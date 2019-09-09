@@ -98,7 +98,7 @@ public class DFWCoordinator {
     }
 
     public Position getNext() {
-        if (isNotDone()) {
+        if (!isDone()) {
             this.pendingResponses ++;
 
             return this.pending.poll();
@@ -107,7 +107,7 @@ public class DFWCoordinator {
         return null;
     }
 
-    public Position getPivotFromPosition(Position position) {
+    public Position getPivot(Position position) {
         Block blk = this.blocks.get(position);
         int round = blk.round;
         int blkSize = this.blksize;
@@ -115,7 +115,7 @@ public class DFWCoordinator {
         return new Position(round * blkSize, round * blkSize);
     }
 
-    public Set<Position> getDependenciesFromPosition(Position position) {
+    public Set<Position> getDependencies(Position position) {
         Block blk = this.blocks.get(position);
         Set<Position> result = new HashSet<>();
 
@@ -126,8 +126,8 @@ public class DFWCoordinator {
         return result;
     }
 
-    public boolean isNotDone() {
-        return !this.pending.isEmpty() || this.pendingResponses > 0;
+    public boolean isDone() {
+        return this.pending.isEmpty() && this.pendingResponses == 0;
     }
 
     private Map<Position, Block> generateBlocks(int matrixSize, int blksize) {
@@ -200,35 +200,35 @@ public class DFWCoordinator {
         Block blk = this.blocks.get(position);
 
         int round = blk.round;
-        boolean hasDependenciesNextRound = blk.previous.containsKey(round + 1);
-        boolean dependsOnBlk = hasDependenciesNextRound && blk.previous.get(round + 1).contains(blk);
+        int nextRound = round + 1;
+
+        boolean hasDependenciesNextRound = blk.previous.containsKey(nextRound);
+        boolean dependsOnItselfNextRound = hasDependenciesNextRound && blk.previous.get(nextRound).contains(blk);
         boolean isNextPivot = !hasDependenciesNextRound;
 
-        if (hasDependenciesNextRound && dependsOnBlk && round < maxRounds) {
+        if (hasDependenciesNextRound && dependsOnItselfNextRound && round < maxRounds) {
             // remove itself for the next round
-            blk.removePrevious(round + 1, blk);
+            blk.removePrevious(nextRound, blk);
             // ready for the next round
-            if (blk.previous.get(round + 1).isEmpty()) {
+            if (blk.previous.get(nextRound).isEmpty()) {
                 result.add(blk.position);
             }
         }
 
-        // next pivot element; has no previous in next round
+        // next pivot element; has no previous blocks in next round
         if (isNextPivot && round < maxRounds) {
             result.add(blk.position);
         }
 
+        // get next blocks which have no dependencies anymore
         if (blk.next.containsKey(round)) {
-
             for (Block nextBlk : blk.next.get(round)) {
                 nextBlk.removePrevious(round, blk);
 
                 if (nextBlk.previous.get(round).isEmpty()) {
                     result.add(nextBlk.position);
                 }
-
             }
-
         }
 
         if (blk.round < maxRounds) {
