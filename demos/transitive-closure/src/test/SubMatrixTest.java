@@ -1,13 +1,9 @@
 package test;
 
-import main.DFWPosition;
 import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class SubMatrixTest {
 
@@ -50,58 +46,6 @@ public class SubMatrixTest {
     }
 
     @Test
-    public void testPairingPositionsX() {
-        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 2);
-        SubMatrix dataBlock = new SubMatrix(testMatrix, 2, 0, 2);
-
-        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
-
-        Set<DFWPosition> expected = new HashSet<>();
-        expected.add(new DFWPosition(0,2));
-        expected.add(new DFWPosition(4,2));
-
-        Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
-    }
-
-    @Test
-    public void testPairingPositionsY() {
-        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 2);
-        SubMatrix dataBlock = new SubMatrix(testMatrix, 0, 2, 2);
-
-        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
-
-        Set<DFWPosition> expected = new HashSet<>();
-        expected.add(new DFWPosition(2,0));
-        expected.add(new DFWPosition(2,4));
-
-        Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
-    }
-
-    @Test
-    public void testEmptyPairingPositions() {
-        // uneven sizes
-        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 3);
-        SubMatrix dataBlock = new SubMatrix(testMatrix, 0, 2, 2);
-        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
-
-        Assert.assertTrue(result.isEmpty());
-    }
-
-    @Test
-    public void testPairingPositionsEnd() {
-        SubMatrix pivot = new SubMatrix(testMatrix, 4, 4, 2);
-        SubMatrix dataBlock = new SubMatrix(testMatrix, 4, 2, 2);
-
-        Set<DFWPosition> result = pivot.getPairingPositions(dataBlock);
-
-        Set<DFWPosition> expected = new HashSet<>();
-        expected.add(new DFWPosition(0,4));
-        expected.add(new DFWPosition(2,4));
-
-        Assert.assertTrue(result.containsAll(expected) && result.size() == expected.size());
-    }
-
-    @Test
     public void testGetMatrixValue() {
         SubMatrix sub = new SubMatrix(testMatrix, 2, 4, 2);
 
@@ -123,24 +67,6 @@ public class SubMatrixTest {
         Assert.assertFalse(sub.contains(0, 0));
         Assert.assertFalse(sub.contains(3, 6));
         Assert.assertFalse(sub.contains(1, 4));
-    }
-
-    @Test
-    public void testTarget() {
-        SubMatrix pivot = new SubMatrix(testMatrix, 2, 2, 1);
-
-        DFWPosition p1 = new DFWPosition(2, 5);
-        DFWPosition p2 = new DFWPosition(4, 2);
-        DFWPosition p3 = new DFWPosition(4, 5);
-
-        DFWPosition p4 = new DFWPosition(2, 1);
-        DFWPosition p5 = new DFWPosition(1, 2);
-        DFWPosition p6 = new DFWPosition(1, 1);
-
-        Assert.assertEquals(pivot.getTargetPosition(p1, p2), p3);
-        Assert.assertEquals(pivot.getTargetPosition(p2, p1), p3);
-        Assert.assertEquals(pivot.getTargetPosition(p4, p5), p6);
-        Assert.assertEquals(pivot.getTargetPosition(p5, p4), p6);
     }
 
 }

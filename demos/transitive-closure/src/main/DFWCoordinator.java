@@ -6,7 +6,7 @@ public class DFWCoordinator {
 
     class Block {
         int round = 0;
-        DFWPosition position;
+        Position position;
         Map<Integer, Set<Block>> previous = new HashMap<>();
         Map<Integer, Set<Block>> next = new HashMap<>();
         Map<Integer, Set<Block>> dependedOn = new HashMap<>();
@@ -73,12 +73,12 @@ public class DFWCoordinator {
     private int maxRounds;
     private int blksize;
     private int pendingResponses = 0;
-    private Queue<DFWPosition> pending;
-    private Map<DFWPosition, Block> blocks;
+    private Queue<Position> pending;
+    private Map<Position, Block> blocks;
 
     public DFWCoordinator(int matrixSize, int blksize) {
         int paddedMatrixSize = (int) Math.ceil((double) matrixSize / blksize) * blksize;
-        DFWPosition start = new DFWPosition(0, 0);
+        Position start = new Position(0, 0);
         this.pending = new LinkedList<>();
 
         this.blocks = this.generateBlocks(paddedMatrixSize, blksize);
@@ -90,14 +90,14 @@ public class DFWCoordinator {
         this.pending.add(start);
     }
 
-    public void calculated(DFWPosition position) {
-        List<DFWPosition> positions = getNextPositions(position);
+    public void calculated(Position position) {
+        List<Position> positions = getNextPositions(position);
 
         this.pending.addAll(positions);
         this.pendingResponses --;
     }
 
-    public DFWPosition getNext() {
+    public Position getNext() {
         if (isNotDone()) {
             this.pendingResponses ++;
 
@@ -107,17 +107,17 @@ public class DFWCoordinator {
         return null;
     }
 
-    public DFWPosition getPivotFromPosition(DFWPosition position) {
+    public Position getPivotFromPosition(Position position) {
         Block blk = this.blocks.get(position);
         int round = blk.round;
         int blkSize = this.blksize;
 
-        return new DFWPosition(round * blkSize, round * blkSize);
+        return new Position(round * blkSize, round * blkSize);
     }
 
-    public Set<DFWPosition> getDependenciesFromPosition(DFWPosition position) {
+    public Set<Position> getDependenciesFromPosition(Position position) {
         Block blk = this.blocks.get(position);
-        Set<DFWPosition> result = new HashSet<>();
+        Set<Position> result = new HashSet<>();
 
         if (blk.dependedOn.containsKey(blk.round)) {
             blk.dependedOn.get(blk.round).forEach(dependency -> result.add(dependency.position));
@@ -130,13 +130,13 @@ public class DFWCoordinator {
         return !this.pending.isEmpty() || this.pendingResponses > 0;
     }
 
-    private Map<DFWPosition, Block> generateBlocks(int matrixSize, int blksize) {
-        final Map<DFWPosition, Block>  blocks = new HashMap<>();
+    private Map<Position, Block> generateBlocks(int matrixSize, int blksize) {
+        final Map<Position, Block>  blocks = new HashMap<>();
 
         for (int x = 0; x < matrixSize; x += blksize) {
             for (int y = 0; y < matrixSize; y += blksize) {
                 Block block = new Block();
-                block.position = new DFWPosition(x, y);
+                block.position = new Position(x, y);
                 blocks.put(block.position, block);
             }
         }
@@ -145,7 +145,7 @@ public class DFWCoordinator {
     }
 
     private Block getBlock(int x, int y) {
-        return this.blocks.get(new DFWPosition(x, y));
+        return this.blocks.get(new Position(x, y));
     }
 
     private void generateDependencies(int matrixSize, int blksize) {
@@ -195,8 +195,8 @@ public class DFWCoordinator {
         }
     }
 
-    private List<DFWPosition> getNextPositions(DFWPosition position) {
-        final List<DFWPosition> result = new LinkedList<>();
+    private List<Position> getNextPositions(Position position) {
+        final List<Position> result = new LinkedList<>();
         Block blk = this.blocks.get(position);
 
         int round = blk.round;

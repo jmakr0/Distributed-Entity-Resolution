@@ -1,7 +1,7 @@
 package test;
 
 import main.DFWBlock;
-import main.DFWPosition;
+import main.Position;
 import main.SubMatrix;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +32,7 @@ public class DFWBlockTest {
     @Test
     public void testCalculateTargetPlusOne() {
         SubMatrix target = new SubMatrix(testMatrix, 6,2, 2);
-        DFWPosition pivot = new DFWPosition(2,2);
+        Position pivot = new Position(2,2);
 
         // in this case the only path is the pivot element
         SubMatrix path = new SubMatrix(this.testMatrix, 2, 2, 2);
@@ -54,7 +54,7 @@ public class DFWBlockTest {
     @Test
     public void testCalculateTargetPlusTwoInCross() {
         SubMatrix target = new SubMatrix(testMatrix, 6,6, 2);
-        DFWPosition pivot = new DFWPosition(2,2);
+        Position pivot = new Position(2,2);
 
         SubMatrix p1 = new SubMatrix(this.testMatrix, 2, 6, 2);
         SubMatrix p2 = new SubMatrix(this.testMatrix, 6, 2, 2);
@@ -77,7 +77,7 @@ public class DFWBlockTest {
     @Test
     public void testCalculateTargetPlusTwoOutOfCross() {
         SubMatrix target = new SubMatrix(testMatrix, 0,6, 2);
-        DFWPosition pivot = new DFWPosition(2,2);
+        Position pivot = new Position(2,2);
 
         SubMatrix p1 = new SubMatrix(this.testMatrix, 0, 2, 2);
         SubMatrix p2 = new SubMatrix(this.testMatrix, 2, 6, 2);

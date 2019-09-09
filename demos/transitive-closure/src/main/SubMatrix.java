@@ -1,78 +1,19 @@
 package main;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class SubMatrix {
 
-    private int matrixSize;
+    private Position position;
     private int subMatrixSize;
     private int [][] subMatrix;
 
-    private DFWPosition position;
-    private Set<DFWPosition> tuplePositionsXAxis;
-    private Set<DFWPosition> tuplePositionsYAxis;
-
-    private boolean validPosition(DFWPosition p) {
-        return p.getX() >= 0 && p.getX() < this.matrixSize && p.getY() >= 0 && p.getY() < this.matrixSize;
-    }
-
-    private Set<DFWPosition> calculateTuplePositions(SubMatrix other) {
-        int posX = this.getX();
-        int posY = this.getY();
-
-        Set<DFWPosition> positions = new HashSet<>();
-
-        for (int i = 0; i < this.matrixSize; i += this.subMatrixSize) {
-
-            if(this.position.sameX(other.getX())) {
-                posX = i;
-            } else {
-                posY = i;
-            }
-
-            DFWPosition pos = new DFWPosition(posX, posY);
-
-            if(this.validPosition(pos) && !this.position.equals(pos)) {
-                positions.add(pos);
-            }
-        }
-
-        return positions;
-    }
-
-    private Set<DFWPosition> getTuplePositionsXAxis(SubMatrix submatrix) {
-        if(this.tuplePositionsXAxis == null) {
-            this.tuplePositionsXAxis = this.calculateTuplePositions(submatrix);
-        }
-
-        return this.tuplePositionsXAxis;
-    }
-
-    private Set<DFWPosition> getTuplePositionsYAxis(SubMatrix submatrix) {
-        if(this.tuplePositionsYAxis == null) {
-            this.tuplePositionsYAxis = this.calculateTuplePositions(submatrix);
-        }
-
-        return this.tuplePositionsYAxis;
-    }
-
-    private int getInternX(int x) {
-        return x - this.getX();
-    }
-
-    private int getInternY(int y) {
-        return y - this.getY();
-    }
-
     public SubMatrix(int [][] matrix, int x, int y, int size) {
-        this(matrix, new DFWPosition(x, y), size);
+        this(matrix, new Position(x, y), size);
     }
 
-    public SubMatrix(int [][] matrix, DFWPosition position, int size) {
+    public SubMatrix(int [][] matrix, Position position, int size) {
         this.position = position;
-        this.matrixSize = matrix.length;
         this.subMatrixSize = size;
         this.subMatrix = new int[size][size];
 
@@ -91,41 +32,11 @@ public class SubMatrix {
         }
     }
 
-    public DFWPosition getTargetPosition(DFWPosition p1, DFWPosition p2){
-        int x;
-        int y;
-
-        // same x
-        if(this.getX() == p1.getX()) {
-            y = p1.getY();
-            int dx = Math.abs(this.getX() - p2.getX());
-
-            if (p2.getX() > this.getX()) {
-                x = p1.getX() + dx;
-            } else {
-                x = p1.getX() - dx;
-            }
-        }
-        // same y
-        else {
-            x = p1.getX();
-            int dy = Math.abs(this.getY() - p2.getY());
-
-            if (p2.getY() > this.getY()) {
-                y = p1.getY() + dy;
-            } else {
-                y = p1.getY() - dy;
-            }
-        }
-
-        return new DFWPosition(x, y);
-    }
-
     public int[][] getSubMatrix() {
         return subMatrix;
     }
 
-    public DFWPosition getPosition() {
+    public Position getPosition() {
         return this.position;
     }
 
@@ -139,21 +50,6 @@ public class SubMatrix {
 
     public int getSubMatrixSize() {
         return this.subMatrixSize;
-    }
-
-    public Set<DFWPosition> getPairingPositions(SubMatrix other) {
-        boolean sameSize = this.subMatrixSize == other.subMatrixSize;
-        boolean sameX = this.position.sameX(other.getX());
-        boolean sameY = this.position.sameY(other.getY());
-        Set<DFWPosition> positions = new HashSet<>();
-
-        if(sameSize && sameX) {
-            positions = this.getTuplePositionsYAxis(other);
-        } else if (sameSize && sameY) {
-            positions = this.getTuplePositionsXAxis(other);
-        }
-
-        return positions;
     }
 
     public boolean contains(int x, int y) {
@@ -190,6 +86,14 @@ public class SubMatrix {
     @Override
     public int hashCode() {
         return this.position.hashCode();
+    }
+
+    private int getInternX(int x) {
+        return x - this.getX();
+    }
+
+    private int getInternY(int y) {
+        return y - this.getY();
     }
 
 }

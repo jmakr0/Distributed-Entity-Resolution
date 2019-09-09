@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DFWBlock {
-    private DFWPosition pivot;
+    private Position pivot;
     private SubMatrix target;
     private List<SubMatrix> subMatrices;
 
@@ -31,17 +31,13 @@ public class DFWBlock {
         return responsibleMatrix.getMatrixValue(x, y);
     }
 
-//    public DFWBlock(SubMatrix target, SubMatrix pivot) {
-//        this(target, pivot.getPosition());
-//    }
-
-    public DFWBlock(SubMatrix target, DFWPosition pivot, List<SubMatrix> data) {
+    public DFWBlock(SubMatrix target, Position pivot, List<SubMatrix> data) {
         this.target = target;
         this.pivot = pivot;
         this.subMatrices = data;
     }
 
-    public DFWBlock(SubMatrix target, DFWPosition pivot) {
+    public DFWBlock(SubMatrix target, Position pivot) {
         this.target = target;
         this.pivot = pivot;
         this.subMatrices = new LinkedList<>();

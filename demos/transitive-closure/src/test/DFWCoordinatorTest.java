@@ -1,8 +1,7 @@
 package test;
 
-import main.DFWBlock;
 import main.DFWCoordinator;
-import main.DFWPosition;
+import main.Position;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,14 +15,14 @@ public class DFWCoordinatorTest {
 
     private int matrixSize = 6;
     private int blkSize = 3;
-    private Map<Integer, Set<DFWPosition>> testMatrix = new HashMap<>();
+    private Map<Integer, Set<Position>> testMatrix = new HashMap<>();
 
     @Before
     public void prepareTestMatrix() {
         int round = 0;
 
         this.testMatrix.put(round, new HashSet<>());
-        this.testMatrix.get(round).add(new DFWPosition(0, 0));
+        this.testMatrix.get(round).add(new Position(0, 0));
 
         for (int k = 0; k < matrixSize; k += blkSize) {
 
@@ -34,16 +33,16 @@ public class DFWCoordinatorTest {
 
                 if (i != k) {
                     // x
-                    this.testMatrix.get(round).add(new DFWPosition(i, k));
+                    this.testMatrix.get(round).add(new Position(i, k));
                     // y
-                    this.testMatrix.get(round).add(new DFWPosition(k, i));
+                    this.testMatrix.get(round).add(new Position(k, i));
 
                     // triple
                     for (int j = 0; j < matrixSize; j += blkSize) {
 
                         if (j != k) {
-                            this.testMatrix.get(round).add(new DFWPosition(j, i));
-                            this.testMatrix.get(round).add(new DFWPosition(i, j));
+                            this.testMatrix.get(round).add(new Position(j, i));
+                            this.testMatrix.get(round).add(new Position(i, j));
                         }
 
                     }
@@ -61,7 +60,7 @@ public class DFWCoordinatorTest {
         DFWCoordinator dfwCoordinator = new DFWCoordinator(matrixSize, blkSize);
 
         int round = 0;
-        DFWPosition pos;
+        Position pos;
 
         while (dfwCoordinator.isNotDone()) {
             pos = dfwCoordinator.getNext();
@@ -84,13 +83,13 @@ public class DFWCoordinatorTest {
         DFWCoordinator dfwCoordinator = new DFWCoordinator(matrixSize, blkSize);
 
         int round = 0;
-        DFWPosition pos;
+        Position pos;
 
         while (dfwCoordinator.isNotDone()) {
             pos = dfwCoordinator.getNext();
 
-            Set<DFWPosition> dependencies = dfwCoordinator.getDependenciesFromPosition(pos);
-            Set<DFWPosition> expectedDependencies = calculateDependencies(pos, round);
+            Set<Position> dependencies = dfwCoordinator.getDependenciesFromPosition(pos);
+            Set<Position> expectedDependencies = calculateDependencies(pos, round);
             Assert.assertEquals(expectedDependencies, dependencies);
 
             this.testMatrix.get(round).remove(pos);
@@ -106,11 +105,11 @@ public class DFWCoordinatorTest {
         Assert.assertTrue(this.testMatrix.isEmpty());
     }
 
-    private Set<DFWPosition> calculateDependencies(DFWPosition position, int round) {
-        Set<DFWPosition> dependencies = new HashSet<>();
+    private Set<Position> calculateDependencies(Position position, int round) {
+        Set<Position> dependencies = new HashSet<>();
 
-        dependencies.add(new DFWPosition(position.getX(), round*blkSize));
-        dependencies.add(new DFWPosition(round*blkSize, position.getY()));
+        dependencies.add(new Position(position.getX(), round*blkSize));
+        dependencies.add(new Position(round*blkSize, position.getY()));
 
         // the own position should not be a dependency
         dependencies.remove(position);
