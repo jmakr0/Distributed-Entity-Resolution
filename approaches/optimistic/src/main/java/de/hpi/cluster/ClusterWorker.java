@@ -12,10 +12,20 @@ import de.hpi.cluster.actors.listeners.MetricsListener;
 public class ClusterWorker extends ClusterSystem {
 
 	public static final String WORKER_ROLE = "worker";
-	
-	public static void start(String actorSystemName, int workers, String host, int port, String masterhost, int masterport) {
+
+	public static void start(String actorSystemName, Config config) {
+		int workers = config.getInt("der.cluster.worker.worker-actors");
+		String host = config.getString("der.cluster.worker.host-address");
+		int port = config.getInt("der.cluster.worker.port");
+		int masterPort = config.getInt("der.cluster.master.port");
+		String masterHost = config.getString("der.cluster.master.host-address");
+
+		start(actorSystemName, workers, host, port, masterHost, masterPort);
+	}
+
+	private static void start(String actorSystemName, int workers, String host, int port, String masterHost, int masterPort) {
 		
-		final Config config = createConfiguration(actorSystemName, WORKER_ROLE, host, port, masterhost, masterport);
+		final Config config = createConfiguration(actorSystemName, WORKER_ROLE, host, port, masterHost, masterPort);
 		
 		final ActorSystem system = createSystem(actorSystemName, config);
 		

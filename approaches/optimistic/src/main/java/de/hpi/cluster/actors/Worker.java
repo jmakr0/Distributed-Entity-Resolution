@@ -45,8 +45,8 @@ public class Worker extends AbstractActor {
         private RegisterAckMessage() {}
         protected Blocking blocking;
         protected double similarityThreshold;
-        protected double numberComparisonIntervalStart;
-        protected double numberComparisonIntervalEnd;
+        protected double numberComparisonThresholdMin;
+        protected double numberComparisonThresholdMax;
         protected Md5HashRouter router;
     }
 
@@ -90,8 +90,8 @@ public class Worker extends AbstractActor {
 
     // todo: put this into ONE object
     private double similarityThreshold;
-    private double numberComparisonIntervalStart;
-    private double numberComparisonIntervalEnd;
+    private double numberComparisonThresholdMin;
+    private double numberComparisonThresholdMax;
 
     private Md5HashRouter router;
     private Map<String, List<String[]>> data = new HashMap<>();
@@ -150,8 +150,8 @@ public class Worker extends AbstractActor {
 
         this.blocking = registerAckMessage.blocking;
         this.similarityThreshold = registerAckMessage.similarityThreshold;
-        this.numberComparisonIntervalStart = registerAckMessage.numberComparisonIntervalStart;
-        this.numberComparisonIntervalEnd = registerAckMessage.numberComparisonIntervalEnd;
+        this.numberComparisonThresholdMin = registerAckMessage.numberComparisonThresholdMin;
+        this.numberComparisonThresholdMax = registerAckMessage.numberComparisonThresholdMax;
         this.setRouter(registerAckMessage.router, "RegisterAckMessage");
 
 //        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
@@ -329,16 +329,14 @@ public class Worker extends AbstractActor {
         this.log.info("number of data keys: {}", this.data.keySet().size());
 
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator();
+        NumberComparator nComparator = new AbsComparator(this.numberComparisonThresholdMin, this.numberComparisonThresholdMax);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator);
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
 
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
-                this.log.info("Duplicate {}", duplicates);
-
                 this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
         }
