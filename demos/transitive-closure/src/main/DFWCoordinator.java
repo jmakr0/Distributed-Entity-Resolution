@@ -11,7 +11,7 @@ public class DFWCoordinator {
         Map<Integer, Set<Block>> next = new HashMap<>();
         Map<Integer, Set<Block>> dependedOn = new HashMap<>();
 
-        public void setNext(int round, Block nextBlk) {
+        void setNext(int round, Block nextBlk) {
             setDependencyNextRound();
             nextBlk.setPrevious(round, this);
 
@@ -22,14 +22,14 @@ public class DFWCoordinator {
             this.next.get(round).add(nextBlk);
         }
 
-        public void setPrevious(int round, Block previousBlk) {
+        void setPrevious(int round, Block previousBlk) {
             if (!this.previous.containsKey(round)) {
                 this.previous.put(round, new HashSet<>());
             }
             this.previous.get(round).add(previousBlk);
         }
 
-        public void removePrevious(int round, Block blk) {
+        void removePrevious(int round, Block blk) {
             if (!this.previous.containsKey(round)) {
                 return;
             }
@@ -215,8 +215,7 @@ public class DFWCoordinator {
 
         // next pivot element; has no previous in next round
         if (isNextPivot && round < maxRounds) {
-            round ++;
-            blk.round++;
+            result.add(blk.position);
         }
 
         if (blk.next.containsKey(round)) {
@@ -232,7 +231,9 @@ public class DFWCoordinator {
 
         }
 
-        blk.round++;
+        if (blk.round < maxRounds) {
+            blk.round++;
+        }
 
         return result;
     }
