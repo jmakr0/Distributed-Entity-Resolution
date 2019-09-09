@@ -1,6 +1,6 @@
 # Shared
 
-To make our code reusable in different approaches, we implemented parts in different projects. These can be locally imported as `maven` dependency. For more details, please read attached the `Javadoc`.
+To make our code reusable in different approaches, we implemented parts in different projects. These can be locally imported as `maven` dependency. For more details, please read the provided `Javadoc`.
 
 ## Available projects
 * **data**: Contains the functionality of parsing the input and gold standard data.
