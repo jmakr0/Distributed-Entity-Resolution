@@ -19,8 +19,8 @@ public class EntityResolution {
     private static final String RESTAURANT_DATA_GOLD = "../../data/restaurant_gold.csv";
     private static final int PREFIX_LENGTH = 5;
     private static final double SIMILARITY_THRESHOLD = 0.9;
-    private static final double INTERVAL_START = 5;
-    private static final double INTERVAL_END = 30;
+    private static final double THRESHOLD_MIN = 5;
+    private static final double THRESHOLD_MAX = 30;
 
     public static void main(String[] args) {
 
@@ -63,7 +63,7 @@ public class EntityResolution {
 
     private static Set<Set<Integer>> findDuplicates(Map<String, List<String[]>> groupedData) {
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator(INTERVAL_START, INTERVAL_END);
+        NumberComparator nComparator = new AbsComparator(THRESHOLD_MIN, THRESHOLD_MAX);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
         DuplicateDetector duDetector = new SimpleDuplicateDetector(comparator, SIMILARITY_THRESHOLD);

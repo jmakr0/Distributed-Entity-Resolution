@@ -37,13 +37,12 @@ The config file defines the following fields:
 		- **min-workload**: A natural number indicating the minimum workload a worker should get regardless of his current performance. The size of the workload is defined as follows: `number_of_rows_in_data_chunk = workload^2`
 	- similarity 
 		- abs-comparator
-			- vorschlag: `threshold_min` und `threshold_max`
-			- **interval-start**: The distance between two given numbers that is at least required so that similarity != 1. For more details, we refer to the [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java).
-			- **interval-end**: The distance between two given numbers that is so high such that we set similarity = 0. For more details, we refer to the [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java).
+			- **threshold_min**: The distance between two given numbers that is at least required so that similarity != 1. For more details, we refer to the [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java).
+			- **threshold_max**: The distance between two given numbers that is so high such that we set similarity = 0. For more details, we refer to the [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java).
 			
-			Example for interval-start and interval-end: 
+			Example for threshold_min and threshold_max: 
 			
-			```intervalStart = 5, intervalEnd = 10```
+			```threshold_min = 5, threshold_max = 10```
 			
 			```compare(5,6) -> abs distance < 5 -> sim = 1```
 			

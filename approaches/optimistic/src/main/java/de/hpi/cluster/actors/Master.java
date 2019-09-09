@@ -192,14 +192,14 @@ public class Master extends AbstractActor {
         Md5HashRouter routerCopy = new Md5HashRouter(this.router);
 
         double similarityThreshold = config.getDouble("der.duplicate-detection.similarity-threshold");
-        int intervalStart = config.getInt("der.similarity.abs-comparator.interval-start");
-        int intervalEnd = config.getInt("der.similarity.abs-comparator.interval-end");
+        int thresholdMin = config.getInt("der.similarity.abs-comparator.threshold-min");
+        int thresholdMax = config.getInt("der.similarity.abs-comparator.threshold-max");
 
         worker.tell(new Worker.RegisterAckMessage(
                         new NameBlocking(),
                         similarityThreshold,
-                        intervalStart,
-                        intervalEnd,
+                        thresholdMin,
+                        thresholdMax,
                         routerCopy),
                 this.self()
         );

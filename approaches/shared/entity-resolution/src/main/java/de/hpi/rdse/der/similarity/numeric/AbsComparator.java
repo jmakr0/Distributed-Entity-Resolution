@@ -5,28 +5,29 @@ import com.typesafe.config.ConfigFactory;
 
 public class AbsComparator implements NumberComparator {
 
-    double intervalStart;
-    double intervalEnd;
+    double thresholdMin;
+    double thresholdMax;
 
     /**
+     * abs-comparator
      * Initializes a abs based number comparator
-     * @param intervalStart distance between two given numbers that is minimum required so that sim != 1
-     * @param intervalEnd distance between two given numbers that is so high such that we set sim = 0
+     * @param thresholdMin The distance between two given numbers that is at least required so that similarity != 1.
+     * @param thresholdMax The distance between two given numbers that is so high such that we set similarity = 0.
      *
-     *                    e.g. intervalStart = 5, intervalEnd = 10
+     *                    e.g. thresholdMin = 5, thresholdMax = 10
      *                    compare(5,6) -> abs distance < 5 -> sim = 1
      *                    compare(5,20) -> abs distance > 10 -> sim = 0
      *                    compare(5,11) -> 5 <= abs distance = 6 <= 10  -> sim somewhere between 1 and 0
      *
      */
-    public AbsComparator(double intervalStart, double intervalEnd) {
-        this.intervalStart = intervalStart;
-        this.intervalEnd = intervalEnd;
+    public AbsComparator(double thresholdMin, double thresholdMax) {
+        this.thresholdMin = thresholdMin;
+        this.thresholdMax = thresholdMax;
     }
 
     public AbsComparator(Config config) {
-        this.intervalStart = config.getDouble("similarity.abs-comparator.interval-start");
-        this.intervalStart = config.getDouble("similarity.abs-comparator.interval-end");
+        this.thresholdMin = config.getDouble("similarity.abs-comparator.threshold-min");
+        this.thresholdMax = config.getDouble("similarity.abs-comparator.threshold-max");
     }
 
     public AbsComparator() {
@@ -36,9 +37,9 @@ public class AbsComparator implements NumberComparator {
     public double compare(double n1, double n2) {
         double diff = Math.abs(n1-n2);
 
-        if (diff < intervalStart) {
+        if (diff < thresholdMin) {
             return 1;
-        } else if (diff > intervalEnd) {
+        } else if (diff > thresholdMax) {
             return 0;
         }
 
@@ -47,6 +48,6 @@ public class AbsComparator implements NumberComparator {
 
     private double scaleDiffToZeroOneInterval(double diff) {
         // Formula: output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
-        return 1 - (0 + ((1 - 0) / (intervalEnd - intervalStart)) * (diff - intervalStart));
+        return 1 - (0 + ((1 - 0) / (thresholdMax - thresholdMin)) * (diff - thresholdMin));
     }
 }
