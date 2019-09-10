@@ -1,6 +1,8 @@
 package de.hpi.cluster.actors;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.CurrentClusterState;
 import akka.cluster.ClusterEvent.MemberUp;
@@ -9,10 +11,9 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.actors.listeners.MetricsListener;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
-import de.hpi.ddd.transitiveClosure.DFWBlock;
+import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.dude.DuplicateDetector;
 import de.hpi.rdse.der.dude.SimpleDuplicateDetector;
 import de.hpi.rdse.der.partitioning.Md5HashRouter;

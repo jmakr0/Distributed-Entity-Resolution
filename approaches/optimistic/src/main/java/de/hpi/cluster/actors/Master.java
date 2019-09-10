@@ -3,21 +3,22 @@ package de.hpi.cluster.actors;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import com.typesafe.config.Config;
 import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
 import de.hpi.cluster.actors.Worker.DataMessage;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
-import de.hpi.ddd.transitiveClosure.DFWBlock;
-import de.hpi.ddd.transitiveClosure.TransitiveClosure;
 import de.hpi.rdse.der.data.CSVService;
 import de.hpi.rdse.der.data.GoldReader;
+import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
 import de.hpi.rdse.der.evaluation.GoldStandardEvaluator;
+import de.hpi.rdse.der.fw.FloydWarshall;
 import de.hpi.rdse.der.partitioning.Md5HashRouter;
 import de.hpi.rdse.der.performance.PerformanceTracker;
+import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import com.typesafe.config.Config;
 
 import java.io.Serializable;
 import java.util.*;
@@ -262,8 +263,11 @@ public class Master extends AbstractActor {
         if (this.workers.isEmpty()) {
             evaluateDuplicates();
 
-            this.logTransitiveClosure(TransitiveClosure.calculate(this.duplicates));
-//            this.log.info("start transitive closure");
+            int[][] matrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
+            int[][] tkMatrix = FloydWarshall.apply(matrix);
+            this.log.info("locally");
+//            this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
+            System.out.println(MatrixConverter.fromTransitiveClosure(tkMatrix));
             transitiveClosure();
 
             // todo move shutdown
@@ -344,6 +348,13 @@ public class Master extends AbstractActor {
     private void handle(DFWDoneMessage dfwDoneMessage) {
         Set<Set<Integer>> tk = dfwDoneMessage.transitiveClosure;
         logTransitiveClosure(tk);
+
+        Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(this.goldPath);
+        GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
+        System.out.println("tk-distributed:" + tk);
+        evaluator.evaluate(tk, goldStandard);
+
+        this.shutdown();
     }
 
     private void logTransitiveClosure(Set<Set<Integer>> tk) {

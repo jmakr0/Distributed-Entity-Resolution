@@ -5,10 +5,10 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import de.hpi.ddd.transitiveClosure.DFW;
-import de.hpi.ddd.transitiveClosure.DFWBlock;
-import de.hpi.ddd.transitiveClosure.MatrixConverter;
-import de.hpi.ddd.transitiveClosure.TransitiveClosure;
+import de.hpi.rdse.der.dfw.DFW;
+import de.hpi.rdse.der.dfw.DFWBlock;
+import de.hpi.rdse.der.fw.FloydWarshall;
+import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -80,7 +80,7 @@ public class TCMaster extends AbstractActor {
     }
 
     private void handle(RequestWorkMessage requestWorkMessage) {
-        boolean calculated = this.dfw.calculated();
+        boolean calculated = this.dfw.isCalculated();
         DFWBlock block = this.dfw.getBlock();
 
         if (calculated) {
@@ -113,7 +113,7 @@ public class TCMaster extends AbstractActor {
     }
 
     private void sendWork() {
-        if (!this.dfw.calculated()) {
+        if (!this.dfw.isCalculated()) {
             DFWBlock block = this.dfw.getBlock();
             if (block != null) {
                 this.sender().tell(new Master.DFWWorkMessage(block), this.self());
@@ -128,7 +128,9 @@ public class TCMaster extends AbstractActor {
         this.log.info("sendResult");
 
         int[][] matrix = this.dfw.getMatrix();
-        Set<Set<Integer>> tk = TransitiveClosure.formTransitiveClosure(matrix);
+        int[][] tkMatrix = FloydWarshall.apply(matrix);
+
+        Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(tkMatrix);
 
         this.sender().tell(new Master.DFWDoneMessage(tk), this.sender());
     }

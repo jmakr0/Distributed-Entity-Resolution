@@ -6,7 +6,6 @@ import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import de.hpi.cluster.actors.Reaper;
 
 public class ClusterListener extends AbstractActor {
 
