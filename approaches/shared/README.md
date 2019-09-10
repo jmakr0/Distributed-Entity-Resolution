@@ -13,7 +13,7 @@ To make our code reusable in different approaches, we implemented parts in diffe
 ## Usage
 The projects are imported into the `monolith` and `optimistic` approach using `maven`. Since we don't wanted to publish the projects as publicly available `maven` dependencies they have to be build and imported before they can be used. 
 
-We provide the [update-local-dependencies](../../maven/update-local-dependencies.sh) script. It first builds the projects using `mvn clean verify`, and afterward, imports the project locally using the `mvn install:install-file` command.
+We provide the [update-local-dependencies](update-local-dependencies.sh) script. It first builds the projects using `mvn clean verify`, and afterward, imports the project locally using the `mvn install:install-file` command.
 
 After running the script the libraries can be imported and used like normal `maven` libraries.
 For example, to include the `evaluation` project add the following dependency to your maven dependencies.

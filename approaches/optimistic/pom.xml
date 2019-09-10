@@ -92,7 +92,7 @@
 <!--		our local jar libraries-->
 		<dependency>
 			<groupId>de.hpi.rdse.der</groupId>
-			<artifactId>Partitioning</artifactId>
+			<artifactId>partitioning</artifactId>
 			<version>1.0</version>
 		</dependency>
 
