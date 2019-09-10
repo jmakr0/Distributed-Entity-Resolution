@@ -42,21 +42,26 @@ public class MatrixConverterTest {
 
         Set<Set<Integer>> expected = new HashSet<>();
 
-        Set<Integer> class1 = new HashSet<Integer>();
-        class1.add(0);
-        class1.add(1);
-        class1.add(2);
+        Set<Integer> d1 = new HashSet<Integer>();
+        d1.add(0);
+        d1.add(1);
 
-        Set<Integer> class2 = new HashSet<Integer>();
-        class2.add(3);
+        Set<Integer> d2 = new HashSet<Integer>();
+        d2.add(0);
+        d2.add(2);
 
-        Set<Integer> class3 = new HashSet<Integer>();
-        class3.add(4);
-        class3.add(5);
+        Set<Integer> d3 = new HashSet<Integer>();
+        d3.add(1);
+        d3.add(2);
 
-        expected.add(class1);
-        expected.add(class2);
-        expected.add(class3);
+        Set<Integer> d4 = new HashSet<Integer>();
+        d4.add(4);
+        d4.add(5);
+
+        expected.add(d1);
+        expected.add(d2);
+        expected.add(d3);
+        expected.add(d4);
 
         Assert.assertEquals(expected, result);
     }

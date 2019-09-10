@@ -82,29 +82,16 @@ public class MatrixConverter {
 
         int maxID = matrix.length - 1;
 
-        Queue<Integer> work = new LinkedList<>();
-
-        // put all IDs in work queue
         for (int i = 0; i <= maxID; i++) {
-            work.add(i);
-        }
-
-        while (!work.isEmpty()) {
-            int currentID = work.poll();
-
-            Set<Integer> duplicates = new HashSet<>();
-            duplicates.add(currentID);
-
-            for (int id = 0; id <= maxID; id++) {
-                boolean hasConnection = matrix[currentID][id];
-
-                if (hasConnection) {
-                    duplicates.add(id);
-                    work.remove(id);
+            boolean[] row = matrix[i];
+            for (int j = 0; j <= maxID; j++) {
+                if (j != i && row[j]) {
+                    HashSet<Integer> duplicatePair = new HashSet<Integer>();
+                    duplicatePair.add(i);
+                    duplicatePair.add(j);
+                    transitiveClosure.add(duplicatePair);
                 }
             }
-
-            transitiveClosure.add(duplicates);
         }
 
         return transitiveClosure;

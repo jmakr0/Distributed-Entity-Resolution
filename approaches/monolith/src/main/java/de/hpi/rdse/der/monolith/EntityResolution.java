@@ -5,12 +5,14 @@ import de.hpi.rdse.der.dude.DuplicateDetector;
 import de.hpi.rdse.der.dude.SimpleDuplicateDetector;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
 import de.hpi.rdse.der.evaluation.GoldStandardEvaluator;
+import de.hpi.rdse.der.fw.FloydWarshall;
 import de.hpi.rdse.der.monolith.util.CSVService;
 import de.hpi.rdse.der.similarity.UniversalComparator;
 import de.hpi.rdse.der.similarity.numeric.AbsComparator;
 import de.hpi.rdse.der.similarity.numeric.NumberComparator;
 import de.hpi.rdse.der.similarity.string.JaroWinklerComparator;
 import de.hpi.rdse.der.similarity.string.StringComparator;
+import de.hpi.rdse.der.util.MatrixConverter;
 
 import java.util.*;
 
@@ -38,11 +40,17 @@ public class EntityResolution {
         // matching
         Set<Set<Integer>> duplicates = findDuplicates(groupedData);
 
-        // TODO transitive closure
+        int[][] duplicateMatrix = MatrixConverter.duplicateSetToMatrix(duplicates);
+        int[][] transitiveClosureMatrix = FloydWarshall.apply(duplicateMatrix);
+
+        Set<Set<Integer>> transitiveClosure = MatrixConverter.fromTransitiveClosure(transitiveClosureMatrix);
 
         Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(RESTAURANT_DATA_GOLD);
         GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
+        System.out.println(duplicates);
         evaluator.evaluate(duplicates, goldStandard);
+        System.out.println(transitiveClosure);
+        evaluator.evaluate(transitiveClosure, goldStandard);
     }
 
     private static Map<String,List<String[]>> groupDataByPrefixOfName(List<String[]> records) {
