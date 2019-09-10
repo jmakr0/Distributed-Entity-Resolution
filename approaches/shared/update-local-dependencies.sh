@@ -1,18 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
-PARTITIONING_PATH='../approaches/shared/partitioning'
-SETOPERATIONS_PATH='../set-operations'
-EVALUATION_PATH='../evaluation'
-DUPLICATEDETECTION_PATH='../entity-resolution'
-DATA_PATH='../data'
-TRANSITIVE_CLOSURE_PATH='../transitive-closure'
-
+PARTITIONING_PATH='partitioning'
+SETOPERATIONS_PATH='set-operations'
+EVALUATION_PATH='evaluation'
+DUPLICATEDETECTION_PATH='entity-resolution'
+DATA_PATH='data'
+TRANSITIVE_CLOSURE_PATH='transitive-closure'
 
 cd $PARTITIONING_PATH
 mvn clean verify
 
 mvn install:install-file -Dfile=target/Partitioning-1.0-jar-with-dependencies.jar -DpomFile=pom.xml
-
 
 
 cd $SETOPERATIONS_PATH
