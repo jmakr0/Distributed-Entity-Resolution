@@ -17,8 +17,6 @@ mvn clean verify
 
 mvn install:install-file -Dfile=target/setoperations-1.0.jar -DpomFile=pom.xml
 
-pwd
-
 cd $ENTITY_RESOLUTION_PATH
 mvn clean verify
 
