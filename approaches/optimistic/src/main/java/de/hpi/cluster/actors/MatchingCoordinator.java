@@ -6,7 +6,6 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
-import javafx.collections.ObservableFloatArray;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -54,7 +53,7 @@ public class MatchingCoordinator extends AbstractActor {
     }
 
     @Data @AllArgsConstructor
-    public static class ComparisonFinishedMessage implements Serializable {
+    public static class WorkerFinishedMatchingMessage implements Serializable {
         private static final long serialVersionUID = -1111194361812333325L;
     }
 
@@ -79,7 +78,7 @@ public class MatchingCoordinator extends AbstractActor {
                 .match(ConfigMessage.class, this::handle)
                 .match(StartSimilarityMessage.class, this::handle)
                 .match(DuplicateMessage.class, this::handle)
-                .match(ComparisonFinishedMessage.class, this::handle)
+                .match(WorkerFinishedMatchingMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -108,10 +107,12 @@ public class MatchingCoordinator extends AbstractActor {
         this.duplicates.addAll(duplicateMessage.duplicates);
     }
 
-    private void handle(ComparisonFinishedMessage comparisonFinishedMessage) {
+    private void handle(WorkerFinishedMatchingMessage workerFinishedMatchingMessage) {
         this.matching.remove(this.sender());
 
-        this.master.tell(new Master.MatchingCompletedMessage(this.duplicates), this.self());
+        if (matching.isEmpty()) {
+            this.master.tell(new Master.MatchingCompletedMessage(this.duplicates), this.self());
+        }
     }
 
 }

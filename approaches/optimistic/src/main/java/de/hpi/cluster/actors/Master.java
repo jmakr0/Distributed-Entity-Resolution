@@ -53,6 +53,18 @@ public class Master extends AbstractActor {
     }
 
     @Data @AllArgsConstructor
+    public static class DuplicateMessage implements Serializable {
+        private static final long serialVersionUID = -1444194311112342425L;
+        private DuplicateMessage() {}
+        protected Set<Set<Integer>> duplicates;
+    }
+
+    @Data @AllArgsConstructor
+    public static class WorkerFinishedMatchingMessage implements Serializable {
+        private static final long serialVersionUID = -1031194361812333325L;
+    }
+
+    @Data @AllArgsConstructor
     public static class MatchingCompletedMessage implements Serializable {
         private static final long serialVersionUID = -1942194771812333325L;
         private MatchingCompletedMessage() {}
@@ -97,7 +109,6 @@ public class Master extends AbstractActor {
     private Set<ActorRef> workers = new HashSet<>();
     // todo: see if if we can merge lists in the end
     private Set<ActorRef> registeredWorkers = new HashSet<>();
-    private Set<ActorRef> inMatchingPhase = new HashSet<>();
     private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
     private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
 
@@ -142,6 +153,8 @@ public class Master extends AbstractActor {
                 .match(RegisterMessage.class, this::handle)
                 .match(WorkRequestMessage.class, this::handle)
                 .match(Terminated.class, this::handle)
+                .match(DuplicateMessage.class, this::handle)
+                .match(WorkerFinishedMatchingMessage.class, this::handle)
                 .match(MatchingCompletedMessage.class, this::handle)
                 .match(ReadyDFWMessage.class, this::handle)
                 .match(IdleDFWMessage.class, this::handle)
@@ -233,7 +246,6 @@ public class Master extends AbstractActor {
 
     private void sendSimilarity(ActorRef worker) {
         this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
-        this.inMatchingPhase.add(worker);
     }
 
     private void sendData(ActorRef worker) {
@@ -243,6 +255,14 @@ public class Master extends AbstractActor {
 
         DataMessage dataMessage = new DataMessage(data);
         worker.tell(dataMessage, this.self());
+    }
+
+    private void handle(DuplicateMessage duplicateMessage) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.DuplicateMessage(duplicateMessage.duplicates), this.sender());
+    }
+
+    private void handle(WorkerFinishedMatchingMessage workerFinishedMatchingMessage) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.WorkerFinishedMatchingMessage(), this.sender());
     }
 
     private void handle(MatchingCompletedMessage matchingCompletedMessage) {
@@ -278,9 +298,9 @@ public class Master extends AbstractActor {
     private void transitiveClosure(Set<Set<Integer>> duplicates) {
         this.log.info("Calculate Transitive Closure");
 
-        for (ActorRef worker: this.inMatchingPhase) {
-            this.readyForDFWWork.add(worker);
-        }
+//        for (ActorRef worker: this.inMatchingPhase) {
+//            this.readyForDFWWork.add(worker);
+//        }
 
         tcMaster.tell(new TCMaster.CalculateMessage(duplicates, this.fwBlockSize), this.self());
     }

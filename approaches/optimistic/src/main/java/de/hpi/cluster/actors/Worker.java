@@ -11,6 +11,7 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
+import de.hpi.cluster.actors.MatchingCoordinator.WorkerFinishedMatchingMessage;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.rdse.der.dfw.DFWBlock;
@@ -330,11 +331,11 @@ public class Worker extends AbstractActor {
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
-                this.sender().tell(new MatchingCoordinator.DuplicateMessage(duplicates), this.self());
+                this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
         }
 
-        this.sender().tell(new MatchingCoordinator.ComparisonFinishedMessage(), this.self());
+        this.sender().tell(new Master.WorkerFinishedMatchingMessage(), this.self());
     }
 
     private void handle(DFWWorkMessage dfwWorkMessage) {
