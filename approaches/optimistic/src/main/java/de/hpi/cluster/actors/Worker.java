@@ -11,7 +11,6 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.actors.MatchingCoordinator.WorkerFinishedMatchingMessage;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.rdse.der.dfw.DFWBlock;
