@@ -11,6 +11,7 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
+import de.hpi.cluster.actors.MatchingCoordinator.WorkerFinishedMatchingMessage;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.rdse.der.dfw.DFWBlock;
@@ -45,9 +46,6 @@ public class Worker extends AbstractActor {
         private static final long serialVersionUID = -4243194361868862395L;
         private RegisterAckMessage() {}
         protected Blocking blocking;
-        protected double similarityThreshold;
-        protected double numberComparisonThresholdMin;
-        protected double numberComparisonThresholdMax;
         protected Md5HashRouter router;
     }
 
@@ -77,6 +75,9 @@ public class Worker extends AbstractActor {
     @Data @AllArgsConstructor
     public static class SimilarityMessage implements Serializable {
         private static final long serialVersionUID = -5431818188868861534L;
+        private double similarityThreshold;
+        private int thresholdMin;
+        private int thresholdMax;
     }
 
     @Data @AllArgsConstructor
@@ -88,11 +89,6 @@ public class Worker extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
     private final Cluster cluster = Cluster.get(this.context().system());
-
-    // todo: put this into ONE object
-    private double similarityThreshold;
-    private double numberComparisonThresholdMin;
-    private double numberComparisonThresholdMax;
 
     private Md5HashRouter router;
     private Map<String, List<String[]>> data = new HashMap<>();
@@ -150,9 +146,6 @@ public class Worker extends AbstractActor {
         this.log.info("Router version: " + registerAckMessage.router.getVersion());
 
         this.blocking = registerAckMessage.blocking;
-        this.similarityThreshold = registerAckMessage.similarityThreshold;
-        this.numberComparisonThresholdMin = registerAckMessage.numberComparisonThresholdMin;
-        this.numberComparisonThresholdMax = registerAckMessage.numberComparisonThresholdMax;
         this.setRouter(registerAckMessage.router, "RegisterAckMessage");
 
 //        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
@@ -330,10 +323,10 @@ public class Worker extends AbstractActor {
         this.log.info("number of data keys: {}", this.data.keySet().size());
 
         StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator(this.numberComparisonThresholdMin, this.numberComparisonThresholdMax);
+        NumberComparator nComparator = new AbsComparator(similarityMessage.thresholdMin, similarityMessage.thresholdMax);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, this.similarityThreshold);
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, similarityMessage.similarityThreshold);
 
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
@@ -342,7 +335,7 @@ public class Worker extends AbstractActor {
             }
         }
 
-        this.sender().tell(new Master.ComparisonFinishedMessage(), this.self());
+        this.sender().tell(new Master.WorkerFinishedMatchingMessage(), this.self());
     }
 
     private void handle(DFWWorkMessage dfwWorkMessage) {

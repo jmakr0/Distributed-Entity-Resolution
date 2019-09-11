@@ -54,14 +54,21 @@ public class Master extends AbstractActor {
 
     @Data @AllArgsConstructor
     public static class DuplicateMessage implements Serializable {
-        private static final long serialVersionUID = -1111194311112342425L;
+        private static final long serialVersionUID = -1444194311112342425L;
         private DuplicateMessage() {}
         protected Set<Set<Integer>> duplicates;
     }
 
     @Data @AllArgsConstructor
-    public static class ComparisonFinishedMessage implements Serializable {
-        private static final long serialVersionUID = -1111194361812333325L;
+    public static class WorkerFinishedMatchingMessage implements Serializable {
+        private static final long serialVersionUID = -1031194361812333325L;
+    }
+
+    @Data @AllArgsConstructor
+    public static class MatchingCompletedMessage implements Serializable {
+        private static final long serialVersionUID = -1942194771812333325L;
+        private MatchingCompletedMessage() {}
+        private Set<Set<Integer>> duplicates;
     }
 
     @Data @AllArgsConstructor
@@ -99,10 +106,8 @@ public class Master extends AbstractActor {
 
     private Config config;
 
-    private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
-
     private Set<ActorRef> workers = new HashSet<>();
-    // todo: see if we really need this list, currently we do
+    // todo: see if if we can merge lists in the end
     private Set<ActorRef> registeredWorkers = new HashSet<>();
     private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
     private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
@@ -113,7 +118,10 @@ public class Master extends AbstractActor {
     private String goldPath;
     private Md5HashRouter router;
 
+    // Coordinators
     private ActorRef tcMaster;
+    private ActorRef matchingCoordinator;
+
 
     private PerformanceTracker performanceTracker;
 
@@ -146,7 +154,8 @@ public class Master extends AbstractActor {
                 .match(WorkRequestMessage.class, this::handle)
                 .match(Terminated.class, this::handle)
                 .match(DuplicateMessage.class, this::handle)
-                .match(ComparisonFinishedMessage.class, this::handle)
+                .match(WorkerFinishedMatchingMessage.class, this::handle)
+                .match(MatchingCompletedMessage.class, this::handle)
                 .match(ReadyDFWMessage.class, this::handle)
                 .match(IdleDFWMessage.class, this::handle)
                 .match(DFWWorkMessage.class, this::handle)
@@ -175,6 +184,12 @@ public class Master extends AbstractActor {
         this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload);
 
         this.fwBlockSize = this.config.getInt("der.transitive-closure.block-size");
+
+        // create coordinator actors
+        this.matchingCoordinator = context().actorOf(MatchingCoordinator.props(), MatchingCoordinator.DEFAULT_NAME);
+        this.matchingCoordinator.tell(new MatchingCoordinator.ConfigMessage(config), this.self());
+
+        this.tcMaster = context().actorOf(TCMaster.props(), TCMaster.DEFAULT_NAME);
     }
 
     private void handle(RegisterMessage registerMessage) {
@@ -192,15 +207,8 @@ public class Master extends AbstractActor {
 
         Md5HashRouter routerCopy = new Md5HashRouter(this.router);
 
-        double similarityThreshold = config.getDouble("der.duplicate-detection.similarity-threshold");
-        int thresholdMin = config.getInt("der.similarity.abs-comparator.threshold-min");
-        int thresholdMax = config.getInt("der.similarity.abs-comparator.threshold-max");
-
         worker.tell(new Worker.RegisterAckMessage(
                         new NameBlocking(),
-                        similarityThreshold,
-                        thresholdMin,
-                        thresholdMax,
                         routerCopy),
                 this.self()
         );
@@ -237,9 +245,7 @@ public class Master extends AbstractActor {
     }
 
     private void sendSimilarity(ActorRef worker) {
-        this.log.info("Similarity message to {}", worker.path().name());
-
-        worker.tell(new Worker.SimilarityMessage(), this.self());
+        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
     }
 
     private void sendData(ActorRef worker) {
@@ -251,49 +257,35 @@ public class Master extends AbstractActor {
         worker.tell(dataMessage, this.self());
     }
 
-    private void handle(ComparisonFinishedMessage comparisonFinishedMessage) {
+    private void handle(DuplicateMessage duplicateMessage) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.DuplicateMessage(duplicateMessage.duplicates), this.sender());
+    }
 
-        ActorRef worker = this.sender();
-        this.workers.remove(worker);
+    private void handle(WorkerFinishedMatchingMessage workerFinishedMatchingMessage) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.WorkerFinishedMatchingMessage(), this.sender());
+    }
 
-        if (!this.readyForDFWWork.contains(worker)) {
+    private void handle(MatchingCompletedMessage matchingCompletedMessage) {
+
+        Set<Set<Integer>> duplicates = matchingCompletedMessage.duplicates;
+
+        // just for testing: compute the transitive closure in a non distributed way
+        // int[][] matrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
+        // int[][] tkMatrix = FloydWarshall.apply(matrix);
+        // this.log.info("locally");
+        // this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
+
+        this.transitiveClosure(matchingCompletedMessage.duplicates);
+    }
+
+    private void transitiveClosure(Set<Set<Integer>> duplicates) {
+        this.log.info("Calculate Transitive Closure");
+
+        for (ActorRef worker: this.workers) {
             this.readyForDFWWork.add(worker);
         }
 
-        if (this.workers.isEmpty()) {
-            evaluateDuplicates();
-
-            int[][] matrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
-            int[][] tkMatrix = FloydWarshall.apply(matrix);
-            this.log.info("locally");
-//            this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
-            System.out.println(MatrixConverter.fromTransitiveClosure(tkMatrix));
-            transitiveClosure();
-
-            // todo move shutdown
-//            this.log.info("All tasks finished, starting shutdown process.");
-//            this.shutdown();
-        }
-    }
-
-    private void transitiveClosure() {
-        this.log.info("Calculate Transitive Closure");
-        this.tcMaster = context().actorOf(TCMaster.props(), TCMaster.DEFAULT_NAME);
-
-        tcMaster.tell(new TCMaster.CalculateMessage(this.duplicates, this.fwBlockSize), this.self());
-    }
-
-    private void evaluateDuplicates() {
-        this.log.info("Duplicates: \"{}\"", this.duplicates);
-        Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(this.goldPath);
-        GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
-        evaluator.evaluate(duplicates, goldStandard);
-    }
-
-    private void handle(DuplicateMessage duplicateMessage) {
-        this.log.info("Duplicate {}", duplicateMessage.duplicates);
-
-        this.duplicates.addAll(duplicateMessage.duplicates);
+        tcMaster.tell(new TCMaster.CalculateMessage(duplicates, this.fwBlockSize), this.self());
     }
 
     private void handle(IdleDFWMessage idleDFWMessage) {
