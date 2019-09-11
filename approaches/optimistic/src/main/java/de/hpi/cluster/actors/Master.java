@@ -298,9 +298,9 @@ public class Master extends AbstractActor {
     private void transitiveClosure(Set<Set<Integer>> duplicates) {
         this.log.info("Calculate Transitive Closure");
 
-//        for (ActorRef worker: this.inMatchingPhase) {
-//            this.readyForDFWWork.add(worker);
-//        }
+        for (ActorRef worker: this.workers) {
+            this.readyForDFWWork.add(worker);
+        }
 
         tcMaster.tell(new TCMaster.CalculateMessage(duplicates, this.fwBlockSize), this.self());
     }

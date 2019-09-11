@@ -98,7 +98,7 @@ public class MatchingCoordinator extends AbstractActor {
         this.matching.add(worker);
 
         this.log.info("Similarity message to {}", worker.path().name());
-        worker.tell(new Worker.SimilarityMessage(this.similarityThreshold, this.thresholdMin, this.thresholdMax), this.self());
+        worker.tell(new Worker.SimilarityMessage(this.similarityThreshold, this.thresholdMin, this.thresholdMax), this.master);
     }
 
     private void handle(DuplicateMessage duplicateMessage) {
