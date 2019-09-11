@@ -276,23 +276,6 @@ public class Master extends AbstractActor {
         // this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
 
         this.transitiveClosure(matchingCompletedMessage.duplicates);
-
-
-        // TODO think about list logic
-//        ActorRef worker = this.sender();
-//        this.workers.remove(worker);
-//
-//        if (!this.readyForDFWWork.contains(worker)) {
-//            this.readyForDFWWork.add(worker);
-//        }
-//
-//        if (this.workers.isEmpty()) {
-//
-//
-//            // todo move shutdown
-////            this.log.info("All tasks finished, starting shutdown process.");
-////            this.shutdown();
-//        }
     }
 
     private void transitiveClosure(Set<Set<Integer>> duplicates) {
