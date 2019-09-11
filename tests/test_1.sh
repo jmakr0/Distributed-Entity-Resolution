@@ -1,15 +1,14 @@
 #!/bin/bash
 
-set +e
-
 # General
 
-TEST_NAME="Test_3"
+TEST_NAME="Test_1"
+CONFIG_FILE="default.conf"
 TIMEOUT_SEC=50
 
 PATH_DATASET=$(pwd)/../data/restaurant.csv
 PATH_DATASET_GOLD=$(pwd)/../data/restaurant_gold.csv
-DATASET_SIZE_MB=$(du -m $PATH_DATASET | cut -f1)
+DATASET_SIZE_MB=$(du -m ${PATH_DATASET} | cut -f1) # takes the current size
 
 # Docker settings
 
@@ -17,24 +16,22 @@ SHM_SIZE=512m
 DOCKER_NETWORK="rdse-network"
 
 PATH_DATA_MOUNT=$(pwd)/testing/data
+PATH_CONF_MOUNT=$(pwd)/conf
 
-PATH_LOG_TEST_DIR=$TEST_NAME/$(date +%Y%m%d_%H%M%S)/
+PATH_LOG_TEST_DIR=${TEST_NAME}/$(date +%Y%m%d_%H%M%S)
 PATH_LOG_MOUNT=$(pwd)/testing/log
-PATH_LOG_DIR=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
+PATH_LOG_DIR=${PATH_LOG_MOUNT}/${PATH_LOG_TEST_DIR}
 
 WORKER_CPU_SHARES=0
 WORKER_MEMORY=0
 
-# Master settings
-
-MASTER_NODES=1
-MASTER_WORKERS=0
-MASTER_NEW_DATASET_SIZE_MB=10
-
 # Worker settings
 
-WORKER_NODES=2
-WORKER_WORKERS=3
+WORKER_CONTAINER=1
+
+# Master settings
+
+MASTER_NEW_DATASET_SIZE_MB=0 # if 0, test keeps DATASET_SIZE_MB
 
 # Run test
 
@@ -45,19 +42,19 @@ echo
 echo "### Initialize ###"
 echo
 
-. ./testing/init.sh
+. bin/init.sh
 
 echo
 echo "### Run ###"
 echo
 
-. ./testing/run.sh
+. bin/run.sh
 
 echo
 echo "### Teardown ###"
 echo
 
-. ./testing/teardown.sh
+. bin/teardown.sh
 
 echo
 echo "### Done ###"

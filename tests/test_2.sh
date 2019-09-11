@@ -4,7 +4,7 @@ set +e
 
 # General
 
-TEST_NAME="Test_1"
+TEST_NAME="Test_2"
 TIMEOUT_SEC=50
 
 PATH_DATASET=$(pwd)/../data/restaurant.csv
@@ -33,8 +33,8 @@ MASTER_NEW_DATASET_SIZE_MB=0
 
 # Worker settings
 
-WORKER_NODES=1
-WORKER_WORKERS=1
+WORKER_NODES=2
+WORKER_WORKERS=3
 
 # Run test
 
@@ -45,19 +45,18 @@ echo
 echo "### Initialize ###"
 echo
 
-. ./testing/init.sh
+. ../docker/testing/init.sh
 
 echo
 echo "### Run ###"
 echo
 
-. ./testing/run.sh
+. ../docker/testing/run.sh
 
 echo
 echo "### Teardown ###"
 echo
 
-. ./testing/teardown.sh
+. ../docker/testing/teardown.sh
 
-echo
 echo "### Done ###"

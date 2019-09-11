@@ -10,38 +10,5 @@ To build the images, just execute:
 ./build_images.sh
 ```
 
-The script [build_images.sh](build_images.sh) uses maven, builds a `JAR` from the current code-base and creates a [base](images/Dockerfile-base), [master](images/Dockerfile-base), and [worker](images/Dockerfile-base) image.
-
-## Tests
-
-A test script, e.g. [test_1.sh](test_1.sh), sets up its environment and sources it to the following scripts:
-
-* [init.sh](testing/init.sh): Creates the docker test network, log/data directory, copies/creates dataset. If desired (`MASTER_NEW_DATASET_SIZE_MB`=100), a bigger dataset is created.
-* [run.sh](testing/run.sh): Starts master and worker nodes within a docker container.
-* [teardown.sh](testing/teardown.sh): Waits until all nodes are done or a certain timeout is reached. Deletes the docker test network, all nodes, and the data directory which is only used for the tests.
-
-The log data, which are saved in `testing/log` by default, are not deleted automatically. If you want to have a total cleanup, use `./helpers/cleanup.sh`.
-
-#### Test_1
-
-Worker nodes: 1
-
-Worker on each node: 1
-
-#### Test_2
-
-Worker nodes: 2
-
-Worker on each node: 3
-
-#### Test_3
-
-Worker nodes: 2
-
-Worker on each node: 3
-
-Dataset size: 10MB
-
-#### Custom test
-
-To setup a custom test, copy [test_template.sh](test_template.sh) and adjust it.
+The script [build_images.sh](build_images.sh) uses maven, builds a `JAR` from the current code-base and creates a 
+[base](Dockerfile-base), [master](Dockerfile-base), and [worker](Dockerfile-base) image.
