@@ -5,18 +5,13 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
-import de.hpi.cluster.actors.Worker.DataMessage;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
-import de.hpi.rdse.der.data.CSVService;
 import de.hpi.rdse.der.data.GoldReader;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
 import de.hpi.rdse.der.evaluation.GoldStandardEvaluator;
-import de.hpi.rdse.der.fw.FloydWarshall;
 import de.hpi.rdse.der.partitioning.Md5HashRouter;
-import de.hpi.rdse.der.performance.PerformanceTracker;
-import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -50,6 +45,11 @@ public class Master extends AbstractActor {
         private static final long serialVersionUID = -7643194361868862420L;
         private WorkRequestMessage() {}
         private int routerVersion;
+    }
+
+    @Data @AllArgsConstructor
+    public static class AllDataParsedMessage implements Serializable {
+        private static final long serialVersionUID = -4739494771812333325L;
     }
 
     @Data @AllArgsConstructor
@@ -113,17 +113,15 @@ public class Master extends AbstractActor {
     private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
 
     private boolean repartitionRunning = false;
+    private boolean dataAvailable = true;
 
-    private CSVService csvService;
     private String goldPath;
     private Md5HashRouter router;
 
     // Coordinators
     private ActorRef tcMaster;
     private ActorRef matchingCoordinator;
-
-
-    private PerformanceTracker performanceTracker;
+    private ActorRef indexingCoordinator;
 
     private int fwBlockSize;
 
@@ -152,6 +150,7 @@ public class Master extends AbstractActor {
                 .match(ConfigMessage.class, this::handle)
                 .match(RegisterMessage.class, this::handle)
                 .match(WorkRequestMessage.class, this::handle)
+                .match(AllDataParsedMessage.class, this::handle)
                 .match(Terminated.class, this::handle)
                 .match(DuplicateMessage.class, this::handle)
                 .match(WorkerFinishedMatchingMessage.class, this::handle)
@@ -169,23 +168,16 @@ public class Master extends AbstractActor {
         this.config = message.config;
 
         this.goldPath = this.config.getString("der.data.gold-standard.path");
-        String data = this.config.getString("der.data.input.path");
-        boolean hasHeader = this.config.getBoolean("der.data.input.has-header");
-        char separator = this.config.getString("der.data.input.line-separator").charAt(0);
-        int minWorkload = this.config.getInt("der.performance-tracker.min-workload");
-        int maxQueueSize = this.config.getInt("der.data.input.max-queue-size");
-
-        this.csvService = new CSVService(data, hasHeader, separator, (int) Math.pow(2,minWorkload), maxQueueSize);
 
         int numberOfBuckets = this.config.getInt("der.hash-router.number-of-buckets");
         this.router = new Md5HashRouter(numberOfBuckets);
 
-        int timeThreshold = this.config.getInt("der.performance-tracker.time-threshold");
-        this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload);
-
         this.fwBlockSize = this.config.getInt("der.transitive-closure.block-size");
 
         // create coordinator actors
+        this.indexingCoordinator = context().actorOf(IndexingCoordinator.props(), IndexingCoordinator.DEFAULT_NAME);
+        this.indexingCoordinator.tell(new IndexingCoordinator.ConfigMessage(config), this.self());
+
         this.matchingCoordinator = context().actorOf(MatchingCoordinator.props(), MatchingCoordinator.DEFAULT_NAME);
         this.matchingCoordinator.tell(new MatchingCoordinator.ConfigMessage(config), this.self());
 
@@ -225,7 +217,7 @@ public class Master extends AbstractActor {
             this.sendRepartition(worker);
         } else if (masterVersion == workerVersion) {
 
-            if(this.csvService.dataAvailable()){
+            if(this.dataAvailable){
                 this.sendData(worker);
             } else {
                 this.sendSimilarity(worker);
@@ -236,6 +228,10 @@ public class Master extends AbstractActor {
 
     }
 
+    private void handle(AllDataParsedMessage allDataParsedMessage) {
+        this.dataAvailable = false;
+    }
+
     private void sendRepartition(ActorRef worker) {
         this.log.info("Repartitioning message to {}", worker.path().name());
 
@@ -244,17 +240,12 @@ public class Master extends AbstractActor {
         worker.tell(new Worker.RepartitionMessage(routerCopy), this.self());
     }
 
-    private void sendSimilarity(ActorRef worker) {
-        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
+    private void sendData(ActorRef worker) {
+        this.indexingCoordinator.tell(new IndexingCoordinator.SendDataMessage(worker), this.self());
     }
 
-    private void sendData(ActorRef worker) {
-        int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
-        this.log.info("numberOfLines: {}", numberOfLines);
-        String data = this.csvService.getRecords(numberOfLines);
-
-        DataMessage dataMessage = new DataMessage(data);
-        worker.tell(dataMessage, this.self());
+    private void sendSimilarity(ActorRef worker) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
     }
 
     private void handle(DuplicateMessage duplicateMessage) {

@@ -11,7 +11,6 @@ import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.actors.MatchingCoordinator.WorkerFinishedMatchingMessage;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.rdse.der.dfw.DFWBlock;
@@ -162,60 +161,6 @@ public class Worker extends AbstractActor {
 
         this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
     }
-
-//    private void handle(RouterVersionRequestMessage routerVersionRequestMessage) {
-//        ActorRef peer = this.sender();
-//
-//        peer.tell(new RouterVersionResponseMessage(this.router.getVersion()), this.self());
-//    }
-
-//    private void handle(RouterVersionResponseMessage routerVersionResponseMessage) {
-//        ActorRef peer = this.sender();
-//        int myRouterVersion = this.router.getVersion();
-//        int peerRouterVersion = routerVersionResponseMessage.version;
-//
-//        if(myRouterVersion == peerRouterVersion) {
-//            this.sendData(peer);
-//        } else if (myRouterVersion > peerRouterVersion) {
-//            this.sendRouter(peer);
-//        } else {
-//            this.requestRouter(peer);
-//        }
-//    }
-
-//    private void handle(RouterRequestMessage routerRequestMessage) {
-//        ActorRef peer = this.sender();
-//
-//        peer.tell(new RepartitionMessage(this.router), this.self());
-//    }
-
-//    private void sendData(ActorRef peer) {
-
-    // todo:
-    // get data for peer
-    // delete peer from sendQueue
-    // send data to peer
-
-//        Iterator<Map.Entry<String,List<String[]>>> iterator = this.data.entrySet().iterator();
-//
-//        while (iterator.hasNext()) {
-//            Map.Entry<String,List<String[]>> entry = iterator.next();
-//            ActorRef responsibleWorker = this.router.getObjectForKey(entry.getValue().toString());
-//
-//        }
-////            ActorRef responsibleWorker = router.getObjectForKey(key);
-////            List<String[]> pd = this.data.get(key);
-////            responsibleWorker.tell(new ParsedDataMessage(key, pd), this.self());
-////        }
-//    }
-
-//    private void sendRouter(ActorRef peer) {
-//        peer.tell(new RepartitionMessage(this.router), this.self());
-//    }
-
-//    private void requestRouter(ActorRef peer) {
-//        peer.tell(new RouterRequestMessage(), this.self());
-//    }
 
     private void handle(DataMessage dataMessage) {
         this.log.info("data massage received");
