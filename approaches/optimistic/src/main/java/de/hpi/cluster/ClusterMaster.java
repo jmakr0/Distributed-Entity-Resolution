@@ -9,9 +9,6 @@ import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 //import de.hpi.cluster.actors.Reaper;
 
 public class ClusterMaster extends ClusterSystem {

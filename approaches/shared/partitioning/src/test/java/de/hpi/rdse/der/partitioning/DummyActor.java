@@ -2,7 +2,6 @@ package de.hpi.rdse.der.partitioning;
 
 import akka.actor.AbstractActor;
 import akka.actor.Props;
-
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
