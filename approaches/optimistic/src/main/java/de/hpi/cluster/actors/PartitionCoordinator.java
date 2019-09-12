@@ -62,14 +62,16 @@ public class PartitionCoordinator extends AbstractActor {
     private void handle(ConfigMessage configMessage) {
         this.master = this.sender();
 
-//        ActorSystem system = context().system();
-////        Serialization serialization = SerializationExtension.get(system);
-//        this.serializer = serialization.findSerializerFor(this.router);
-
         Config config = configMessage.config;
 
         int numberOfBuckets = config.getInt("der.hash-router.number-of-buckets");
         this.router = new Md5HashRouter(numberOfBuckets);
+
+        // determines serializer
+
+//        ActorSystem system = context().system();
+//        Serialization serialization = SerializationExtension.get(system);
+//        this.serializer = serialization.findSerializerFor(this.router);
     }
 
     private void handle(RegisterMessage registerMessage) {
