@@ -5,13 +5,11 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
-import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
 import de.hpi.rdse.der.data.GoldReader;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
 import de.hpi.rdse.der.evaluation.GoldStandardEvaluator;
-import de.hpi.rdse.der.partitioning.Md5HashRouter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -116,9 +114,9 @@ public class Master extends AbstractActor {
     private boolean dataAvailable = true;
 
     private String goldPath;
-    private Md5HashRouter router;
 
     // Coordinators
+    private ActorRef partitionCoordinator;
     private ActorRef tcMaster;
     private ActorRef matchingCoordinator;
     private ActorRef indexingCoordinator;
@@ -169,12 +167,12 @@ public class Master extends AbstractActor {
 
         this.goldPath = this.config.getString("der.data.gold-standard.path");
 
-        int numberOfBuckets = this.config.getInt("der.hash-router.number-of-buckets");
-        this.router = new Md5HashRouter(numberOfBuckets);
-
         this.fwBlockSize = this.config.getInt("der.transitive-closure.block-size");
 
         // create coordinator actors
+        this.partitionCoordinator = context().actorOf(PartitionCoordinator.props(), PartitionCoordinator.DEFAULT_NAME);
+        this.partitionCoordinator.tell(new PartitionCoordinator.ConfigMessage(config), this.self());
+
         this.indexingCoordinator = context().actorOf(IndexingCoordinator.props(), IndexingCoordinator.DEFAULT_NAME);
         this.indexingCoordinator.tell(new IndexingCoordinator.ConfigMessage(config), this.self());
 
@@ -185,59 +183,25 @@ public class Master extends AbstractActor {
     }
 
     private void handle(RegisterMessage registerMessage) {
-        this.log.info("REGISTERED with Info: \"{}\"", registerMessage.info.infoString());
+        this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
 
         ActorRef worker = this.sender();
 
         this.addWorker(worker);
-
-        this.router.putOnHashring(worker);
-
-        this.log.info("Router version: " + this.router.getVersion());
-
-        System.out.println("Master " + System.identityHashCode(this.router));
-
-        Md5HashRouter routerCopy = new Md5HashRouter(this.router);
-
-        worker.tell(new Worker.RegisterAckMessage(
-                        new NameBlocking(),
-                        routerCopy),
-                this.self()
-        );
     }
 
     private void handle(WorkRequestMessage workRequestMessage) {
         ActorRef worker = this.sender();
-        int masterVersion = this.router.getVersion();
-        int workerVersion = workRequestMessage.routerVersion;
 
-        this.log.info("Work request {}, master router {}, worker router {}", worker.path().name(), masterVersion, workerVersion);
-
-        if (masterVersion > workerVersion) {
-            this.sendRepartition(worker);
-        } else if (masterVersion == workerVersion) {
-
-            if(this.dataAvailable){
-                this.sendData(worker);
-            } else {
-                this.sendSimilarity(worker);
-            }
+        if(this.dataAvailable){
+            this.sendData(worker);
         } else {
-            this.log.error("Reached undefined state");
+            this.sendSimilarity(worker);
         }
-
     }
 
     private void handle(AllDataParsedMessage allDataParsedMessage) {
         this.dataAvailable = false;
-    }
-
-    private void sendRepartition(ActorRef worker) {
-        this.log.info("Repartitioning message to {}", worker.path().name());
-
-        Md5HashRouter routerCopy = new Md5HashRouter(this.router);
-
-        worker.tell(new Worker.RepartitionMessage(routerCopy), this.self());
     }
 
     private void sendData(ActorRef worker) {
