@@ -4,7 +4,7 @@
 
 TEST_NAME="Test_1"
 CONFIG_FILE="default.conf"
-TIMEOUT_SEC=120
+TIMEOUT_SEC=60
 
 PATH_DATASET=$(pwd)/../data/restaurant.csv
 PATH_DATASET_GOLD=$(pwd)/../data/restaurant_gold.csv

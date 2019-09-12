@@ -48,7 +48,7 @@ public class ClusterWorker extends ClusterSystem {
 
 	}
 
-	// todo: remove!
+	// todo: check #46
 	static String getDefaultHost() {
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
