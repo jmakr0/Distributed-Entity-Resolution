@@ -8,9 +8,9 @@ docker run -d --rm \
    --shm-size ${SHM_SIZE} \
    --network ${DOCKER_NETWORK} \
    --name rdse-master \
-   --volume ${PATH_LOG_DIR}:/app/log \
-   --volume ${PATH_DATA_MOUNT}:/app/data \
-   --volume ${PATH_CONF_MOUNT}:/app/conf \
+   --volume ${TEST_LOG_PATH}:/app/log \
+   --volume ${TEST_DATA_PATH}:/app/data \
+   --volume ${TEST_CONF_PATH}:/app/conf \
    -e CONFIG_FILE=${CONFIG_FILE} \
    rdse/master
 
@@ -25,8 +25,8 @@ for I in $(seq ${WORKER_CONTAINER}); do
       --name rdse-worker-${I} \
       --memory ${WORKER_MEMORY} \
       --cpu-shares ${WORKER_CPU_SHARES} \
-      --volume ${PATH_LOG_DIR}:/app/log \
-      --volume ${PATH_CONF_MOUNT}:/app/conf \
+      --volume ${TEST_LOG_PATH}:/app/log \
+      --volume ${TEST_CONF_PATH}:/app/conf \
       -e CONFIG_FILE=${CONFIG_FILE} \
       rdse/worker
 done

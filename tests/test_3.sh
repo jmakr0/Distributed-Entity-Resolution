@@ -7,20 +7,20 @@ set +e
 TEST_NAME="Test_3"
 TIMEOUT_SEC=50
 
-PATH_DATASET=$(pwd)/../data/restaurant.csv
-PATH_DATASET_GOLD=$(pwd)/../data/restaurant_gold.csv
-DATASET_SIZE_MB=$(du -m $PATH_DATASET | cut -f1)
+DATASET_PATH=$(pwd)/../data/restaurant.csv
+GOLD_STANDARD_PATH=$(pwd)/../data/restaurant_gold.csv
+DATASET_SIZE_MB=$(du -m ${DATASET_PATH} | cut -f1)
 
 # Docker settings
 
 SHM_SIZE=512m
 DOCKER_NETWORK="rdse-network"
 
-PATH_DATA_MOUNT=$(pwd)/testing/data
+TEST_DATA_PATH=$(pwd)/testing/data
 
 PATH_LOG_TEST_DIR=$TEST_NAME/$(date +%Y%m%d_%H%M%S)/
 PATH_LOG_MOUNT=$(pwd)/testing/log
-PATH_LOG_DIR=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
+TEST_LOG_PATH=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
 
 WORKER_CPU_SHARES=0
 WORKER_MEMORY=0

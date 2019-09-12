@@ -4,7 +4,7 @@ SEC=0
 MASTER_CONTAINER=1
 
 CLUSTER_NODES=$(($MASTER_CONTAINER + $WORKER_CONTAINER))
-NODE_DONES=$(find ${PATH_LOG_DIR} -type f -name *.done.log | wc -l)
+NODE_DONES=$(find ${TEST_LOG_PATH} -type f -name *.done.log | wc -l)
 DOCKER_NODES=$(docker ps -aq -f "name=rdse*")
 DOCKER_NETWORK=$(docker network ls -q -f "name=$DOCKER_NETWORK")
 
@@ -12,7 +12,7 @@ DOCKER_NETWORK=$(docker network ls -q -f "name=$DOCKER_NETWORK")
 
 until [[ ${NODE_DONES} -eq ${CLUSTER_NODES} ]] || [[ ${SEC} -ge ${TIMEOUT_SEC} ]]; do
    echo "...nodes that are done: $NODE_DONES | timeout in: $(($TIMEOUT_SEC - $SEC)) seconds";
-   NODE_DONES=$(find ${PATH_LOG_DIR} -type f -name *.done.log | wc -l);
+   NODE_DONES=$(find ${TEST_LOG_PATH} -type f -name *.done.log | wc -l);
    SEC=$((SEC+5));
    sleep 5;
 done
@@ -40,7 +40,8 @@ then
 	docker network rm ${DOCKER_NETWORK}
 fi
 
-if [[ -d ${PATH_DATA_MOUNT} ]]
-then
-  rm -rf ${PATH_DATA_MOUNT}
-fi
+# remove test data
+#if [[ -d ${TEST_DATA_PATH} ]]
+#then
+#  rm -rf ${TEST_DATA_PATH}
+#fi
