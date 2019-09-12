@@ -6,7 +6,9 @@
 
 # Override environment settings from env.sh; make the test individual
 
-TEST_NAME="Test_1"
+TEST_NAME="Test_2"
+TEST_TIMEOUT=120
+CONFIG_FILE="test_2.conf"
 
 # Run test
 
@@ -22,7 +24,7 @@ echo
 echo
 echo "### Run ###"
 echo
-
+	
 . bin/run.sh
 
 echo
