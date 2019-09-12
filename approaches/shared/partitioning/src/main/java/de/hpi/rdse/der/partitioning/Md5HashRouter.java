@@ -34,27 +34,6 @@ public class Md5HashRouter implements Serializable {
     }
 
     /**
-     * TODO check if we need this constructor (Kryo serialization issues)
-     * THis Constructor is used to create a copy of a given MD5HashRouter
-     * @param router the router to create a copy of
-     */
-    public Md5HashRouter(Md5HashRouter router) {
-        this.mapping = new HashMap<ActorRef, List<Integer>>();
-        this.mappingIndex = new HashMap<>();
-
-        for (ActorRef key:router.mapping.keySet()) {
-            this.mapping.put(key, router.mapping.get(key));
-        }
-
-        for (Integer key:router.mappingIndex.keySet()) {
-            this.mappingIndex.put(key, router.mappingIndex.get(key));
-        }
-
-        this.numberOfBuckets = router.numberOfBuckets;
-        this.version = router.version;
-    }
-
-    /**
      * Inits a new MD5HashRouter dividing the keyspace of the MD5 hashring
      * @param buckets the number of buckets in the hashring
      */
