@@ -69,9 +69,9 @@ public class PartitionCoordinator extends AbstractActor {
 
         // determines serializer
 
-//        ActorSystem system = context().system();
-//        Serialization serialization = SerializationExtension.get(system);
-//        this.serializer = serialization.findSerializerFor(this.router);
+        ActorSystem system = context().system();
+        Serialization serialization = SerializationExtension.get(system);
+        this.serializer = serialization.findSerializerFor(Md5HashRouter.class);
     }
 
     private void handle(RegisterMessage registerMessage) {
