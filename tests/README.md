@@ -2,7 +2,7 @@
 
 A test script, e.g. [test_1.sh](test_1.sh), sets up its environment and sources it to the following scripts:
 
-* [init.sh](../tests/bin/init.sh): Creates the docker test network, log/data directory, copies/creates dataset. If desired (`MASTER_NEW_DATASET_SIZE_MB`=100), a bigger dataset is created.
+* [init.sh](../tests/bin/init.sh): Creates the docker test network, log/data directory, copies/creates dataset. If desired (`TEST_DATASET_SIZE`=100), a bigger dataset is created.
 * [run.sh](../tests/bin/run.sh): Starts master and worker nodes within a docker container.
 * [teardown.sh](../tests/bin/teardown.sh): Waits until all nodes are done or a certain timeout is reached. Deletes the docker test network, all nodes, and the data directory which is only used for the tests.
 

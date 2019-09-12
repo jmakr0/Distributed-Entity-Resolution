@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# todo: not adjusted yet!
+
 # General
 
 TEST_NAME="YOUR_TEST_NAME"
-TIMEOUT_SEC=60
+TEST_TIMEOUT=60
 
 DATASET_PATH=$(pwd)/../data/restaurant.csv
 GOLD_STANDARD_PATH=$(pwd)/../data/restaurant_gold.csv
@@ -14,11 +16,11 @@ DATASET_SIZE_MB=$(du -m $DATASET_PATH | cut -f1) # takes the current size
 SHM_SIZE=512m
 DOCKER_NETWORK="rdse-network"
 
-TEST_DATA_PATH=$(pwd)/testing/data
+DATA_PATH=$(pwd)/testing/data
 
 PATH_LOG_TEST_DIR=$TEST_NAME/$(date +%Y%m%d_%H%M%S)/
 PATH_LOG_MOUNT=$(pwd)/testing/log
-TEST_LOG_PATH=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
+LOGGING_PATH=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
 
 WORKER_CPU_SHARES=0
 WORKER_MEMORY=0
@@ -27,7 +29,7 @@ WORKER_MEMORY=0
 
 MASTER_NODES=1
 MASTER_WORKERS=0
-MASTER_NEW_DATASET_SIZE_MB=0
+TEST_DATASET_SIZE=0
 
 # Worker settings
 

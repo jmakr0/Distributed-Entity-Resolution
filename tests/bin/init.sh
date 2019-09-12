@@ -14,27 +14,31 @@ fi
 
 # Setup log directory
 
-mkdir -p ${TEST_LOG_PATH}
-echo "logs are saved to: ${TEST_LOG_PATH}"
+LOGGING_PATH=${LOGGING_PATH}/${TEST_NAME}/log/$(date +%Y%m%d_%H%M%S)
+mkdir -p ${LOGGING_PATH}
+echo "logs are saved to: ${LOGGING_PATH}"
 
 # Setup data directory
 
-mkdir -p ${TEST_DATA_PATH}
-echo "dataset copied to: ${TEST_DATA_PATH}/data.csv"
+DATA_PATH=${DATA_PATH}/${TEST_NAME}/data
+mkdir -p ${DATA_PATH}
+echo "dataset copied to: ${DATA_PATH}/data.csv"
 
-# Create/Copy dataset
+# Create/copy dataset
 
-# normalize filename to data.csv
-if [[ ${MASTER_NEW_DATASET_SIZE_MB} -gt ${DATASET_SIZE_MB} ]]
+DATASET_SIZE_MB=$(du -m ${DATASET_PATH} | cut -f1) # takes the current size in MB
+
+# Normalize filename to data.csv
+if [[ ${TEST_DATASET_SIZE} -gt ${DATASET_SIZE_MB} ]]
 then
-    echo "create bigger dataset of ${MASTER_NEW_DATASET_SIZE_MB} MB"
-    ./testing/helper/create_dataset.sh ${DATASET_PATH} ${TEST_DATA_PATH}/data.csv ${MASTER_NEW_DATASET_SIZE_MB}
+    echo "create bigger dataset of ${TEST_DATASET_SIZE} MB"
+    ./testing/helper/create_dataset.sh ${DATASET_PATH} ${DATA_PATH}/data.csv ${TEST_DATASET_SIZE}
 else
-    cp ${DATASET_PATH} ${TEST_DATA_PATH}/data.csv
+    cp ${DATASET_PATH} ${DATA_PATH}/data.csv
 fi
 
 # We dont care about the gold standard when the dataset is replicated.
 # Just copy it anyway.
 
-cp ${GOLD_STANDARD_PATH} ${TEST_DATA_PATH}/data_gold.csv
-echo "dataset gold standard copied to: ${TEST_DATA_PATH}/data_gold.csv"
+cp ${GOLD_STANDARD_PATH} ${DATA_PATH}/data_gold.csv
+echo "dataset gold standard copied to: ${DATA_PATH}/data_gold.csv"
