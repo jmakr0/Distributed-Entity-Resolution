@@ -41,12 +41,6 @@ public class PartitionCoordinator extends AbstractActor {
         protected ActorRef worker;
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class TestMessage implements Serializable {
-        private static final long serialVersionUID = -7373543618688625L;
-    }
-
     private ActorRef master;
     private Set<ActorRef> worker = new HashSet<>();
     private Md5HashRouter router;
@@ -72,7 +66,7 @@ public class PartitionCoordinator extends AbstractActor {
     private void handle(RegisterMessage registerMessage) {
         ActorRef worker = registerMessage.worker;
 
-        this.addWorker(worker);
+        this.worker.add(worker);
 
         this.router.putOnHashring(worker);
 
@@ -85,9 +79,5 @@ public class PartitionCoordinator extends AbstractActor {
                         routerCopy),
                     this.master
         );
-    }
-
-    private void addWorker(ActorRef worker) {
-        this.worker.add(worker);
     }
 }
