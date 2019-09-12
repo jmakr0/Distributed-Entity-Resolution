@@ -7,6 +7,7 @@
 # Override environment settings from env.sh; make the test individual
 
 TEST_NAME="Test_1"
+TEST_TIMEOUT=120
 
 # Run test
 

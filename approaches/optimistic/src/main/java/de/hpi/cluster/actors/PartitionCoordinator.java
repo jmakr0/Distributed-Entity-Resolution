@@ -83,11 +83,12 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.log.info("Router version: " + this.router.getVersion());
 
-        Md5HashRouter routerCopy = new Md5HashRouter(this.router);
+//        Md5HashRouter routerCopy = new Md5HashRouter(this.router);
+        byte[] serializedRouter = serializer.toBinary(this.router);
 
         worker.tell(new Worker.RegisterAckMessage(
                         new NameBlocking(),
-                        routerCopy),
+                        serializedRouter),
                     this.master
         );
     }

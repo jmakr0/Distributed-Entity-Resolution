@@ -10,6 +10,9 @@ import akka.cluster.Member;
 import akka.cluster.MemberStatus;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.serialization.Serialization;
+import akka.serialization.SerializationExtension;
+import akka.serialization.Serializer;
 import de.hpi.cluster.ClusterMaster;
 import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
@@ -45,14 +48,14 @@ public class Worker extends AbstractActor {
         private static final long serialVersionUID = -4243194361868862395L;
         private RegisterAckMessage() {}
         protected Blocking blocking;
-        protected Md5HashRouter router;
+        protected byte[] serializedRouter;
     }
 
     @Data @AllArgsConstructor
     public static class RepartitionMessage implements Serializable {
         private static final long serialVersionUID = -7643424361868862395L;
         private RepartitionMessage() {}
-        protected Md5HashRouter router;
+        protected byte[] serializedRouter;
     }
 
     @Data @AllArgsConstructor
@@ -68,7 +71,7 @@ public class Worker extends AbstractActor {
         private ParsedDataMessage() {}
         protected String key;
         protected List<String[]> data;
-        protected Md5HashRouter router;
+        protected byte[] serializedRouter;
     }
 
     @Data @AllArgsConstructor
@@ -142,21 +145,22 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(RegisterAckMessage registerAckMessage) {
+        Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
         this.log.info("RegisterAckMessage received");
-        this.log.info("Router version: " + registerAckMessage.router.getVersion());
+        this.log.info("Router version: " + router.getVersion());
 
         this.blocking = registerAckMessage.blocking;
-        this.setRouter(registerAckMessage.router, "RegisterAckMessage");
+        this.setRouter(router, "RegisterAckMessage");
 
-//        this.sender().tell(new Master.WorkRequestMessage(0), this.self());
         this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
     }
 
     private void handle(RepartitionMessage repartitionMessage) {
-        this.log.info("Repartitioning with worker router {}, master router {}", this.getRouterVersion(), repartitionMessage.router.getVersion());
+        Md5HashRouter router = this.deserializeRouter(repartitionMessage.serializedRouter);
+        this.log.info("Repartitioning with worker router {}, master router {}", this.getRouterVersion(), router.getVersion());
 
-        if(repartitionMessage.router.getVersion() > this.getRouterVersion()) {
-            this.setRouter(repartitionMessage.router, "RepartitionMessage");
+        if(router.getVersion() > this.getRouterVersion()) {
+            this.setRouter(router, "RepartitionMessage");
             this.repartition();
         }
 
@@ -214,7 +218,8 @@ public class Worker extends AbstractActor {
             ActorRef peer = this.router.responsibleActor(entry.getValue().toString());
 
             if(peer.compareTo(this.self()) != 0) {
-                peer.tell(new ParsedDataMessage(entry.getKey(), entry.getValue(), this.router), this.self());
+                byte [] serializedRouter = this.serializeRouter();
+                peer.tell(new ParsedDataMessage(entry.getKey(), entry.getValue(), serializedRouter), this.self());
                 iterator.remove();
             }
 
@@ -238,15 +243,17 @@ public class Worker extends AbstractActor {
                 }
 
             } else {
-                responsibleWorker.tell(new ParsedDataMessage(key, pd, this.router), this.self());
+                byte [] serializedRouter = this.serializeRouter();
+                responsibleWorker.tell(new ParsedDataMessage(key, pd, serializedRouter), this.self());
             }
 
         }
     }
 
     private void handle(ParsedDataMessage parsedDataMessage) {
+        Md5HashRouter router = this.deserializeRouter(parsedDataMessage.serializedRouter);
         int myRouterVersion = this.getRouterVersion();
-        int peerRouterVersion = parsedDataMessage.router.getVersion();
+        int peerRouterVersion = router.getVersion();
 
         String key = parsedDataMessage.key;
 
@@ -259,7 +266,7 @@ public class Worker extends AbstractActor {
         }
 
         if(peerRouterVersion > myRouterVersion) {
-            this.setRouter(parsedDataMessage.router, "ParsedDataMessage");
+            this.setRouter(router, "ParsedDataMessage");
             this.repartition();
         }
 
@@ -312,6 +319,20 @@ public class Worker extends AbstractActor {
             this.log.info("Set router from version {} to {} from {}", this.router.getVersion(), router.getVersion(), source);
         }
         this.router = router;
+    }
+
+    private byte[] serializeRouter() {
+        Serialization serialization = SerializationExtension.get(this.context().system());
+        Serializer serializer = serialization.findSerializerFor(Md5HashRouter.class);
+
+        return serializer.toBinary(this.router);
+    }
+
+    private Md5HashRouter deserializeRouter(byte[] serializedRouter) {
+        Serialization serialization = SerializationExtension.get(this.context().system());
+        Serializer serializer = serialization.findSerializerFor(Md5HashRouter.class);
+
+        return  (Md5HashRouter) serializer.fromBinary(serializedRouter);
     }
 
 }
