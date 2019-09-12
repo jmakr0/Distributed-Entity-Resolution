@@ -9,6 +9,9 @@ import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 //import de.hpi.cluster.actors.Reaper;
 
 public class ClusterMaster extends ClusterSystem {
@@ -17,7 +20,8 @@ public class ClusterMaster extends ClusterSystem {
 
 	public static void start(String actorSystemName, Config config) {
 		int workers = config.getInt("der.cluster.master.worker-actors");
-		String host = config.getString("der.cluster.master.host-address");
+//		String host = config.getString("der.cluster.master.host-address");
+		String host = getDefaultHost();
 		int port = config.getInt("der.cluster.master.port");
 		String inputPath = config.getString("der.data.input.path");
 		String goldPath = config.getString("der.data.gold-standard.path");
@@ -41,5 +45,15 @@ public class ClusterMaster extends ClusterSystem {
 				
 			}
 		});
+
+	}
+
+	// todo: remove!
+	static String getDefaultHost() {
+		try {
+			return InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			return "localhost";
+		}
 	}
 }

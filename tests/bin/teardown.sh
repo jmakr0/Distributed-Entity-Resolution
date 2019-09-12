@@ -28,19 +28,19 @@ fi
 
 # Take down docker 
 
-#if ! [[ -z ${DOCKER_NODES} ]]
-#then
-#	echo "stop docker nodes";
-#	docker stop ${DOCKER_NODES}
-#fi
-#
-#if ! [[ -z ${DOCKER_NETWORK} ]]
-#then
-#	echo "stop docker RDSE network";
-#	docker network rm ${DOCKER_NETWORK}
-#fi
-#
-#if [[ -d ${PATH_DATA_MOUNT} ]]
-#then
-#  rm -rf ${PATH_DATA_MOUNT}
-#fi
+if ! [[ -z ${DOCKER_NODES} ]]
+then
+	echo "stop docker nodes";
+	docker stop ${DOCKER_NODES}
+fi
+
+if ! [[ -z ${DOCKER_NETWORK} ]]
+then
+	echo "stop docker RDSE network";
+	docker network rm ${DOCKER_NETWORK}
+fi
+
+if [[ -d ${PATH_DATA_MOUNT} ]]
+then
+  rm -rf ${PATH_DATA_MOUNT}
+fi

@@ -1,9 +1,0 @@
-FROM java:8-jre
-
-RUN mkdir /app
-RUN mkdir /app/data
-RUN mkdir /app/log
-
-COPY build/* /app/
-
-WORKDIR /app

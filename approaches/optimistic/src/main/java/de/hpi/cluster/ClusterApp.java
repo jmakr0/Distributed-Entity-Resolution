@@ -11,7 +11,6 @@ import java.io.File;
 public class ClusterApp {
 
     public static final String ACTOR_SYSTEM_NAME = "der-optimistic";
-    public static final String DEFAULT_CONFIG = "default";
 
     public static void main(String[] args) {
 
@@ -54,8 +53,8 @@ public class ClusterApp {
     }
 
     static class Command {
-        @Parameter(names = {"-c", "--config"}, description = "path to the config file")
-        String configPath = DEFAULT_CONFIG;
+        @Parameter(names = {"-c", "--config"}, description = "path to the config file", required=true)
+        String configPath;
     }
 
 }

@@ -17,10 +17,7 @@ DOCKER_NETWORK="rdse-network"
 
 PATH_DATA_MOUNT=$(pwd)/testing/data
 PATH_CONF_MOUNT=$(pwd)/conf
-
-PATH_LOG_TEST_DIR=${TEST_NAME}/$(date +%Y%m%d_%H%M%S)
-PATH_LOG_MOUNT=$(pwd)/testing/log
-PATH_LOG_DIR=${PATH_LOG_MOUNT}/${PATH_LOG_TEST_DIR}
+PATH_LOG_DIR=$(pwd)/testing/log/${TEST_NAME}/$(date +%Y%m%d_%H%M%S)
 
 WORKER_CPU_SHARES=0
 WORKER_MEMORY=0
