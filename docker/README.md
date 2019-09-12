@@ -1,6 +1,6 @@
-# Docker Setup
+# Docker
 
-In order to test our setup distributively on one machine, we deployed our approaches into docker containers.
+To test our setup distributively on one machine, we deployed our approaches into docker containers to isolate them against each other.
 
 ## Build
 
@@ -10,38 +10,44 @@ To build the images, just execute:
 ./build_images.sh
 ```
 
-The script [build_images.sh](build_images.sh) uses maven, builds a `JAR` from the current code-base and creates a [base](images/Dockerfile-base), [master](images/Dockerfile-base), and [worker](images/Dockerfile-base) image.
+### Details
 
-## Tests
+The script [build_images.sh](build_images.sh) uses maven to build a `JAR` of the current code-base and creates a 
+[docker image](Dockerfile-DER) for the master and worker. The following parameters have to be set for the build process:
+* `JAR_NAME` - The name of the JAR that will be executed within the container
+* `ROLE` - Either the application will be run as worker or master
+* `PORT` - The port that will be exposed on the host
+* `CONFIG_FILE` - The name of the config file
 
-A test script, e.g. [test_1.sh](test_1.sh), sets up its environment and sources it to the following scripts:
+## Mounts
 
-* [init.sh](testing/init.sh): Creates the docker test network, log/data directory, copies/creates dataset. If desired (`MASTER_NEW_DATASET_SIZE_MB`=100), a bigger dataset is created.
-* [run.sh](testing/run.sh): Starts master and worker nodes within a docker container.
-* [teardown.sh](testing/teardown.sh): Waits until all nodes are done or a certain timeout is reached. Deletes the docker test network, all nodes, and the data directory which is only used for the tests.
+Once the container is executed, the application uses the following directories if not changed via the [config file](..approaches/optimistic/src/main/resources/default.conf):
 
-The log data, which are saved in `testing/log` by default, are not deleted automatically. If you want to have a total cleanup, use `./helpers/cleanup.sh`.
+* `/app/data` - The location of the data; given in a *csv* format
+* `/app/conf` - The application's config file location
+* `/app/log` - The application logs all its output to this directory
 
-#### Test_1
+**Example-1**
+```
+docker run -it --rm \
+           -v /DATA_PATH:/app/data \
+           -v /CONF_PATH:/app/conf \
+           -v /LOG_PATH:/app/log \
+           rdse/master
+```
 
-Worker nodes: 1
+The `CONFIG_FILE` environment variable enables you to have different config files in the same `/CONF_PATH` directory:
 
-Worker on each node: 1
+**Example-2**
+```
+docker run -it --rm \
+           -v /DATA_PATH:/app/data \
+           -v /CONF_PATH:/app/conf \
+           -v /LOG_PATH:/app/log \
+           -e CONFIG_FILE=test_1.conf \
+           rdse/master
+```
 
-#### Test_2
+## Usage
 
-Worker nodes: 2
-
-Worker on each node: 3
-
-#### Test_3
-
-Worker nodes: 2
-
-Worker on each node: 3
-
-Dataset size: 10MB
-
-#### Custom test
-
-To setup a custom test, copy [test_template.sh](test_template.sh) and adjust it.
+We further apply this setup to test our implementation. Please check out the [testing folder](../tests).

@@ -6,10 +6,11 @@ import com.beust.jcommander.ParameterException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import java.io.File;
+
 public class ClusterApp {
 
     public static final String ACTOR_SYSTEM_NAME = "der-optimistic";
-    public static final String DEFAULT_CONFIG = "default";
 
     public static void main(String[] args) {
 
@@ -27,7 +28,7 @@ public class ClusterApp {
             }
 
             // load config
-            Config config = ConfigFactory.load(command.configPath);
+            Config config = ConfigFactory.parseFile(new File(command.configPath));
 
             switch (jCommander.getParsedCommand()) {
                 case ClusterMaster.MASTER_ROLE:
@@ -52,8 +53,8 @@ public class ClusterApp {
     }
 
     static class Command {
-        @Parameter(names = {"-c", "--config"}, description = "this path to the config file")
-        String configPath = DEFAULT_CONFIG;
+        @Parameter(names = {"-c", "--config"}, description = "path to the config file", required=true)
+        String configPath;
     }
 
 }

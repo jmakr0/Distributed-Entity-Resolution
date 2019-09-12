@@ -1,0 +1,25 @@
+FROM java:8-jre
+
+ARG JAR_NAME
+ARG ROLE
+ARG PORT
+ARG CONFIG_FILE
+
+ENV JAR_NAME=$JAR_NAME
+ENV ROLE=$ROLE
+ENV CONFIG_FILE=$CONFIG_FILE
+
+RUN mkdir /app
+RUN mkdir /app/data
+RUN mkdir /app/conf
+RUN mkdir /app/log
+
+COPY build/* /app/
+
+WORKDIR /app
+
+EXPOSE $PORT
+
+CMD java -jar $JAR_NAME $ROLE \
+         -c conf/${CONFIG_FILE} > log/${ROLE}_${HOSTNAME}.log && \
+         touch log/${ROLE}_${HOSTNAME}.done.log
