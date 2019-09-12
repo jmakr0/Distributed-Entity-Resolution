@@ -31,5 +31,8 @@ classes/
 # Mac files
 .DS_Store
 
-# intelliJ
+# IntelliJ
 *.iml
+
+# Tests
+tests/testing
