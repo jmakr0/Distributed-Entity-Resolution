@@ -1,40 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# todo: not adjusted yet!
+# Source environment and setup test variables
 
-# General
+. bin/env.sh
 
-TEST_NAME="YOUR_TEST_NAME"
-TEST_TIMEOUT=60
+# To create a scrip, you can simply override the variables which are defined in the env.sh
 
-DATASET_PATH=$(pwd)/../data/restaurant.csv
-GOLD_STANDARD_PATH=$(pwd)/../data/restaurant_gold.csv
-DATASET_SIZE_MB=$(du -m $DATASET_PATH | cut -f1) # takes the current size
+TEST_NAME="TEST_TEMPLATE_NAME"
 
-# Docker settings
-
-SHM_SIZE=512m
-DOCKER_NETWORK="rdse-network"
-
-DATA_PATH=$(pwd)/testing/data
-
-PATH_LOG_TEST_DIR=$TEST_NAME/$(date +%Y%m%d_%H%M%S)/
-PATH_LOG_MOUNT=$(pwd)/testing/log
-LOGGING_PATH=$PATH_LOG_MOUNT/$PATH_LOG_TEST_DIR
-
-WORKER_CPU_SHARES=0
-WORKER_MEMORY=0
-
-# Master settings
-
-MASTER_NODES=1
-MASTER_WORKERS=0
-TEST_DATASET_SIZE=0
-
-# Worker settings
-
-WORKER_NODES=1
-WORKER_WORKERS=1
+# ...
+# ... further vars here
 
 # Run test
 
@@ -45,19 +20,19 @@ echo
 echo "### Initialize ###"
 echo
 
-. ../docker/testing/init.sh
+. bin/init.sh
 
 echo
 echo "### Run ###"
 echo
 
-. ../docker/testing/run.sh
+. bin/run.sh
 
 echo
 echo "### Teardown ###"
 echo
 
-. ../docker/testing/teardown.sh
+. bin/teardown.sh
 
 echo
 echo "### Done ###"
