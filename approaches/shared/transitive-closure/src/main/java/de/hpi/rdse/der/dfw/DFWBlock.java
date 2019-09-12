@@ -12,6 +12,9 @@ public class DFWBlock {
     private SubMatrix target;
     private List<SubMatrix> subMatrices;
 
+    // default constructor for serialization
+    public DFWBlock() {}
+
     public DFWBlock(SubMatrix target, Position pivot, List<SubMatrix> subMatrices) {
         this.target = target;
         this.pivot = pivot;

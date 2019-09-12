@@ -74,6 +74,7 @@ public class Worker extends AbstractActor {
     @Data @AllArgsConstructor
     public static class SimilarityMessage implements Serializable {
         private static final long serialVersionUID = -5431818188868861534L;
+        private SimilarityMessage() {}
         private double similarityThreshold;
         private int thresholdMin;
         private int thresholdMax;
