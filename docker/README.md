@@ -36,7 +36,7 @@ docker run -it --rm \
            rdse/master
 ```
 
-The `CONFIG_FILE` evironment variable enables you to have different config files in the same `/CONF_PATH` directory:
+The `CONFIG_FILE` environment variable enables you to have different config files in the same `/CONF_PATH` directory:
 
 **Example-2**
 ```
