@@ -2,9 +2,13 @@ package de.hpi.cluster.actors;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.serialization.Serialization;
+import akka.serialization.SerializationExtension;
+import akka.serialization.Serializer;
 import com.typesafe.config.Config;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.rdse.der.partitioning.Md5HashRouter;
@@ -44,6 +48,7 @@ public class PartitionCoordinator extends AbstractActor {
     private ActorRef master;
     private Set<ActorRef> worker = new HashSet<>();
     private Md5HashRouter router;
+    private Serializer serializer;
 
     @Override
     public Receive createReceive() {
@@ -56,6 +61,10 @@ public class PartitionCoordinator extends AbstractActor {
 
     private void handle(ConfigMessage configMessage) {
         this.master = this.sender();
+
+//        ActorSystem system = context().system();
+////        Serialization serialization = SerializationExtension.get(system);
+//        this.serializer = serialization.findSerializerFor(this.router);
 
         Config config = configMessage.config;
 
@@ -80,4 +89,5 @@ public class PartitionCoordinator extends AbstractActor {
                     this.master
         );
     }
+
 }
