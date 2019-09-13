@@ -90,7 +90,6 @@ public class TCMaster extends AbstractActor {
                 .match(ConfigMessage.class, this::handle)
                 .match(CalculateMessage.class, this::handle)
                 .match(DispatchBlockMessage.class, this::handle)
-//                .match(RequestWorkMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -102,20 +101,6 @@ public class TCMaster extends AbstractActor {
 
         this.blockSize = config.getInt("der.transitive-closure.block-size");
     }
-
-//    private void handle(RequestWorkMessage requestWorkMessage) {
-//        boolean calculated = this.dfw.isCalculated();
-//        DFWBlock block = this.dfw.getBlock();
-//        ActorRef worker = requestWorkMessage.worker;
-//
-//        if (calculated) {
-//            this.sendResult();
-//        } else if(block != null) {
-//            worker.tell(new Worker.DFWWorkMessage(block), this.sender());
-//        } else {
-//            this.sender().tell(new Master.IdleDFWMessage(), requestWorkMessage.worker);
-//        }
-//    }
 
     private void handle(CalculateMessage calculateMessage) {
         this.log.info("Received calculateMessage");
@@ -130,8 +115,6 @@ public class TCMaster extends AbstractActor {
     }
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
-//        this.log.info("Received distpatchBlockMessage");
-
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
         this.workers.add(this.sender());
@@ -144,7 +127,6 @@ public class TCMaster extends AbstractActor {
     }
 
     private void sendWork() {
-//        boolean isCalculated = this.dfw.isCalculated();
         boolean hasNextBlock = this.dfw.hasNextBlock();
         boolean hasWorkers = !this.workers.isEmpty();
 
@@ -155,6 +137,7 @@ public class TCMaster extends AbstractActor {
             worker.tell(new Worker.DFWWorkMessage(block), this.master);
 
             hasWorkers = !this.workers.isEmpty();
+            hasNextBlock = this.dfw.hasNextBlock();
         }
     }
 
@@ -167,7 +150,5 @@ public class TCMaster extends AbstractActor {
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.workers), this.sender());
     }
-
-
 
 }
