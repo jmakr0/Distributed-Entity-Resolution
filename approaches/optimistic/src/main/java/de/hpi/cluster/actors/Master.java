@@ -41,8 +41,6 @@ public class Master extends AbstractActor {
     @Data @AllArgsConstructor
     public static class WorkRequestMessage implements Serializable {
         private static final long serialVersionUID = -7643194361868862420L;
-        private WorkRequestMessage() {}
-        private int routerVersion;
     }
 
     @Data @AllArgsConstructor
@@ -155,7 +153,7 @@ public class Master extends AbstractActor {
                 .match(MatchingCompletedMessage.class, this::handle)
                 .match(ReadyDFWMessage.class, this::handle)
                 .match(IdleDFWMessage.class, this::handle)
-                .match(DFWWorkMessage.class, this::handle)
+//                .match(DFWWorkMessage.class, this::handle)
                 .match(DFWWorkFinishedMessage.class, this::handle)
                 .match(DFWDoneMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
@@ -258,15 +256,15 @@ public class Master extends AbstractActor {
 
     }
 
-    private void handle(DFWWorkMessage dfwWorkMessage) {
-        ActorRef worker = this.sender();
-
-        worker.tell(new Worker.DFWWorkMessage(dfwWorkMessage.block), this.self());
-
-//        this.pendingDFWWork.add(dfwWorkMessage);
+//    private void handle(DFWWorkMessage dfwWorkMessage) {
+//        ActorRef worker = this.sender();
 //
-//        this.keepWorkersBusy();
-    }
+//        worker.tell(new Worker.DFWWorkMessage(dfwWorkMessage.block), this.self());
+//
+////        this.pendingDFWWork.add(dfwWorkMessage);
+////
+////        this.keepWorkersBusy();
+//    }
 
     private void keepWorkersBusy() {
         while (!(this.readyForDFWWork.isEmpty() || this.pendingDFWWork.isEmpty())) {

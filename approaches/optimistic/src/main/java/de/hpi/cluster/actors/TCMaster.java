@@ -82,11 +82,12 @@ public class TCMaster extends AbstractActor {
     private void handle(RequestWorkMessage requestWorkMessage) {
         boolean calculated = this.dfw.isCalculated();
         DFWBlock block = this.dfw.getBlock();
+        ActorRef worker = requestWorkMessage.worker;
 
         if (calculated) {
             this.sendResult();
         } else if(block != null) {
-            this.sender().tell(new Master.DFWWorkMessage(block), requestWorkMessage.worker);
+            worker.tell(new Worker.DFWWorkMessage(block), this.sender());
         } else {
             this.sender().tell(new Master.IdleDFWMessage(), requestWorkMessage.worker);
         }
@@ -109,7 +110,7 @@ public class TCMaster extends AbstractActor {
 
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
-//        this.sendWork();
+        this.sendWork();
     }
 
     private void sendWork() {
@@ -128,9 +129,9 @@ public class TCMaster extends AbstractActor {
         this.log.info("sendResult");
 
         int[][] matrix = this.dfw.getMatrix();
-        int[][] tkMatrix = FloydWarshall.apply(matrix);
+//        int[][] tkMatrix = FloydWarshall.apply(matrix);
 
-        Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(tkMatrix);
+        Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
 
         this.sender().tell(new Master.DFWDoneMessage(tk), this.sender());
     }
