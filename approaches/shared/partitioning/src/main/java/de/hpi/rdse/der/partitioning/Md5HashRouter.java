@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -17,7 +18,8 @@ import static com.google.common.hash.Hashing.md5;
  * As a Hash function MD5 is used
  * For the hash calculation as well as for the consistent hashing itself we use the com.google.common.hash library
  */
-public class Md5HashRouter {
+public class Md5HashRouter implements Serializable {
+    private static final long serialVersionUID = -7643424321861862995L;
 
     private Map<ActorRef, List<Integer>> mapping;
     // an index to speedup the responsibility lookup
@@ -27,30 +29,8 @@ public class Md5HashRouter {
 
     Random r = new Random();
 
-    /**
-     * This default Constructor is needed for serialization
-     */
-    public Md5HashRouter() {}
-
-    /**
-     * TODO check if we need this constructor (Kryo serialization issues)
-     * THis Constructor is used to create a copy of a given MD5HashRouter
-     * @param router the router to create a copy of
-     */
-    public Md5HashRouter(Md5HashRouter router) {
-        this.mapping = new HashMap<ActorRef, List<Integer>>();
-        this.mappingIndex = new HashMap<>();
-
-        for (ActorRef key:router.mapping.keySet()) {
-            this.mapping.put(key, router.mapping.get(key));
-        }
-
-        for (Integer key:router.mappingIndex.keySet()) {
-            this.mappingIndex.put(key, router.mappingIndex.get(key));
-        }
-
-        this.numberOfBuckets = router.numberOfBuckets;
-        this.version = router.version;
+    public Md5HashRouter() {
+        // This default Constructor is needed for serialization
     }
 
     /**

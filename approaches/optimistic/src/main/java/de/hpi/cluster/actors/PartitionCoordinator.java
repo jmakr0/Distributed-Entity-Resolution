@@ -2,9 +2,13 @@ package de.hpi.cluster.actors;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.serialization.Serialization;
+import akka.serialization.SerializationExtension;
+import akka.serialization.Serializer;
 import com.typesafe.config.Config;
 import de.hpi.cluster.messages.NameBlocking;
 import de.hpi.rdse.der.partitioning.Md5HashRouter;
@@ -44,6 +48,7 @@ public class PartitionCoordinator extends AbstractActor {
     private ActorRef master;
     private Set<ActorRef> worker = new HashSet<>();
     private Md5HashRouter router;
+    private Serializer serializer;
 
     @Override
     public Receive createReceive() {
@@ -61,6 +66,12 @@ public class PartitionCoordinator extends AbstractActor {
 
         int numberOfBuckets = config.getInt("der.hash-router.number-of-buckets");
         this.router = new Md5HashRouter(numberOfBuckets);
+
+        // determine serializer
+
+        ActorSystem system = context().system();
+        Serialization serialization = SerializationExtension.get(system);
+        this.serializer = serialization.findSerializerFor(Md5HashRouter.class);
     }
 
     private void handle(RegisterMessage registerMessage) {
@@ -72,12 +83,13 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.log.info("Router version: " + this.router.getVersion());
 
-        Md5HashRouter routerCopy = new Md5HashRouter(this.router);
+        byte[] serializedRouter = serializer.toBinary(this.router);
 
         worker.tell(new Worker.RegisterAckMessage(
                         new NameBlocking(),
-                        routerCopy),
+                        serializedRouter),
                     this.master
         );
     }
+
 }
