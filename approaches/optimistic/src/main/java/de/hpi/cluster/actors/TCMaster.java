@@ -149,7 +149,7 @@ public class TCMaster extends AbstractActor {
         boolean hasWorkers = !this.workers.isEmpty();
 
         while (hasWorkers &&  hasNextBlock) {
-            DFWBlock block = this.dfw.getBlock();
+            DFWBlock block = this.dfw.getNextBlock();
 
             ActorRef worker = workers.poll();
             worker.tell(new Worker.DFWWorkMessage(block), this.master);
