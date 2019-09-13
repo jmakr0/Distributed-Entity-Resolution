@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
 
-# set environment
-
-export JAR_NAME="AMakkaN-1.0.jar"
-export MASTER_HOST="rdse-master"
-export PORT_MASTER=7877
-export PORT_WORKER=7879
-export CONFIG_FILE="default.conf"
-
-# get current app
+JAR_NAME="AMakkaN-1.0.jar"
+MASTER_HOST="rdse-master"
+PORT_MASTER=7877
+PORT_WORKER=7879
+CONFIG_FILE="default.conf"
 
 mkdir build
-cd ../approaches/optimistic
-mvn clean verify
+cd ../approaches/
+./build.sh "$@"                                         # ATTENTION: args will be passed to the approaches/build.sh
 cd -
-cp ../approaches/optimistic/target/${JAR_NAME} build/
 
-# build image
+cp ../approaches/optimistic/target/${JAR_NAME} build/   # Copy build
+
+# Build image
 
 docker build -t rdse/master \
              --build-arg JAR_NAME=${JAR_NAME} \
@@ -32,6 +29,6 @@ docker build -t rdse/worker \
              --build-arg ROLE=worker \
              -f Dockerfile-DER .
 
-# cleanup
+# Cleanup
 
 rm -rf build
