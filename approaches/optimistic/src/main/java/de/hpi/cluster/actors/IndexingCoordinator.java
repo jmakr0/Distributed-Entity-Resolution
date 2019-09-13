@@ -75,13 +75,18 @@ public class IndexingCoordinator extends AbstractActor {
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
         this.log.info("numberOfLines: {}", numberOfLines);
 
-        assert this.csvService.dataAvailable();
-
-        String data = this.csvService.getRecords(numberOfLines);
-        worker.tell(new Worker.DataMessage(data), this.master);
-
-        if (!this.csvService.dataAvailable()) {
+        if (this.csvService.dataAvailable()) {
+            String data = this.csvService.getRecords(numberOfLines);
+            assert data != null;
+            worker.tell(new Worker.DataMessage(data), this.master);
+        } else {
             this.master.tell(new Master.AllDataParsedMessage(), this.self());
+            this.master.tell(new Master.WorkRequestMessage(), worker);
         }
+
+
+
+
+
     }
 }

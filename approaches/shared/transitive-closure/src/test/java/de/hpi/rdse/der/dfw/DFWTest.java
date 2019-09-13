@@ -36,7 +36,7 @@ public class DFWTest {
         DFW dfw = new DFW(testMatrix, blksize);
 
         while(!dfw.isCalculated()) {
-            DFWBlock block = dfw.getBlock();
+            DFWBlock block = dfw.getNextBlock();
             block.calculate();
             dfw.dispatch(block.getTarget());
         }
@@ -92,7 +92,7 @@ public class DFWTest {
         DFW dfw = new DFW(testMatrix, 8);
 
         // request pivot for calculation
-        DFWBlock block = dfw.getBlock();
+        DFWBlock block = dfw.getNextBlock();
 
         // pivot is still pending...
         Assert.assertFalse(dfw.isCalculated());

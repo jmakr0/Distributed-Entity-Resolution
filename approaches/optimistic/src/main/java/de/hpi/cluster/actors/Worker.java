@@ -152,7 +152,7 @@ public class Worker extends AbstractActor {
         this.blocking = registerAckMessage.blocking;
         this.setRouter(router, "RegisterAckMessage");
 
-        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private void handle(RepartitionMessage repartitionMessage) {
@@ -164,7 +164,7 @@ public class Worker extends AbstractActor {
             this.repartition();
         }
 
-        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private void handle(DataMessage dataMessage) {
@@ -200,7 +200,7 @@ public class Worker extends AbstractActor {
 
         this.log.info("data size: {}",this.data.keySet().size());
 
-        this.sender().tell(new Master.WorkRequestMessage(this.getRouterVersion()), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private String cleanData(String data) {

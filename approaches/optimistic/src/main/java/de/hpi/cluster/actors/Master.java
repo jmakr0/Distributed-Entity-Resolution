@@ -41,8 +41,6 @@ public class Master extends AbstractActor {
     @Data @AllArgsConstructor
     public static class WorkRequestMessage implements Serializable {
         private static final long serialVersionUID = -7643194361868862420L;
-        private WorkRequestMessage() {}
-        private int routerVersion;
     }
 
     @Data @AllArgsConstructor
@@ -67,6 +65,7 @@ public class Master extends AbstractActor {
         private static final long serialVersionUID = -1942194771812333325L;
         private MatchingCompletedMessage() {}
         private Set<Set<Integer>> duplicates;
+        private Set<ActorRef> workers;
     }
 
     @Data @AllArgsConstructor
@@ -98,15 +97,16 @@ public class Master extends AbstractActor {
         private static final long serialVersionUID = -1971194311112342421L;
         private DFWDoneMessage() {}
         Set<Set<Integer>> transitiveClosure;
+        Queue<ActorRef> workers;
     }
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
     private Config config;
 
-    private Set<ActorRef> workers = new HashSet<>();
+//    private Set<ActorRef> workers = new HashSet<>();
     // todo: see if if we can merge lists in the end
-    private Set<ActorRef> registeredWorkers = new HashSet<>();
+    private Queue<ActorRef> registeredWorkers = new LinkedList<>();
     private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
     private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
 
@@ -155,7 +155,7 @@ public class Master extends AbstractActor {
                 .match(MatchingCompletedMessage.class, this::handle)
                 .match(ReadyDFWMessage.class, this::handle)
                 .match(IdleDFWMessage.class, this::handle)
-                .match(DFWWorkMessage.class, this::handle)
+//                .match(DFWWorkMessage.class, this::handle)
                 .match(DFWWorkFinishedMessage.class, this::handle)
                 .match(DFWDoneMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
@@ -166,8 +166,6 @@ public class Master extends AbstractActor {
         this.config = message.config;
 
         this.goldPath = this.config.getString("der.data.gold-standard.path");
-
-        this.fwBlockSize = this.config.getInt("der.transitive-closure.block-size");
 
         // create coordinator actors
         this.partitionCoordinator = context().actorOf(PartitionCoordinator.props(), PartitionCoordinator.DEFAULT_NAME);
@@ -180,14 +178,15 @@ public class Master extends AbstractActor {
         this.matchingCoordinator.tell(new MatchingCoordinator.ConfigMessage(config), this.self());
 
         this.tcMaster = context().actorOf(TCMaster.props(), TCMaster.DEFAULT_NAME);
+        this.tcMaster.tell(new TCMaster.ConfigMessage(config), this.self());
     }
 
     private void handle(RegisterMessage registerMessage) {
         this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
 
-        ActorRef worker = this.sender();
+//        ActorRef worker = this.sender();
 
-        this.addWorker(worker);
+//        this.addWorker(worker);
     }
 
     private void handle(WorkRequestMessage workRequestMessage) {
@@ -223,6 +222,7 @@ public class Master extends AbstractActor {
     private void handle(MatchingCompletedMessage matchingCompletedMessage) {
 
         Set<Set<Integer>> duplicates = matchingCompletedMessage.duplicates;
+        Set<ActorRef> workers = matchingCompletedMessage.workers;
 
         // just for testing: compute the transitive closure in a non distributed way
         // int[][] matrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
@@ -230,17 +230,17 @@ public class Master extends AbstractActor {
         // this.log.info("locally");
         // this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
 
-        this.transitiveClosure(matchingCompletedMessage.duplicates);
+        this.transitiveClosure(matchingCompletedMessage.duplicates, workers);
     }
 
-    private void transitiveClosure(Set<Set<Integer>> duplicates) {
+    private void transitiveClosure(Set<Set<Integer>> duplicates, Set<ActorRef> workers) {
         this.log.info("Calculate Transitive Closure");
 
-        for (ActorRef worker: this.workers) {
-            this.readyForDFWWork.add(worker);
-        }
+//        for (ActorRef worker: workers) {
+//            this.readyForDFWWork.add(worker);
+//        }
 
-        tcMaster.tell(new TCMaster.CalculateMessage(duplicates, this.fwBlockSize), this.self());
+        tcMaster.tell(new TCMaster.CalculateMessage(duplicates, workers), this.self());
     }
 
     private void handle(IdleDFWMessage idleDFWMessage) {
@@ -258,34 +258,34 @@ public class Master extends AbstractActor {
 
     }
 
-    private void handle(DFWWorkMessage dfwWorkMessage) {
-        ActorRef worker = this.sender();
-
-        worker.tell(new Worker.DFWWorkMessage(dfwWorkMessage.block), this.self());
-
-//        this.pendingDFWWork.add(dfwWorkMessage);
+//    private void handle(DFWWorkMessage dfwWorkMessage) {
+//        ActorRef worker = this.sender();
 //
-//        this.keepWorkersBusy();
-    }
+//        worker.tell(new Worker.DFWWorkMessage(dfwWorkMessage.block), this.self());
+//
+////        this.pendingDFWWork.add(dfwWorkMessage);
+////
+////        this.keepWorkersBusy();
+//    }
 
-    private void keepWorkersBusy() {
-        while (!(this.readyForDFWWork.isEmpty() || this.pendingDFWWork.isEmpty())) {
-            ActorRef worker = this.readyForDFWWork.poll();
-            DFWWorkMessage work = this.pendingDFWWork.poll();
-
-            worker.tell(new Worker.DFWWorkMessage(work.block), this.self());
-        }
-
-    }
+//    private void keepWorkersBusy() {
+//        while (!(this.readyForDFWWork.isEmpty() || this.pendingDFWWork.isEmpty())) {
+//            ActorRef worker = this.readyForDFWWork.poll();
+//            DFWWorkMessage work = this.pendingDFWWork.poll();
+//
+//            worker.tell(new Worker.DFWWorkMessage(work.block), this.self());
+//        }
+//
+//    }
 
     private void handle(DFWWorkFinishedMessage dfwWorkFinishedMessage) {
         DFWBlock block = dfwWorkFinishedMessage.block;
 
 //        this.log.info("tell DispatchBlockMessage");
 
-        this.tcMaster.tell(new DispatchBlockMessage(block), this.self());
+        this.tcMaster.tell(new DispatchBlockMessage(block), this.sender());
 
-        tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
+//        this.tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
 
 //        this.readyForDFWWork.add(this.sender());
 //
@@ -301,6 +301,7 @@ public class Master extends AbstractActor {
         System.out.println("tk-distributed:" + tk);
         evaluator.evaluate(tk, goldStandard);
 
+        this.registeredWorkers = dfwDoneMessage.workers;
         this.shutdown();
     }
 
@@ -322,10 +323,10 @@ public class Master extends AbstractActor {
         this.log.info("Unregistered {}", message.getActor());
     }
 
-    private void addWorker(ActorRef actor) {
-        this.workers.add(actor);
-        this.registeredWorkers.add(actor);
-    }
+//    private void addWorker(ActorRef actor) {
+//        this.workers.add(actor);
+//        this.registeredWorkers.add(actor);
+//    }
 
     private void shutdown() {
         this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());
