@@ -110,26 +110,25 @@ public class TCMaster extends AbstractActor {
 
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
-        this.sendWork();
+//        this.sendWork();
     }
 
-    private void sendWork() {
-        if (!this.dfw.isCalculated()) {
-            DFWBlock block = this.dfw.getBlock();
-            if (block != null) {
-                this.sender().tell(new Master.DFWWorkMessage(block), this.self());
-                block = this.dfw.getBlock();
-            }
-        } else {
-            this.sendResult();
-        }
-    }
+//    private void sendWork() {
+//        if (!this.dfw.isCalculated()) {
+//            DFWBlock block = this.dfw.getBlock();
+//            if (block != null) {
+//                this.sender().tell(new Master.DFWWorkMessage(block), this.self());
+//                block = this.dfw.getBlock();
+//            }
+//        } else {
+//            this.sendResult();
+//        }
+//    }
 
     private void sendResult() {
         this.log.info("sendResult");
 
         int[][] matrix = this.dfw.getMatrix();
-//        int[][] tkMatrix = FloydWarshall.apply(matrix);
 
         Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
 

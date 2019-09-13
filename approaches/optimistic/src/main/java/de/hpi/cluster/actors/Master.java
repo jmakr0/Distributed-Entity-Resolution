@@ -266,15 +266,15 @@ public class Master extends AbstractActor {
 ////        this.keepWorkersBusy();
 //    }
 
-    private void keepWorkersBusy() {
-        while (!(this.readyForDFWWork.isEmpty() || this.pendingDFWWork.isEmpty())) {
-            ActorRef worker = this.readyForDFWWork.poll();
-            DFWWorkMessage work = this.pendingDFWWork.poll();
-
-            worker.tell(new Worker.DFWWorkMessage(work.block), this.self());
-        }
-
-    }
+//    private void keepWorkersBusy() {
+//        while (!(this.readyForDFWWork.isEmpty() || this.pendingDFWWork.isEmpty())) {
+//            ActorRef worker = this.readyForDFWWork.poll();
+//            DFWWorkMessage work = this.pendingDFWWork.poll();
+//
+//            worker.tell(new Worker.DFWWorkMessage(work.block), this.self());
+//        }
+//
+//    }
 
     private void handle(DFWWorkFinishedMessage dfwWorkFinishedMessage) {
         DFWBlock block = dfwWorkFinishedMessage.block;
@@ -283,7 +283,7 @@ public class Master extends AbstractActor {
 
         this.tcMaster.tell(new DispatchBlockMessage(block), this.self());
 
-        tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
+        this.tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
 
 //        this.readyForDFWWork.add(this.sender());
 //
