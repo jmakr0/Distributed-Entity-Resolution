@@ -164,7 +164,7 @@ public class TCMaster extends AbstractActor {
 
         Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
 
-        this.master.tell(new Master.DFWDoneMessage(tk), this.sender());
+        this.master.tell(new Master.DFWDoneMessage(tk, this.workers), this.sender());
     }
 
 

@@ -97,6 +97,7 @@ public class Master extends AbstractActor {
         private static final long serialVersionUID = -1971194311112342421L;
         private DFWDoneMessage() {}
         Set<Set<Integer>> transitiveClosure;
+        Queue<ActorRef> workers;
     }
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
@@ -105,7 +106,7 @@ public class Master extends AbstractActor {
 
 //    private Set<ActorRef> workers = new HashSet<>();
     // todo: see if if we can merge lists in the end
-    private Set<ActorRef> registeredWorkers = new HashSet<>();
+    private Queue<ActorRef> registeredWorkers = new LinkedList<>();
     private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
     private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
 
@@ -300,6 +301,7 @@ public class Master extends AbstractActor {
         System.out.println("tk-distributed:" + tk);
         evaluator.evaluate(tk, goldStandard);
 
+        this.registeredWorkers = dfwDoneMessage.workers;
         this.shutdown();
     }
 
