@@ -11,6 +11,8 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class MatchingCoordinator extends AbstractActor {
@@ -21,7 +23,7 @@ public class MatchingCoordinator extends AbstractActor {
     private int thresholdMin;
     private int thresholdMax;
     private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
-    private Set<ActorRef> working = new HashSet<>();
+    private List<ActorRef> working = new LinkedList<>();
     private Set<ActorRef> done = new HashSet<>();
     private ActorRef master;
 
@@ -97,6 +99,7 @@ public class MatchingCoordinator extends AbstractActor {
         ActorRef worker = startSimilarityMessage.worker;
 
         this.working.add(worker);
+        this.done.remove(worker);
 
         this.log.info("Similarity message to {}", worker.path().name());
         worker.tell(new Worker.SimilarityMessage(this.similarityThreshold, this.thresholdMin, this.thresholdMax), this.master);
@@ -109,8 +112,13 @@ public class MatchingCoordinator extends AbstractActor {
     }
 
     private void handle(WorkerFinishedMatchingMessage workerFinishedMatchingMessage) {
-        this.working.remove(this.sender());
-        this.done.add(this.sender());
+        ActorRef worker = this.sender();
+
+        this.working.remove(worker);
+
+        if (!this.working.contains(worker)) {
+            this.done.add(this.sender());
+        }
 
         if (working.isEmpty()) {
             this.master.tell(new Master.MatchingCompletedMessage(this.duplicates, this.done), this.self());
