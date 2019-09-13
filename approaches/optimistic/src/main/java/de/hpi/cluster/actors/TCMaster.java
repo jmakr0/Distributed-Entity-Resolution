@@ -144,13 +144,14 @@ public class TCMaster extends AbstractActor {
     }
 
     private void sendWork() {
-        boolean isCalculated = this.dfw.isCalculated();
+//        boolean isCalculated = this.dfw.isCalculated();
+        boolean hasNextBlock = this.dfw.hasNextBlock();
         boolean hasWorkers = !this.workers.isEmpty();
 
-        while (hasWorkers && !isCalculated) {
-            ActorRef worker = workers.poll();
+        while (hasWorkers &&  hasNextBlock) {
             DFWBlock block = this.dfw.getBlock();
 
+            ActorRef worker = workers.poll();
             worker.tell(new Worker.DFWWorkMessage(block), this.master);
 
             hasWorkers = !this.workers.isEmpty();

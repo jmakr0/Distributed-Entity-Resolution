@@ -99,8 +99,12 @@ public class DFWCoordinator {
         this.pendingResponses --;
     }
 
-    public Position getNext() {
-        if (!isDone()) {
+    public Boolean hasNext() {
+        return this.pending.size() > 0;
+    }
+
+    public Position getNextPosition() {
+        if (!isDone() && hasNext()) {
             this.pendingResponses ++;
 
             return this.pending.poll();

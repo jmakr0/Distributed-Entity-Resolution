@@ -62,7 +62,7 @@ public class DFWCoordinatorTest {
         Position pos;
 
         while (!dfwCoordinator.isDone()) {
-            pos = dfwCoordinator.getNext();
+            pos = dfwCoordinator.getNextPosition();
 
             this.testMatrix.get(round).remove(pos);
 
@@ -85,7 +85,7 @@ public class DFWCoordinatorTest {
         Position pos;
 
         while (!dfwCoordinator.isDone()) {
-            pos = dfwCoordinator.getNext();
+            pos = dfwCoordinator.getNextPosition();
 
             Set<Position> dependencies = dfwCoordinator.getDependencies(pos);
             Set<Position> expectedDependencies = calculateDependencies(pos, round);

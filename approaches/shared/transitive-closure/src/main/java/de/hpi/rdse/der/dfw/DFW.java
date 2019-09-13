@@ -27,11 +27,16 @@ public class DFW {
         return this.matrix;
     }
 
-    public DFWBlock getBlock() {
-        if(!this.dfwCoordinator.isDone()) {
-            Position nextPosition = this.dfwCoordinator.getNext();
+    public boolean hasNextBlock() {
+        return this.dfwCoordinator.hasNext();
+    }
 
-            return this.getNextBlock(nextPosition);
+    public DFWBlock getNextBlock() {
+        Position position = this.dfwCoordinator.getNextPosition();
+
+        if(position != null) {
+
+            return this.getNextBlock(position);
         }
 
         return null;
