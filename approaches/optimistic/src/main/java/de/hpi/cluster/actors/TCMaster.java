@@ -5,6 +5,8 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import com.typesafe.config.Config;
+import de.hpi.cluster.actors.Master.DFWDoneMessage;
 import de.hpi.rdse.der.dfw.DFW;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.fw.FloydWarshall;
@@ -13,14 +15,27 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 
 public class TCMaster extends AbstractActor {
 
     public static final String DEFAULT_NAME = "tcMaster";
+    private int blockSize;
+    private Queue<ActorRef> workers;
+    private ActorRef master;
 
     public static Props props() {
         return Props.create(TCMaster.class);
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class ConfigMessage implements Serializable {
+        private static final long serialVersionUID = -42431888868862395L;
+        private ConfigMessage() {}
+        protected Config config;
     }
 
     @Data
@@ -29,7 +44,7 @@ public class TCMaster extends AbstractActor {
         private static final long serialVersionUID = -4243198888868862395L;
         private CalculateMessage() {}
         protected Set<Set<Integer>> duplicates;
-        protected int blockSize;
+        protected Set<ActorRef> workers;
     }
 
     @Data
@@ -72,11 +87,20 @@ public class TCMaster extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                .match(ConfigMessage.class, this::handle)
                 .match(CalculateMessage.class, this::handle)
                 .match(DispatchBlockMessage.class, this::handle)
                 .match(RequestWorkMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
+    }
+
+    private void handle(ConfigMessage configMessage) {
+        Config config = configMessage.config;
+
+        this.master = this.sender();
+
+        this.blockSize = config.getInt("der.transitive-closure.block-size");
     }
 
     private void handle(RequestWorkMessage requestWorkMessage) {
@@ -97,12 +121,12 @@ public class TCMaster extends AbstractActor {
         this.log.info("Received calculateMessage");
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
         int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
-        int blockSize = calculateMessage.blockSize;
 
-        this.dfw = new DFW(matrix, blockSize);
+        this.dfw = new DFW(matrix, this.blockSize);
+        this.workers = new LinkedList<>();
+        this.workers.addAll(calculateMessage.workers);
 
-//        this.sendWork();
-        this.sender().tell(new Master.ReadyDFWMessage(), this.self());
+        this.sendWork();
     }
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
@@ -110,20 +134,28 @@ public class TCMaster extends AbstractActor {
 
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
-//        this.sendWork();
+        this.workers.add(this.sender());
+
+        if (this.dfw.isCalculated()) {
+            this.sendResult();
+        } else {
+            this.sendWork();
+        }
     }
 
-//    private void sendWork() {
-//        if (!this.dfw.isCalculated()) {
-//            DFWBlock block = this.dfw.getBlock();
-//            if (block != null) {
-//                this.sender().tell(new Master.DFWWorkMessage(block), this.self());
-//                block = this.dfw.getBlock();
-//            }
-//        } else {
-//            this.sendResult();
-//        }
-//    }
+    private void sendWork() {
+        boolean isCalculated = this.dfw.isCalculated();
+        boolean hasWorkers = !this.workers.isEmpty();
+
+        while (hasWorkers && !isCalculated) {
+            ActorRef worker = workers.poll();
+            DFWBlock block = this.dfw.getBlock();
+
+            worker.tell(new Worker.DFWWorkMessage(block), this.master);
+
+            hasWorkers = !this.workers.isEmpty();
+        }
+    }
 
     private void sendResult() {
         this.log.info("sendResult");

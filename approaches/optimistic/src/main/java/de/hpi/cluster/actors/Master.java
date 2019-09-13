@@ -65,6 +65,7 @@ public class Master extends AbstractActor {
         private static final long serialVersionUID = -1942194771812333325L;
         private MatchingCompletedMessage() {}
         private Set<Set<Integer>> duplicates;
+        private Set<ActorRef> workers;
     }
 
     @Data @AllArgsConstructor
@@ -102,7 +103,7 @@ public class Master extends AbstractActor {
 
     private Config config;
 
-    private Set<ActorRef> workers = new HashSet<>();
+//    private Set<ActorRef> workers = new HashSet<>();
     // todo: see if if we can merge lists in the end
     private Set<ActorRef> registeredWorkers = new HashSet<>();
     private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
@@ -165,8 +166,6 @@ public class Master extends AbstractActor {
 
         this.goldPath = this.config.getString("der.data.gold-standard.path");
 
-        this.fwBlockSize = this.config.getInt("der.transitive-closure.block-size");
-
         // create coordinator actors
         this.partitionCoordinator = context().actorOf(PartitionCoordinator.props(), PartitionCoordinator.DEFAULT_NAME);
         this.partitionCoordinator.tell(new PartitionCoordinator.ConfigMessage(config), this.self());
@@ -178,14 +177,15 @@ public class Master extends AbstractActor {
         this.matchingCoordinator.tell(new MatchingCoordinator.ConfigMessage(config), this.self());
 
         this.tcMaster = context().actorOf(TCMaster.props(), TCMaster.DEFAULT_NAME);
+        this.tcMaster.tell(new TCMaster.ConfigMessage(config), this.self());
     }
 
     private void handle(RegisterMessage registerMessage) {
         this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
 
-        ActorRef worker = this.sender();
+//        ActorRef worker = this.sender();
 
-        this.addWorker(worker);
+//        this.addWorker(worker);
     }
 
     private void handle(WorkRequestMessage workRequestMessage) {
@@ -221,6 +221,7 @@ public class Master extends AbstractActor {
     private void handle(MatchingCompletedMessage matchingCompletedMessage) {
 
         Set<Set<Integer>> duplicates = matchingCompletedMessage.duplicates;
+        Set<ActorRef> workers = matchingCompletedMessage.workers;
 
         // just for testing: compute the transitive closure in a non distributed way
         // int[][] matrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
@@ -228,17 +229,17 @@ public class Master extends AbstractActor {
         // this.log.info("locally");
         // this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
 
-        this.transitiveClosure(matchingCompletedMessage.duplicates);
+        this.transitiveClosure(matchingCompletedMessage.duplicates, workers);
     }
 
-    private void transitiveClosure(Set<Set<Integer>> duplicates) {
+    private void transitiveClosure(Set<Set<Integer>> duplicates, Set<ActorRef> workers) {
         this.log.info("Calculate Transitive Closure");
 
-        for (ActorRef worker: this.workers) {
-            this.readyForDFWWork.add(worker);
-        }
+//        for (ActorRef worker: workers) {
+//            this.readyForDFWWork.add(worker);
+//        }
 
-        tcMaster.tell(new TCMaster.CalculateMessage(duplicates, this.fwBlockSize), this.self());
+        tcMaster.tell(new TCMaster.CalculateMessage(duplicates, workers), this.self());
     }
 
     private void handle(IdleDFWMessage idleDFWMessage) {
@@ -281,9 +282,9 @@ public class Master extends AbstractActor {
 
 //        this.log.info("tell DispatchBlockMessage");
 
-        this.tcMaster.tell(new DispatchBlockMessage(block), this.self());
+        this.tcMaster.tell(new DispatchBlockMessage(block), this.sender());
 
-        this.tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
+//        this.tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
 
 //        this.readyForDFWWork.add(this.sender());
 //
@@ -320,10 +321,10 @@ public class Master extends AbstractActor {
         this.log.info("Unregistered {}", message.getActor());
     }
 
-    private void addWorker(ActorRef actor) {
-        this.workers.add(actor);
-        this.registeredWorkers.add(actor);
-    }
+//    private void addWorker(ActorRef actor) {
+//        this.workers.add(actor);
+//        this.registeredWorkers.add(actor);
+//    }
 
     private void shutdown() {
         this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());

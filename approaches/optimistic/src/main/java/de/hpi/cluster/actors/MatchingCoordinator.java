@@ -15,13 +15,14 @@ import java.util.Set;
 
 public class MatchingCoordinator extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "matching-coordinator";
+    public static final String DEFAULT_NAME = "working-coordinator";
 
     private double similarityThreshold;
     private int thresholdMin;
     private int thresholdMax;
     private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
-    private Set<ActorRef> matching = new HashSet<>();
+    private Set<ActorRef> working = new HashSet<>();
+    private Set<ActorRef> done = new HashSet<>();
     private ActorRef master;
 
     public static Props props() {
@@ -95,7 +96,7 @@ public class MatchingCoordinator extends AbstractActor {
     private void handle(StartSimilarityMessage startSimilarityMessage) {
         ActorRef worker = startSimilarityMessage.worker;
 
-        this.matching.add(worker);
+        this.working.add(worker);
 
         this.log.info("Similarity message to {}", worker.path().name());
         worker.tell(new Worker.SimilarityMessage(this.similarityThreshold, this.thresholdMin, this.thresholdMax), this.master);
@@ -108,10 +109,11 @@ public class MatchingCoordinator extends AbstractActor {
     }
 
     private void handle(WorkerFinishedMatchingMessage workerFinishedMatchingMessage) {
-        this.matching.remove(this.sender());
+        this.working.remove(this.sender());
+        this.done.add(this.sender());
 
-        if (matching.isEmpty()) {
-            this.master.tell(new Master.MatchingCompletedMessage(this.duplicates), this.self());
+        if (working.isEmpty()) {
+            this.master.tell(new Master.MatchingCompletedMessage(this.duplicates, this.done), this.self());
         }
     }
 

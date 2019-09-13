@@ -46,7 +46,6 @@ public class PartitionCoordinator extends AbstractActor {
     }
 
     private ActorRef master;
-    private Set<ActorRef> worker = new HashSet<>();
     private Md5HashRouter router;
     private Serializer serializer;
 
@@ -76,8 +75,6 @@ public class PartitionCoordinator extends AbstractActor {
 
     private void handle(RegisterMessage registerMessage) {
         ActorRef worker = registerMessage.worker;
-
-        this.worker.add(worker);
 
         this.router.putOnHashring(worker);
 
