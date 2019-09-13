@@ -90,7 +90,7 @@ public class TCMaster extends AbstractActor {
                 .match(ConfigMessage.class, this::handle)
                 .match(CalculateMessage.class, this::handle)
                 .match(DispatchBlockMessage.class, this::handle)
-                .match(RequestWorkMessage.class, this::handle)
+//                .match(RequestWorkMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -103,19 +103,19 @@ public class TCMaster extends AbstractActor {
         this.blockSize = config.getInt("der.transitive-closure.block-size");
     }
 
-    private void handle(RequestWorkMessage requestWorkMessage) {
-        boolean calculated = this.dfw.isCalculated();
-        DFWBlock block = this.dfw.getBlock();
-        ActorRef worker = requestWorkMessage.worker;
-
-        if (calculated) {
-            this.sendResult();
-        } else if(block != null) {
-            worker.tell(new Worker.DFWWorkMessage(block), this.sender());
-        } else {
-            this.sender().tell(new Master.IdleDFWMessage(), requestWorkMessage.worker);
-        }
-    }
+//    private void handle(RequestWorkMessage requestWorkMessage) {
+//        boolean calculated = this.dfw.isCalculated();
+//        DFWBlock block = this.dfw.getBlock();
+//        ActorRef worker = requestWorkMessage.worker;
+//
+//        if (calculated) {
+//            this.sendResult();
+//        } else if(block != null) {
+//            worker.tell(new Worker.DFWWorkMessage(block), this.sender());
+//        } else {
+//            this.sender().tell(new Master.IdleDFWMessage(), requestWorkMessage.worker);
+//        }
+//    }
 
     private void handle(CalculateMessage calculateMessage) {
         this.log.info("Received calculateMessage");
