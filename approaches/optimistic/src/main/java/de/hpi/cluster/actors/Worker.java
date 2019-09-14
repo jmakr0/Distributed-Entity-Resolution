@@ -14,7 +14,6 @@ import akka.serialization.Serialization;
 import akka.serialization.SerializationExtension;
 import akka.serialization.Serializer;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.dude.DuplicateDetector;
@@ -151,7 +150,7 @@ public class Worker extends AbstractActor {
         this.blocking = registerAckMessage.blocking;
         this.setRouter(router, "RegisterAckMessage");
 
-        this.sender().tell(new Master.WorkRequestMessage(this.router.getVersion()), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private void handle(RepartitionMessage repartitionMessage) {
@@ -163,7 +162,7 @@ public class Worker extends AbstractActor {
             this.repartition();
         }
 
-        this.sender().tell(new Master.WorkRequestMessage(this.router.getVersion()), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private void handle(DataMessage dataMessage) {
@@ -200,7 +199,7 @@ public class Worker extends AbstractActor {
 
         this.log.info("data size: {}",this.data.keySet().size());
 
-        this.sender().tell(new Master.WorkRequestMessage(this.router.getVersion()), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private String cleanData(String data) {
@@ -314,10 +313,10 @@ public class Worker extends AbstractActor {
 
     private void register(Member member) {
         if (member.hasRole(ClusterMaster.MASTER_ROLE)) {
-            InfoObject infoObj = new InfoObject(this.self().toString());
+
             this.getContext()
                     .actorSelection(member.address() + "/user/" + Master.DEFAULT_NAME)
-                    .tell(new Master.RegisterMessage(infoObj), this.self());
+                    .tell(new Master.RegisterMessage(), this.self());
         }
     }
 

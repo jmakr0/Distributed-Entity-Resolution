@@ -8,7 +8,6 @@ import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import scala.Int;
 
 import java.io.Serializable;
 import java.util.HashSet;

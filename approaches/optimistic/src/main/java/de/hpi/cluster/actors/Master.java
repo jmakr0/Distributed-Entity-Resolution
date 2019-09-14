@@ -5,8 +5,6 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
-import de.hpi.cluster.actors.Worker.ParsedDataMessage;
-import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
 import de.hpi.rdse.der.data.GoldReader;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
@@ -15,16 +13,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 
 public class Master extends AbstractActor {
-
-    public static final String DEFAULT_NAME = "master";
-    private int routerVersion = 0;
-
-    public static Props props() {
-        return Props.create(Master.class);
-    }
 
     @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class ConfigMessage implements Serializable {
@@ -33,45 +27,34 @@ public class Master extends AbstractActor {
         private Config config;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class RegisterMessage implements Serializable {
         private static final long serialVersionUID = -7643194361868862425L;
-        private RegisterMessage() {}
-        protected InfoObjectInterface info;
     }
 
-    @Data @AllArgsConstructor
-    public static class PartitionMessage implements Serializable {
-        private static final long serialVersionUID = -7643124361894862420L;
-        private PartitionMessage() {}
-        protected int routerVersion;
-    }
-
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class WorkRequestMessage implements Serializable {
         private static final long serialVersionUID = -7643194361868862420L;
-        private WorkRequestMessage() {}
-        protected int routerVersion;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class AllDataParsedMessage implements Serializable {
         private static final long serialVersionUID = -4739494771812333325L;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class DuplicateMessage implements Serializable {
         private static final long serialVersionUID = -1444194311112342425L;
         private DuplicateMessage() {}
         protected Set<Set<Integer>> duplicates;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class WorkerFinishedMatchingMessage implements Serializable {
         private static final long serialVersionUID = -1031194361812333325L;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class MatchingCompletedMessage implements Serializable {
         private static final long serialVersionUID = -1942194771812333325L;
         private MatchingCompletedMessage() {}
@@ -79,14 +62,14 @@ public class Master extends AbstractActor {
         private Set<ActorRef> workers;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class DFWWorkFinishedMessage implements Serializable {
         private static final long serialVersionUID = -1991194311112342421L;
         private DFWWorkFinishedMessage() {}
         protected DFWBlock block;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class DFWDoneMessage implements Serializable {
         private static final long serialVersionUID = -1971194311112342421L;
         private DFWDoneMessage() {}
@@ -94,10 +77,12 @@ public class Master extends AbstractActor {
         Queue<ActorRef> workers;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class WorkerGotParsedData implements Serializable {
-        private static final long serialVersionUID = -111L;
+        private static final long serialVersionUID = -1971194313192342421L;
     }
+
+    public static final String DEFAULT_NAME = "master";
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     private Config config;
@@ -110,6 +95,10 @@ public class Master extends AbstractActor {
     private ActorRef tcMaster;
     private ActorRef matchingCoordinator;
     private ActorRef indexingCoordinator;
+
+    public static Props props() {
+        return Props.create(Master.class);
+    }
 
     @Override
     public void preStart() throws Exception {
@@ -136,7 +125,6 @@ public class Master extends AbstractActor {
                 .match(ConfigMessage.class, this::handle)
                 .match(RegisterMessage.class, this::handle)
                 .match(WorkRequestMessage.class, this::handle)
-                .match(PartitionMessage.class, this::handle)
                 .match(AllDataParsedMessage.class, this::handle)
                 .match(Terminated.class, this::handle)
                 .match(DuplicateMessage.class, this::handle)
@@ -147,16 +135,6 @@ public class Master extends AbstractActor {
                 .match(WorkerGotParsedData.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
-    }
-
-    private void handle(WorkerGotParsedData workerGotParsedData) {
-        this.log.info("Worker got parsed data" + this.sender());
-        sendSimilarity(this.sender());
-        this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());
-    }
-
-    private void handle(PartitionMessage partitionMessage) {
-        this.routerVersion = partitionMessage.routerVersion;
     }
 
     private void handle(ConfigMessage message) {
@@ -200,14 +178,6 @@ public class Master extends AbstractActor {
         this.dataAvailable = false;
     }
 
-    private void sendData(ActorRef worker) {
-        this.indexingCoordinator.tell(new IndexingCoordinator.SendDataMessage(worker), this.self());
-    }
-
-    private void sendSimilarity(ActorRef worker) {
-        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
-    }
-
     private void handle(DuplicateMessage duplicateMessage) {
         this.matchingCoordinator.tell(new MatchingCoordinator.DuplicateMessage(duplicateMessage.duplicates), this.sender());
     }
@@ -221,9 +191,23 @@ public class Master extends AbstractActor {
         this.transitiveClosure(matchingCompletedMessage.duplicates, workers);
     }
 
-    private void transitiveClosure(Set<Set<Integer>> duplicates, Set<ActorRef> workers) {
-        this.log.info("Calculate Transitive Closure");
+    private void handle(WorkerGotParsedData workerGotParsedData) {
+        ActorRef worker = this.sender();
+        this.log.info("{} has new data in similarity phase", worker.path().name());
 
+        this.sendSimilarity(worker);
+        this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());
+    }
+
+    private void sendData(ActorRef worker) {
+        this.indexingCoordinator.tell(new IndexingCoordinator.SendDataMessage(worker), this.self());
+    }
+
+    private void sendSimilarity(ActorRef worker) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
+    }
+
+    private void transitiveClosure(Set<Set<Integer>> duplicates, Set<ActorRef> workers) {
         tcMaster.tell(new TCMaster.CalculateMessage(duplicates, workers), this.self());
     }
 
@@ -243,7 +227,7 @@ public class Master extends AbstractActor {
         evaluator.evaluate(tk, goldStandard);
 
         this.registeredWorkers = dfwDoneMessage.workers;
-//        this.shutdown();
+        this.shutdown();
     }
 
     private void logTransitiveClosure(Set<Set<Integer>> tk) {

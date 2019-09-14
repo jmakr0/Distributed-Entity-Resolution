@@ -16,8 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 public class PartitionCoordinator extends AbstractActor {
 
@@ -45,14 +43,6 @@ public class PartitionCoordinator extends AbstractActor {
         protected ActorRef worker;
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class RepartitionMessage implements Serializable {
-        private static final long serialVersionUID = -7373541236186862425L;
-        private RepartitionMessage() {}
-        protected ActorRef worker;
-    }
-
     private ActorRef master;
     private Md5HashRouter router;
     private Serializer serializer;
@@ -62,17 +52,8 @@ public class PartitionCoordinator extends AbstractActor {
         return receiveBuilder()
                 .match(ConfigMessage.class, this::handle)
                 .match(RegisterMessage.class, this::handle)
-                .match(RepartitionMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
-    }
-
-    private void handle(RepartitionMessage repartitionMessage) {
-        ActorRef worker = repartitionMessage.worker;
-
-        byte[] serializedRouter = serializer.toBinary(this.router);
-
-        worker.tell(new Worker.RepartitionMessage(serializedRouter), this.master);
     }
 
     private void handle(ConfigMessage configMessage) {
@@ -98,8 +79,6 @@ public class PartitionCoordinator extends AbstractActor {
         this.log.info("Registered: " + worker + " new router version" + this.router.getVersion());
 
         byte[] serializedRouter = serializer.toBinary(this.router);
-
-        this.master.tell(new Master.PartitionMessage(this.router.getVersion()), this.master);
 
         worker.tell(new Worker.RegisterAckMessage(
                         new NameBlocking(),

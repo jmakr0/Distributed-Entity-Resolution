@@ -5,7 +5,6 @@ import akka.cluster.Cluster;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
-import de.hpi.cluster.actors.listeners.MetricsListener;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

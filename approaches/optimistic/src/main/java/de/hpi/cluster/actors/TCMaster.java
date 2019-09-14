@@ -6,10 +6,8 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
-import de.hpi.cluster.actors.Master.DFWDoneMessage;
 import de.hpi.rdse.der.dfw.DFW;
 import de.hpi.rdse.der.dfw.DFWBlock;
-import de.hpi.rdse.der.fw.FloydWarshall;
 import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,18 +19,7 @@ import java.util.Set;
 
 public class TCMaster extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "tcMaster";
-    private int blockSize;
-    private Queue<ActorRef> workers;
-    private ActorRef master;
-    private boolean restart = false;
-
-    public static Props props() {
-        return Props.create(TCMaster.class);
-    }
-
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
         private static final long serialVersionUID = -42431888868862395L;
         private ConfigMessage() {}
@@ -44,8 +31,7 @@ public class TCMaster extends AbstractActor {
         private static final long serialVersionUID = -424318883528862395L;
     }
 
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class CalculateMessage implements Serializable {
         private static final long serialVersionUID = -4243198888868862395L;
         private CalculateMessage() {}
@@ -53,16 +39,7 @@ public class TCMaster extends AbstractActor {
         protected Set<ActorRef> workers;
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class RequestWorkMessage implements Serializable {
-        private static final long serialVersionUID = -4277777777768862395L;
-        private RequestWorkMessage() {}
-        protected ActorRef worker;
-    }
-
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class DispatchBlockMessage implements Serializable {
         private static final long serialVersionUID = -1277777777768862395L;
         private DispatchBlockMessage() {}
@@ -98,9 +75,21 @@ public class TCMaster extends AbstractActor {
                 .build();
     }
 
+    public static final String DEFAULT_NAME = "tcMaster";
+
+    private int blockSize;
+    private Queue<ActorRef> workers;
+    private ActorRef master;
+    private boolean restart = false;
+
+    public static Props props() {
+        return Props.create(TCMaster.class);
+    }
+
+
     private void handle(RestartMessage restartMessage) {
         if (this.dfw != null) {
-            this.log.info("Restart tc calculation");
+            this.log.info("Restart calculation");
             this.restart = true;
         }
     }
@@ -115,7 +104,8 @@ public class TCMaster extends AbstractActor {
     }
 
     private void handle(CalculateMessage calculateMessage) {
-        this.log.info("Received calculateMessage");
+        this.log.info("Start calculating the transitive closure");
+
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
         int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
 
@@ -128,7 +118,7 @@ public class TCMaster extends AbstractActor {
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
         if (this.restart) {
-            this.log.info("restarts tc calculation; drop message");
+            this.log.info("Restarting calculation; drop message");
             return;
         }
 
@@ -159,7 +149,7 @@ public class TCMaster extends AbstractActor {
     }
 
     private void sendResult() {
-        this.log.info("sendResult");
+        this.log.info("Send results");
 
         int[][] matrix = this.dfw.getMatrix();
 
