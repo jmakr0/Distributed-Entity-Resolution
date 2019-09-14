@@ -85,6 +85,8 @@ public class Master extends AbstractActor {
     public static final String DEFAULT_NAME = "master";
 
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+    private long startTime;
     private Config config;
     private Queue<ActorRef> registeredWorkers = new LinkedList<>();
     private boolean dataAvailable = true;
@@ -141,6 +143,8 @@ public class Master extends AbstractActor {
         this.config = message.config;
 
         this.goldPath = this.config.getString("der.data.gold-standard.path");
+
+        this.startTime = System.currentTimeMillis();
 
         // create coordinator actors
         this.partitionCoordinator = context().actorOf(PartitionCoordinator.props(), PartitionCoordinator.DEFAULT_NAME);
@@ -218,6 +222,9 @@ public class Master extends AbstractActor {
     }
 
     private void handle(DFWDoneMessage dfwDoneMessage) {
+        long stopTime = System.currentTimeMillis();
+        this.log.info("Time: " + (stopTime - this.startTime) + " ms");
+
         Set<Set<Integer>> tk = dfwDoneMessage.transitiveClosure;
         logTransitiveClosure(tk);
 
