@@ -36,7 +36,7 @@ public class IndexingCoordinator extends AbstractActor {
         return receiveBuilder()
                 .match(ConfigMessage.class, this::handle)
                 .match(SendDataMessage.class, this::handle)
-                .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
+                .matchAny(object -> this.log.debug("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
@@ -73,7 +73,7 @@ public class IndexingCoordinator extends AbstractActor {
     private void handle(SendDataMessage sendDataMessage) {
         ActorRef worker = sendDataMessage.worker;
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
-        this.log.info("Performance tracker suggests sending: {} records", numberOfLines);
+        this.log.debug("Performance tracker suggests sending: {} records", numberOfLines);
 
         if (this.csvService.dataAvailable()) {
             String data = this.csvService.getRecords(numberOfLines);

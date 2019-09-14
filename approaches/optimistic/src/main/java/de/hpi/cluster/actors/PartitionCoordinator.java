@@ -49,7 +49,7 @@ public class PartitionCoordinator extends AbstractActor {
         return receiveBuilder()
                 .match(ConfigMessage.class, this::handle)
                 .match(RegisterMessage.class, this::handle)
-                .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
+                .matchAny(object -> this.log.debug("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
@@ -73,7 +73,7 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.router.putOnHashring(worker);
 
-        this.log.info("Registered {} with router version {}", worker.path().name(), this.router.getVersion());
+        this.log.debug("Registered {} with router version {}", worker.path().name(), this.router.getVersion());
 
         byte[] serializedRouter = serializer.toBinary(this.router);
 

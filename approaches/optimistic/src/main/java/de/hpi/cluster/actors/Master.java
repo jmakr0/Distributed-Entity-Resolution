@@ -116,7 +116,7 @@ public class Master extends AbstractActor {
         }
 
         // Log the stop event
-        this.log.info("Stopped {}.", this.getSelf());
+        this.log.debug("Stopped {}.", this.getSelf());
     }
 
     @Override
@@ -133,7 +133,7 @@ public class Master extends AbstractActor {
                 .match(DFWWorkFinishedMessage.class, this::handle)
                 .match(DFWDoneMessage.class, this::handle)
                 .match(WorkerGotParsedData.class, this::handle)
-                .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
+                .matchAny(object -> this.log.debug("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
@@ -160,7 +160,7 @@ public class Master extends AbstractActor {
         this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
 
         if (!this.dataAvailable) {
-            this.log.info("Register after records has been sent to the cluster");
+            this.log.debug("Register after records have been sent to the cluster");
         }
     }
 
@@ -193,7 +193,7 @@ public class Master extends AbstractActor {
 
     private void handle(WorkerGotParsedData workerGotParsedData) {
         ActorRef worker = this.sender();
-        this.log.info("{} has new records in similarity phase", worker.path().name());
+        this.log.debug("{} has new records in similarity phase", worker.path().name());
 
         this.sendSimilarity(worker);
         this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());
@@ -239,13 +239,13 @@ public class Master extends AbstractActor {
             sb.append("\n");
         }
 
-        this.log.info("TransitiveClosure: {}", sb.toString());
+        this.log.debug("TransitiveClosure: {}", sb.toString());
     }
 
     private void handle(Terminated message) {
         this.context().unwatch(message.getActor());
 
-        this.log.info("Unregistered {}", message.getActor());
+        this.log.debug("Unregistered {}", message.getActor());
     }
 
     private void shutdown() {

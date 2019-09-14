@@ -107,7 +107,7 @@ public class Worker extends AbstractActor {
     public void postStop() throws Exception {
         super.postStop();
         this.cluster.unsubscribe(this.self());
-        this.log.info("Stopped {}.", this.getSelf());
+        this.log.debug("Stopped {}.", this.getSelf());
     }
 
     @Override
@@ -121,7 +121,7 @@ public class Worker extends AbstractActor {
                 .match(ParsedDataMessage.class, this::handle)
                 .match(SimilarityMessage.class, this::handle)
                 .match(DFWWorkMessage.class, this::handle)
-                .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
+                .matchAny(object -> this.log.debug("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
@@ -137,7 +137,7 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(RegisterAckMessage registerAckMessage) {
-        this.log.info("Registered");
+        this.log.debug("Registered");
         this.blocking = registerAckMessage.blocking;
         Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
         this.setRouter(router, "registration");
@@ -157,7 +157,7 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(DataMessage dataMessage) {
-        this.log.info("Data message received");
+        this.log.debug("Data message received");
         this.master = this.sender();
 
         Map<String,List<String[]>> parsedData = new HashMap<>();
@@ -179,7 +179,7 @@ public class Worker extends AbstractActor {
 
         this.distributeDataToWorkers(parsedData);
 
-        this.log.info("Records size in total: {}",this.records.keySet().size());
+        this.log.debug("Records size in total: {}",this.records.keySet().size());
 
         this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
@@ -242,9 +242,9 @@ public class Worker extends AbstractActor {
 
     private void setRouter(Md5HashRouter router, String source) {
         if(this.router == null) {
-            this.log.info("Set router to version {} from {}", router.getVersion(), source);
+            this.log.debug("Set router to version {} from {}", router.getVersion(), source);
         } else {
-            this.log.info("Set router from version {} to {} from {}", this.router.getVersion(), router.getVersion(), source);
+            this.log.debug("Set router from version {} to {} from {}", this.router.getVersion(), router.getVersion(), source);
         }
         this.router = router;
     }
@@ -297,7 +297,7 @@ public class Worker extends AbstractActor {
     }
 
     private void repartition() {
-        this.log.info("Start repartitioning");
+        this.log.debug("Start repartitioning");
 
         Iterator<Map.Entry<String,List<String[]>>> iterator = this.records.entrySet().iterator();
 

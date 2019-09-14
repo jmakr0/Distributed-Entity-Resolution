@@ -43,7 +43,7 @@ public class ClusterListener extends AbstractActor {
 
 		this.cluster.unsubscribe(this.self());
 
-		this.log.info("Stopped {}.", this.getSelf());
+		this.log.debug("Stopped {}.", this.getSelf());
 	}
 
 	////////////////////
@@ -53,13 +53,13 @@ public class ClusterListener extends AbstractActor {
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder().match(CurrentClusterState.class, state -> {
-			this.log.info("Current members: {}", state.members());
+			this.log.debug("Current members: {}", state.members());
 		}).match(MemberUp.class, mUp -> {
-			this.log.info("Member is Up: {}", mUp.member());
+			this.log.debug("Member is Up: {}", mUp.member());
 		}).match(UnreachableMember.class, mUnreachable -> {
-			this.log.info("Member detected as unreachable: {}", mUnreachable.member());
+			this.log.debug("Member detected as unreachable: {}", mUnreachable.member());
 		}).match(MemberRemoved.class, mRemoved -> {
-			this.log.info("Member is Removed: {}", mRemoved.member());
+			this.log.debug("Member is Removed: {}", mRemoved.member());
 		}).match(MemberEvent.class, message -> {
 			// ignore
 		}).build();
