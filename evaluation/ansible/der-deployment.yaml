@@ -3,9 +3,8 @@
   gather_facts: false
   remote_user: student
   vars:
-    - src_path: "../build/"
+    - src_path: "../deployment/"
     - deployment_path: "/home/student/DER"
-
   tasks:
 
   - name: ensure deployment path exists
