@@ -8,6 +8,7 @@ import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import scala.Int;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -22,7 +23,7 @@ public class MatchingCoordinator extends AbstractActor {
     private double similarityThreshold;
     private int thresholdMin;
     private int thresholdMax;
-    private Set<Set<Integer>> duplicates = new HashSet<Set<Integer>>();
+    private Set<Set<Integer>> duplicates = new HashSet<>();
     private List<ActorRef> working = new LinkedList<>();
     private Set<ActorRef> done = new HashSet<>();
     private ActorRef master;
@@ -121,6 +122,9 @@ public class MatchingCoordinator extends AbstractActor {
         }
 
         if (working.isEmpty()) {
+            this.log.info("finish similarity");
+            this.log.info("number of duplicates: {}", this.duplicates.size());
+            this.log.info(String.valueOf(this.duplicates));
             this.master.tell(new Master.MatchingCompletedMessage(this.duplicates, this.done), this.self());
         }
     }

@@ -47,8 +47,10 @@ public class EntityResolution {
 
         Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(RESTAURANT_DATA_GOLD);
         GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
+        System.out.println("number of duplicates: " + duplicates.size());
         System.out.println(duplicates);
         evaluator.evaluate(duplicates, goldStandard);
+        System.out.println("number of groups in TC: " + transitiveClosure.size());
         System.out.println(transitiveClosure);
         evaluator.evaluate(transitiveClosure, goldStandard);
     }

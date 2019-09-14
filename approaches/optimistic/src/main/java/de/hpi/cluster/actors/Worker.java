@@ -152,7 +152,7 @@ public class Worker extends AbstractActor {
         this.blocking = registerAckMessage.blocking;
         this.setRouter(router, "RegisterAckMessage");
 
-        this.sender().tell(new Master.WorkRequestMessage(), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(this.router.getVersion()), this.self());
     }
 
     private void handle(RepartitionMessage repartitionMessage) {
@@ -164,7 +164,7 @@ public class Worker extends AbstractActor {
             this.repartition();
         }
 
-        this.sender().tell(new Master.WorkRequestMessage(), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(this.router.getVersion()), this.self());
     }
 
     private void handle(DataMessage dataMessage) {
@@ -200,7 +200,7 @@ public class Worker extends AbstractActor {
 
         this.log.info("data size: {}",this.data.keySet().size());
 
-        this.sender().tell(new Master.WorkRequestMessage(), this.self());
+        this.sender().tell(new Master.WorkRequestMessage(this.router.getVersion()), this.self());
     }
 
     private String cleanData(String data) {
@@ -274,6 +274,7 @@ public class Worker extends AbstractActor {
 
     private void handle(SimilarityMessage similarityMessage) {
         this.log.info("number of data keys: {}", this.data.keySet().size());
+        this.log.info("keys: {}", this.data.keySet());
 
         StringComparator sComparator = new JaroWinklerComparator();
         NumberComparator nComparator = new AbsComparator(similarityMessage.thresholdMin, similarityMessage.thresholdMax);
@@ -284,6 +285,7 @@ public class Worker extends AbstractActor {
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
+                this.log.info("Worker found duplicates: " + duplicates);
                 this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
         }

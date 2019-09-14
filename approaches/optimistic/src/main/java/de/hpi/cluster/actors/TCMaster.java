@@ -64,10 +64,7 @@ public class TCMaster extends AbstractActor {
     }
 
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
-
     private DFW dfw;
-    private boolean done = false;
-
 
     @Override
     public void preStart() throws Exception {
@@ -98,6 +95,7 @@ public class TCMaster extends AbstractActor {
         Config config = configMessage.config;
 
         this.master = this.sender();
+        this.workers = new LinkedList<>();
 
         this.blockSize = config.getInt("der.transitive-closure.block-size");
     }
@@ -108,7 +106,6 @@ public class TCMaster extends AbstractActor {
         int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
 
         this.dfw = new DFW(matrix, this.blockSize);
-        this.workers = new LinkedList<>();
         this.workers.addAll(calculateMessage.workers);
 
         this.sendWork();
@@ -147,6 +144,8 @@ public class TCMaster extends AbstractActor {
         int[][] matrix = this.dfw.getMatrix();
 
         Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
+
+
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.workers), this.sender());
     }

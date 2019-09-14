@@ -39,7 +39,7 @@ public class ClusterWorker extends ClusterSystem {
 			public void run() {
 				system.actorOf(Reaper.props(), Reaper.DEFAULT_NAME);
 
-				system.actorOf(MetricsListener.props(), MetricsListener.DEFAULT_NAME);
+//				system.actorOf(MetricsListener.props(), MetricsListener.DEFAULT_NAME);
 
 				for (int i = 0; i < workers; i++)
 					system.actorOf(Worker.props(), Worker.DEFAULT_NAME + i);
