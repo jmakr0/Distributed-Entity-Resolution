@@ -140,7 +140,7 @@ public class Worker extends AbstractActor {
         this.log.info("Registered");
         this.blocking = registerAckMessage.blocking;
         Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
-        this.setRouter(router, "from registration");
+        this.setRouter(router, "registration");
 
         this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
@@ -149,7 +149,7 @@ public class Worker extends AbstractActor {
         Md5HashRouter router = this.deserializeRouter(repartitionMessage.serializedRouter);
 
         if(router.getVersion() > this.getRouterVersion()) {
-            this.setRouter(router, "from repartitioning");
+            this.setRouter(router, "repartitioning");
             this.repartition();
         }
 
@@ -196,7 +196,7 @@ public class Worker extends AbstractActor {
         this.setRecords(parsedDataMessage.key, parsedDataMessage.records);
 
         if(peerRouterVersion > myRouterVersion) {
-            this.setRouter(router, "from parsed records");
+            this.setRouter(router, "parsed records");
             this.repartition();
         }
 
