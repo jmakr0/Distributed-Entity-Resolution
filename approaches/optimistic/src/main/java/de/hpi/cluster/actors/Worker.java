@@ -147,7 +147,7 @@ public class Worker extends AbstractActor {
     private void handle(RegisterAckMessage registerAckMessage) {
         Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
         this.log.info("RegisterAckMessage received");
-        this.log.info("Router version: " + router.getVersion());
+//        this.log.info("Router version: " + router.getVersion());
 
         this.blocking = registerAckMessage.blocking;
         this.setRouter(router, "RegisterAckMessage");
@@ -274,13 +274,18 @@ public class Worker extends AbstractActor {
 
     private void handle(SimilarityMessage similarityMessage) {
         this.log.info("number of data keys: {}", this.data.keySet().size());
-        this.log.info("keys: {}", this.data.keySet());
 
         StringComparator sComparator = new JaroWinklerComparator();
         NumberComparator nComparator = new AbsComparator(similarityMessage.thresholdMin, similarityMessage.thresholdMax);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
         DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, similarityMessage.similarityThreshold);
+
+        for (List<String[]> values: data.values()) {
+            for (String[] rec: values) {
+                this.log.info("key: {}", rec[0]);
+            }
+        }
 
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
