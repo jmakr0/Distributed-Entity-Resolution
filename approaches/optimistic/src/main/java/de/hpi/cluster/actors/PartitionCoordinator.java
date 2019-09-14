@@ -19,33 +19,32 @@ import java.io.Serializable;
 
 public class PartitionCoordinator extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "partitioning-coordinator";
-
-    public static Props props() {
-        return Props.create(PartitionCoordinator.class);
-    }
-
-    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
-
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
         private static final long serialVersionUID = 7354361868862425L;
         private ConfigMessage() {}
         protected Config config;
     }
 
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class RegisterMessage implements Serializable {
         private static final long serialVersionUID = -737354361868862425L;
         private RegisterMessage() {}
         protected ActorRef worker;
     }
 
+    public static final String DEFAULT_NAME = "partitioning-coordinator";
+
+
+    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
+
     private ActorRef master;
     private Md5HashRouter router;
     private Serializer serializer;
+
+    public static Props props() {
+        return Props.create(PartitionCoordinator.class);
+    }
 
     @Override
     public Receive createReceive() {
@@ -76,15 +75,11 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.router.putOnHashring(worker);
 
-        this.log.info("Registered: " + worker + " new router version" + this.router.getVersion());
+        this.log.info("Registered {} which is getting the router version {}", worker.path().name(), this.router.getVersion());
 
         byte[] serializedRouter = serializer.toBinary(this.router);
 
-        worker.tell(new Worker.RegisterAckMessage(
-                        new NameBlocking(),
-                        serializedRouter),
-                    this.master
-        );
+        worker.tell(new Worker.RegisterAckMessage(new NameBlocking(), serializedRouter), this.master);
     }
 
 }
