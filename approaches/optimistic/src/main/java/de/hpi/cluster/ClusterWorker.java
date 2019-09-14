@@ -5,11 +5,10 @@ import akka.cluster.Cluster;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
+import de.hpi.cluster.actors.listeners.MetricsListener;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-//import de.hpi.cluster.actors.Reaper;
 
 public class ClusterWorker extends ClusterSystem {
 
@@ -38,7 +37,7 @@ public class ClusterWorker extends ClusterSystem {
 			public void run() {
 				system.actorOf(Reaper.props(), Reaper.DEFAULT_NAME);
 
-//				system.actorOf(MetricsListener.props(), MetricsListener.DEFAULT_NAME);
+				system.actorOf(MetricsListener.props(), MetricsListener.DEFAULT_NAME);
 
 				for (int i = 0; i < workers; i++)
 					system.actorOf(Worker.props(), Worker.DEFAULT_NAME + i);

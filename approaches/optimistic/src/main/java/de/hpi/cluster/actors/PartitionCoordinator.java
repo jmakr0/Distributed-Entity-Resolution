@@ -34,13 +34,11 @@ public class PartitionCoordinator extends AbstractActor {
     }
 
     public static final String DEFAULT_NAME = "partitioning-coordinator";
-
-
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
 
-    private ActorRef master;
     private Md5HashRouter router;
     private Serializer serializer;
+    private ActorRef master;
 
     public static Props props() {
         return Props.create(PartitionCoordinator.class);
@@ -75,7 +73,7 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.router.putOnHashring(worker);
 
-        this.log.info("Registered {} which is getting the router version {}", worker.path().name(), this.router.getVersion());
+        this.log.info("Registered {} with router version {}", worker.path().name(), this.router.getVersion());
 
         byte[] serializedRouter = serializer.toBinary(this.router);
 

@@ -140,7 +140,7 @@ public class Master extends AbstractActor {
     private void handle(ConfigMessage message) {
         this.config = message.config;
 
-        this.goldPath = this.config.getString("der.data.gold-standard.path");
+        this.goldPath = this.config.getString("der.records.gold-standard.path");
 
         // create coordinator actors
         this.partitionCoordinator = context().actorOf(PartitionCoordinator.props(), PartitionCoordinator.DEFAULT_NAME);
@@ -160,7 +160,7 @@ public class Master extends AbstractActor {
         this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
 
         if (!this.dataAvailable) {
-            this.log.info("Register after data has been sent to the cluster");
+            this.log.info("Register after records has been sent to the cluster");
         }
     }
 
@@ -193,7 +193,7 @@ public class Master extends AbstractActor {
 
     private void handle(WorkerGotParsedData workerGotParsedData) {
         ActorRef worker = this.sender();
-        this.log.info("{} has new data in similarity phase", worker.path().name());
+        this.log.info("{} has new records in similarity phase", worker.path().name());
 
         this.sendSimilarity(worker);
         this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());

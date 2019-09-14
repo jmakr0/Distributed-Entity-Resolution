@@ -36,7 +36,7 @@ public class TCMaster extends AbstractActor {
         private static final long serialVersionUID = -4243198888868862395L;
         private CalculateMessage() {}
         protected Set<Set<Integer>> duplicates;
-        protected Set<ActorRef> workers;
+        protected Set<ActorRef> idleWorkers;
     }
 
     @Data @AllArgsConstructor
@@ -46,8 +46,19 @@ public class TCMaster extends AbstractActor {
         protected DFWBlock block;
     }
 
+    public static final String DEFAULT_NAME = "tcMaster";
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
+
+    private Queue<ActorRef> idleWorkers;
     private DFW dfw;
+    private Config config;
+    private boolean restart = false;
+    private ActorRef master;
+
+    public static Props props() {
+        return Props.create(TCMaster.class);
+    }
+
 
     @Override
     public void preStart() throws Exception {
@@ -75,18 +86,6 @@ public class TCMaster extends AbstractActor {
                 .build();
     }
 
-    public static final String DEFAULT_NAME = "tcMaster";
-
-    private int blockSize;
-    private Queue<ActorRef> workers;
-    private ActorRef master;
-    private boolean restart = false;
-
-    public static Props props() {
-        return Props.create(TCMaster.class);
-    }
-
-
     private void handle(RestartMessage restartMessage) {
         if (this.dfw != null) {
             this.log.info("Restart calculation");
@@ -95,25 +94,23 @@ public class TCMaster extends AbstractActor {
     }
 
     private void handle(ConfigMessage configMessage) {
-        Config config = configMessage.config;
-
         this.master = this.sender();
-        this.workers = new LinkedList<>();
-
-        this.blockSize = config.getInt("der.transitive-closure.block-size");
+        this.idleWorkers = new LinkedList<>();
+        this.config = configMessage.config;
     }
 
     private void handle(CalculateMessage calculateMessage) {
         this.log.info("Start calculating the transitive closure");
+        int blockSize = this.config.getInt("der.transitive-closure.block-size");
 
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
         int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
 
-        this.dfw = new DFW(matrix, this.blockSize);
-        this.workers.addAll(calculateMessage.workers);
+        this.dfw = new DFW(matrix, blockSize);
+        this.idleWorkers.addAll(calculateMessage.idleWorkers);
         this.restart = false;
 
-        this.sendWork();
+        this.progressCalculation();
     }
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
@@ -124,38 +121,38 @@ public class TCMaster extends AbstractActor {
 
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
-        this.workers.add(this.sender());
+        this.idleWorkers.add(this.sender());
 
         if (this.dfw.isCalculated()) {
             this.sendResult();
         } else {
-            this.sendWork();
+            this.progressCalculation();
         }
     }
 
-    private void sendWork() {
+    private void progressCalculation() {
         boolean hasNextBlock = this.dfw.hasNextBlock();
-        boolean hasWorkers = !this.workers.isEmpty();
+        boolean hasWorkers = !this.idleWorkers.isEmpty();
 
         while (hasWorkers &&  hasNextBlock) {
             DFWBlock block = this.dfw.getNextBlock();
 
-            ActorRef worker = workers.poll();
+            ActorRef worker = idleWorkers.poll();
             worker.tell(new Worker.DFWWorkMessage(block), this.master);
 
-            hasWorkers = !this.workers.isEmpty();
+            hasWorkers = !this.idleWorkers.isEmpty();
             hasNextBlock = this.dfw.hasNextBlock();
         }
     }
 
     private void sendResult() {
-        this.log.info("Send results");
+        this.log.info("Transitive closure calculated");
 
         int[][] matrix = this.dfw.getMatrix();
 
         Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
 
-        this.master.tell(new Master.DFWDoneMessage(tk, this.workers), this.sender());
+        this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }
 
 }

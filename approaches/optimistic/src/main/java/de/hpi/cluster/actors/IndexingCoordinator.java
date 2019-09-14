@@ -15,18 +15,6 @@ import java.io.Serializable;
 
 public class IndexingCoordinator extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "indexing-coordinator";
-
-    public static Props props() {
-        return Props.create(IndexingCoordinator.class);
-    }
-
-    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
-
-    private ActorRef master;
-    private PerformanceTracker performanceTracker;
-    private CSVService csvService;
-
     @Data
     @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
@@ -52,6 +40,18 @@ public class IndexingCoordinator extends AbstractActor {
                 .build();
     }
 
+    public static final String DEFAULT_NAME = "indexing-coordinator";
+
+    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
+
+    private ActorRef master;
+    private PerformanceTracker performanceTracker;
+    private CSVService csvService;
+
+    public static Props props() {
+        return Props.create(IndexingCoordinator.class);
+    }
+
     private void handle(ConfigMessage configMessage) {
         this.master = this.sender();
 
@@ -62,10 +62,10 @@ public class IndexingCoordinator extends AbstractActor {
 
         this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload);
 
-        String data = config.getString("der.data.input.path");
-        boolean hasHeader = config.getBoolean("der.data.input.has-header");
-        char separator = config.getString("der.data.input.line-separator").charAt(0);
-        int maxQueueSize = config.getInt("der.data.input.max-queue-size");
+        String data = config.getString("der.records.input.path");
+        boolean hasHeader = config.getBoolean("der.records.input.has-header");
+        char separator = config.getString("der.records.input.line-separator").charAt(0);
+        int maxQueueSize = config.getInt("der.records.input.max-queue-size");
 
         this.csvService = new CSVService(data, hasHeader, separator, (int) Math.pow(2,minWorkload), maxQueueSize);
     }
