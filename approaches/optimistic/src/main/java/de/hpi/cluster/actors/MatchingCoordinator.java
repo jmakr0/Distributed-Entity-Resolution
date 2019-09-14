@@ -69,7 +69,7 @@ public class MatchingCoordinator extends AbstractActor {
         super.postStop();
 
         // Log the stop event
-        this.log.info("Stopped {}.", this.getSelf());
+        this.log.debug("Stopped {}.", this.getSelf());
     }
 
     @Override
@@ -79,7 +79,7 @@ public class MatchingCoordinator extends AbstractActor {
                 .match(StartSimilarityMessage.class, this::handle)
                 .match(DuplicateMessage.class, this::handle)
                 .match(WorkerFinishedMatchingMessage.class, this::handle)
-                .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
+                .matchAny(object -> this.log.debug("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
@@ -97,7 +97,7 @@ public class MatchingCoordinator extends AbstractActor {
         this.busyWorkers.add(worker);
         this.idleWorkers.remove(worker);
 
-        this.log.info("Similarity message to {}", worker.path().name());
+        this.log.debug("Similarity message to {}", worker.path().name());
         worker.tell(new Worker.SimilarityMessage(similarityThreshold, thresholdMin, thresholdMax), this.master);
     }
 

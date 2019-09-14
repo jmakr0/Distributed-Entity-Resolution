@@ -72,7 +72,7 @@ public class TCMaster extends AbstractActor {
         super.postStop();
 
         // Log the stop event
-        this.log.info("Stopped {}.", this.getSelf());
+        this.log.debug("Stopped {}.", this.getSelf());
     }
 
     @Override
@@ -82,13 +82,13 @@ public class TCMaster extends AbstractActor {
                 .match(RestartMessage.class, this::handle)
                 .match(CalculateMessage.class, this::handle)
                 .match(DispatchBlockMessage.class, this::handle)
-                .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
+                .matchAny(object -> this.log.debug("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
     private void handle(RestartMessage restartMessage) {
         if (this.dfw != null) {
-            this.log.info("Restart calculation");
+            this.log.debug("Restart calculation");
             this.restart = true;
         }
     }
@@ -115,7 +115,7 @@ public class TCMaster extends AbstractActor {
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
         if (this.restart) {
-            this.log.info("Restarting calculation; drop message");
+            this.log.debug("Restarting calculation; drop message");
             return;
         }
 
