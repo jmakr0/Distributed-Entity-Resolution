@@ -9,12 +9,14 @@ public class PerformanceTracker {
 
     private long timeThreshold;
     private int minWorkload;
+    private int maxWorkload;
 
     private Map<ActorRef, PerformanceMetric> performance;
 
-    public PerformanceTracker(long timeThreshold, int minWorkload) {
+    public PerformanceTracker(long timeThreshold, int minWorkload, int maxWorkload) {
         this.timeThreshold = timeThreshold;
         this.minWorkload = minWorkload;
+        this.maxWorkload = maxWorkload;
         this.performance = new HashMap<>();
     }
 
@@ -33,9 +35,9 @@ public class PerformanceTracker {
             int currentWorkload = pMetric.getWorkLoad();
 
             if (timeDiff < this.timeThreshold) {
-                newWorkload = currentWorkload + 1;
+                newWorkload = Math.min(currentWorkload + 1, this.maxWorkload);
             } else {
-                newWorkload = Math.max(currentWorkload - 1, this.minWorkload);
+                newWorkload = Math.min(Math.max(currentWorkload - 1, this.minWorkload), this.maxWorkload);
             }
             pMetric.setWorkLoad(newWorkload);
             pMetric.setWorkTime(now);
