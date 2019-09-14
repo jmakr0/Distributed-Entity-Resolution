@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ClusterSystem {
 
-	protected static Config createConfiguration(String actorSystemName, String actorSystemRole, String host, int port, String masterhost, int masterport) {
+	protected static Config createConfiguration(String actorSystemName, String actorSystemRole, String host, int port, String masterhost, int masterport, String loglevel) {
 		
 		// Create the Config with fallback to the application config
 		return ConfigFactory.parseString(
@@ -20,6 +20,7 @@ public class ClusterSystem {
 						"akka.remote.artery.canonical.hostname = \"" + host + "\"\n" +
 						"akka.remote.artery.canonical.port = " + port + "\n" +
 						"akka.cluster.roles = [" + actorSystemRole + "]\n" +
+						"akka.loglevel = " + loglevel + "\n" +
 						"akka.cluster.seed-nodes = [\"akka://" + actorSystemName + "@" + masterhost + ":" + masterport + "\"]")
 				.withFallback(ConfigFactory.load("cluster"));
 	}
