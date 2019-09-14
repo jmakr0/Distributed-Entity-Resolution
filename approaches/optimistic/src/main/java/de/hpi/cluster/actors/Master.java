@@ -140,7 +140,7 @@ public class Master extends AbstractActor {
     private void handle(ConfigMessage message) {
         this.config = message.config;
 
-        this.goldPath = this.config.getString("der.records.gold-standard.path");
+        this.goldPath = this.config.getString("der.data.gold-standard.path");
 
         // create coordinator actors
         this.partitionCoordinator = context().actorOf(PartitionCoordinator.props(), PartitionCoordinator.DEFAULT_NAME);

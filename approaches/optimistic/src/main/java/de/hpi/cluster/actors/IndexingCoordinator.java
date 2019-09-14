@@ -62,10 +62,10 @@ public class IndexingCoordinator extends AbstractActor {
 
         this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload);
 
-        String data = config.getString("der.records.input.path");
-        boolean hasHeader = config.getBoolean("der.records.input.has-header");
-        char separator = config.getString("der.records.input.line-separator").charAt(0);
-        int maxQueueSize = config.getInt("der.records.input.max-queue-size");
+        String data = config.getString("der.data.input.path");
+        boolean hasHeader = config.getBoolean("der.data.input.has-header");
+        char separator = config.getString("der.data.input.line-separator").charAt(0);
+        int maxQueueSize = config.getInt("der.data.input.max-queue-size");
 
         this.csvService = new CSVService(data, hasHeader, separator, (int) Math.pow(2,minWorkload), maxQueueSize);
     }
@@ -73,7 +73,7 @@ public class IndexingCoordinator extends AbstractActor {
     private void handle(SendDataMessage sendDataMessage) {
         ActorRef worker = sendDataMessage.worker;
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
-        this.log.info("numberOfLines: {}", numberOfLines);
+        this.log.info("Performance tracker suggests sending: {} records", numberOfLines);
 
         if (this.csvService.dataAvailable()) {
             String data = this.csvService.getRecords(numberOfLines);
