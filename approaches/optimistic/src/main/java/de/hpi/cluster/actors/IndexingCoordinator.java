@@ -59,8 +59,9 @@ public class IndexingCoordinator extends AbstractActor {
 
         int timeThreshold = config.getInt("der.performance-tracker.time-threshold");
         int minWorkload = config.getInt("der.performance-tracker.min-workload");
+        int maxWorkload = config.getInt("der.performance-tracker.max-workload");
 
-        this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload);
+        this.performanceTracker = new PerformanceTracker(timeThreshold, minWorkload, maxWorkload);
 
         String data = config.getString("der.data.input.path");
         boolean hasHeader = config.getBoolean("der.data.input.has-header");
