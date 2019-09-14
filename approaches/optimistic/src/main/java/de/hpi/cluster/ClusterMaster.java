@@ -21,8 +21,9 @@ public class ClusterMaster extends ClusterSystem {
 		int port = config.getInt("der.cluster.master.port");
 		String inputPath = config.getString("der.data.input.path");
 		String goldPath = config.getString("der.data.gold-standard.path");
+		String loglevel = config.getString("der.logging.level");
 
-		final Config actorSystemConfig = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port);
+		final Config actorSystemConfig = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port, loglevel);
 		
 		final ActorSystem system = createSystem(actorSystemName, actorSystemConfig);
 		

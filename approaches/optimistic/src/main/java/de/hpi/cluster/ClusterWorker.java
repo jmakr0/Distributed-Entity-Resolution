@@ -23,13 +23,14 @@ public class ClusterWorker extends ClusterSystem {
 		int port = config.getInt("der.cluster.worker.port");
 		int masterPort = config.getInt("der.cluster.master.port");
 		String masterHost = config.getString("der.cluster.master.host-address");
+		String loglevel = config.getString("der.logging.level");
 
-		start(actorSystemName, workers, host, port, masterHost, masterPort);
+		start(actorSystemName, workers, host, port, masterHost, masterPort, loglevel);
 	}
 
-	private static void start(String actorSystemName, int workers, String host, int port, String masterHost, int masterPort) {
+	private static void start(String actorSystemName, int workers, String host, int port, String masterHost, int masterPort, String loglevel) {
 		
-		final Config config = createConfiguration(actorSystemName, WORKER_ROLE, host, port, masterHost, masterPort);
+		final Config config = createConfiguration(actorSystemName, WORKER_ROLE, host, port, masterHost, masterPort, loglevel);
 		
 		final ActorSystem system = createSystem(actorSystemName, config);
 		
