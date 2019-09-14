@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class MatchingCoordinator extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "working-coordinator";
+    public static final String DEFAULT_NAME = "matching-coordinator";
 
     private double similarityThreshold;
     private int thresholdMin;
@@ -107,7 +107,7 @@ public class MatchingCoordinator extends AbstractActor {
     }
 
     private void handle(DuplicateMessage duplicateMessage) {
-        this.log.info("Duplicate {}", duplicateMessage.duplicates);
+//        this.log.info("Duplicate {}", duplicateMessage.duplicates);
 
         this.duplicates.addAll(duplicateMessage.duplicates);
     }
@@ -124,7 +124,7 @@ public class MatchingCoordinator extends AbstractActor {
         if (working.isEmpty()) {
             this.log.info("finish similarity");
             this.log.info("number of duplicates: {}", this.duplicates.size());
-            this.log.info(String.valueOf(this.duplicates));
+//            this.log.info(String.valueOf(this.duplicates));
             this.master.tell(new Master.MatchingCompletedMessage(this.duplicates, this.done), this.self());
         }
     }

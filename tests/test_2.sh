@@ -7,10 +7,10 @@
 # Override environment settings from env.sh; make the test individual
 
 TEST_NAME="Test_2"
-TEST_TIMEOUT=120
+TEST_TIMEOUT=70
 CONFIG_FILE="test_2.conf"
 SHM_SIZE=1024m
-TEST_WORKER_CONTAINER=2
+TEST_WORKER_CONTAINER=3
 
 # Run test
 

@@ -33,11 +33,10 @@ import java.util.*;
 
 public class Worker extends AbstractActor {
 
-    private enum Phase {
-        PARSING, REPARTITIONING, UNDEFINED
-    }
+    private ActorRef master;
 
     public static final String DEFAULT_NAME = "worker";
+    private boolean calculatingSimilarity = false;
 
     public static Props props() {
         return Props.create(Worker.class);
@@ -168,6 +167,7 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(DataMessage dataMessage) {
+        this.master = this.sender();
         this.log.info("data massage received");
 
         Map<String,List<String[]>> parsedData = new HashMap<>();
@@ -251,6 +251,11 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(ParsedDataMessage parsedDataMessage) {
+
+        if (this.calculatingSimilarity) {
+            this.master.tell(new Master.WorkerGotParsedData(), this.self());
+        }
+
         Md5HashRouter router = this.deserializeRouter(parsedDataMessage.serializedRouter);
         int myRouterVersion = this.getRouterVersion();
         int peerRouterVersion = router.getVersion();
@@ -273,24 +278,25 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(SimilarityMessage similarityMessage) {
-        this.log.info("number of data keys: {}", this.data.keySet().size());
+//        this.log.info("number of data keys: {}", this.data.keySet().size());
 
+        this.calculatingSimilarity = true;
         StringComparator sComparator = new JaroWinklerComparator();
         NumberComparator nComparator = new AbsComparator(similarityMessage.thresholdMin, similarityMessage.thresholdMax);
         UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
 
         DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, similarityMessage.similarityThreshold);
 
-        for (List<String[]> values: data.values()) {
-            for (String[] rec: values) {
-                this.log.info("key: {}", rec[0]);
-            }
-        }
+//        for (List<String[]> values: data.values()) {
+//            for (String[] rec: values) {
+//                this.log.info("key: {}", rec[0]);
+//            }
+//        }
 
         for (String key: data.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
             if (!duplicates.isEmpty()) {
-                this.log.info("Worker found duplicates: " + duplicates);
+//                this.log.info("Worker found duplicates: " + duplicates);
                 this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
             }
         }

@@ -5,6 +5,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
+import de.hpi.cluster.actors.Worker.ParsedDataMessage;
 import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
 import de.hpi.rdse.der.data.GoldReader;
 import de.hpi.rdse.der.dfw.DFWBlock;
@@ -93,6 +94,11 @@ public class Master extends AbstractActor {
         Queue<ActorRef> workers;
     }
 
+    @Data @AllArgsConstructor
+    public static class WorkerGotParsedData implements Serializable {
+        private static final long serialVersionUID = -111L;
+    }
+
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     private Config config;
     private Queue<ActorRef> registeredWorkers = new LinkedList<>();
@@ -138,8 +144,15 @@ public class Master extends AbstractActor {
                 .match(MatchingCompletedMessage.class, this::handle)
                 .match(DFWWorkFinishedMessage.class, this::handle)
                 .match(DFWDoneMessage.class, this::handle)
+                .match(WorkerGotParsedData.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
+    }
+
+    private void handle(WorkerGotParsedData workerGotParsedData) {
+        this.log.info("Worker got parsed data" + this.sender());
+        sendSimilarity(this.sender());
+        this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());
     }
 
     private void handle(PartitionMessage partitionMessage) {
@@ -166,21 +179,17 @@ public class Master extends AbstractActor {
     }
 
     private void handle(RegisterMessage registerMessage) {
-        if (this.dataAvailable) {
-            this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
-        } else {
-            this.log.info("data is gone! please gooooo");
+        this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
+
+        if (!this.dataAvailable) {
+            this.log.info("Register after data has been sent to the cluster");
         }
     }
 
     private void handle(WorkRequestMessage workRequestMessage) {
         ActorRef worker = this.sender();
-        int routerVersion = workRequestMessage.routerVersion;
 
-        if (routerVersion < this.routerVersion) {
-            this.log.info("Repartition noticed; new router version {}.", this.routerVersion);
-            this.partitionCoordinator.tell(new PartitionCoordinator.RepartitionMessage(worker), this.self());
-        } else if(this.dataAvailable){
+        if(this.dataAvailable){
             this.sendData(worker);
         } else {
             this.sendSimilarity(worker);
@@ -234,7 +243,7 @@ public class Master extends AbstractActor {
         evaluator.evaluate(tk, goldStandard);
 
         this.registeredWorkers = dfwDoneMessage.workers;
-        this.shutdown();
+//        this.shutdown();
     }
 
     private void logTransitiveClosure(Set<Set<Integer>> tk) {

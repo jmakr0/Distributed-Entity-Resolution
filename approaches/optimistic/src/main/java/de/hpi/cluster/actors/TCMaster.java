@@ -25,6 +25,7 @@ public class TCMaster extends AbstractActor {
     private int blockSize;
     private Queue<ActorRef> workers;
     private ActorRef master;
+    private boolean restart = false;
 
     public static Props props() {
         return Props.create(TCMaster.class);
@@ -36,6 +37,11 @@ public class TCMaster extends AbstractActor {
         private static final long serialVersionUID = -42431888868862395L;
         private ConfigMessage() {}
         protected Config config;
+    }
+
+    @Data @AllArgsConstructor
+    public static class RestartMessage implements Serializable {
+        private static final long serialVersionUID = -424318883528862395L;
     }
 
     @Data
@@ -85,10 +91,18 @@ public class TCMaster extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(ConfigMessage.class, this::handle)
+                .match(RestartMessage.class, this::handle)
                 .match(CalculateMessage.class, this::handle)
                 .match(DispatchBlockMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
+    }
+
+    private void handle(RestartMessage restartMessage) {
+        if (this.dfw != null) {
+            this.log.info("Restart tc calculation");
+            this.restart = true;
+        }
     }
 
     private void handle(ConfigMessage configMessage) {
@@ -107,11 +121,17 @@ public class TCMaster extends AbstractActor {
 
         this.dfw = new DFW(matrix, this.blockSize);
         this.workers.addAll(calculateMessage.workers);
+        this.restart = false;
 
         this.sendWork();
     }
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
+        if (this.restart) {
+            this.log.info("restarts tc calculation; drop message");
+            return;
+        }
+
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
         this.workers.add(this.sender());
@@ -144,8 +164,6 @@ public class TCMaster extends AbstractActor {
         int[][] matrix = this.dfw.getMatrix();
 
         Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
-
-
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.workers), this.sender());
     }

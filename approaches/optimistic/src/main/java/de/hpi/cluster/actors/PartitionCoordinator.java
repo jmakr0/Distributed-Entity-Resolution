@@ -95,7 +95,7 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.router.putOnHashring(worker);
 
-        this.log.info("Router version: " + this.router.getVersion());
+        this.log.info("Registered: " + worker + " new router version" + this.router.getVersion());
 
         byte[] serializedRouter = serializer.toBinary(this.router);
 
