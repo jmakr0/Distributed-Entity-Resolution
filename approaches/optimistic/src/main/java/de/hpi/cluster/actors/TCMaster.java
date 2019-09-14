@@ -6,10 +6,8 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
-import de.hpi.cluster.actors.Master.DFWDoneMessage;
 import de.hpi.rdse.der.dfw.DFW;
 import de.hpi.rdse.der.dfw.DFWBlock;
-import de.hpi.rdse.der.fw.FloydWarshall;
 import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,52 +19,45 @@ import java.util.Set;
 
 public class TCMaster extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "tcMaster";
-    private int blockSize;
-    private Queue<ActorRef> workers;
-    private ActorRef master;
-
-    public static Props props() {
-        return Props.create(TCMaster.class);
-    }
-
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
         private static final long serialVersionUID = -42431888868862395L;
         private ConfigMessage() {}
         protected Config config;
     }
 
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
+    public static class RestartMessage implements Serializable {
+        private static final long serialVersionUID = -424318883528862395L;
+    }
+
+    @Data @AllArgsConstructor
     public static class CalculateMessage implements Serializable {
         private static final long serialVersionUID = -4243198888868862395L;
         private CalculateMessage() {}
         protected Set<Set<Integer>> duplicates;
-        protected Set<ActorRef> workers;
+        protected Set<ActorRef> idleWorkers;
     }
 
-    @Data
-    @AllArgsConstructor
-    public static class RequestWorkMessage implements Serializable {
-        private static final long serialVersionUID = -4277777777768862395L;
-        private RequestWorkMessage() {}
-        protected ActorRef worker;
-    }
-
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class DispatchBlockMessage implements Serializable {
         private static final long serialVersionUID = -1277777777768862395L;
         private DispatchBlockMessage() {}
         protected DFWBlock block;
     }
 
+    public static final String DEFAULT_NAME = "tcMaster";
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
 
+    private Queue<ActorRef> idleWorkers;
     private DFW dfw;
-    private boolean done = false;
+    private Config config;
+    private boolean restart = false;
+    private ActorRef master;
+
+    public static Props props() {
+        return Props.create(TCMaster.class);
+    }
 
 
     @Override
@@ -88,67 +79,80 @@ public class TCMaster extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(ConfigMessage.class, this::handle)
+                .match(RestartMessage.class, this::handle)
                 .match(CalculateMessage.class, this::handle)
                 .match(DispatchBlockMessage.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
 
+    private void handle(RestartMessage restartMessage) {
+        if (this.dfw != null) {
+            this.log.info("Restart calculation");
+            this.restart = true;
+        }
+    }
+
     private void handle(ConfigMessage configMessage) {
-        Config config = configMessage.config;
-
         this.master = this.sender();
-
-        this.blockSize = config.getInt("der.transitive-closure.block-size");
+        this.idleWorkers = new LinkedList<>();
+        this.config = configMessage.config;
     }
 
     private void handle(CalculateMessage calculateMessage) {
-        this.log.info("Received calculateMessage");
+        this.log.info("Start calculating the transitive closure");
+        int blockSize = this.config.getInt("der.transitive-closure.block-size");
+
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
         int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
 
-        this.dfw = new DFW(matrix, this.blockSize);
-        this.workers = new LinkedList<>();
-        this.workers.addAll(calculateMessage.workers);
+        this.dfw = new DFW(matrix, blockSize);
+        this.idleWorkers.addAll(calculateMessage.idleWorkers);
+        this.restart = false;
 
-        this.sendWork();
+        this.progressCalculation();
     }
 
     private void handle(DispatchBlockMessage dispatchBlockMessage) {
+        if (this.restart) {
+            this.log.info("Restarting calculation; drop message");
+            return;
+        }
+
         DFWBlock block = dispatchBlockMessage.block;
         this.dfw.dispatch(block.getTarget());
-        this.workers.add(this.sender());
+        this.idleWorkers.add(this.sender());
 
         if (this.dfw.isCalculated()) {
             this.sendResult();
         } else {
-            this.sendWork();
+            this.progressCalculation();
         }
     }
 
-    private void sendWork() {
+    private void progressCalculation() {
         boolean hasNextBlock = this.dfw.hasNextBlock();
-        boolean hasWorkers = !this.workers.isEmpty();
+        boolean hasWorkers = !this.idleWorkers.isEmpty();
 
         while (hasWorkers &&  hasNextBlock) {
             DFWBlock block = this.dfw.getNextBlock();
 
-            ActorRef worker = workers.poll();
+            ActorRef worker = idleWorkers.poll();
             worker.tell(new Worker.DFWWorkMessage(block), this.master);
 
-            hasWorkers = !this.workers.isEmpty();
+            hasWorkers = !this.idleWorkers.isEmpty();
             hasNextBlock = this.dfw.hasNextBlock();
         }
     }
 
     private void sendResult() {
-        this.log.info("sendResult");
+        this.log.info("Transitive closure calculated");
 
         int[][] matrix = this.dfw.getMatrix();
 
         Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
 
-        this.master.tell(new Master.DFWDoneMessage(tk, this.workers), this.sender());
+        this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }
 
 }

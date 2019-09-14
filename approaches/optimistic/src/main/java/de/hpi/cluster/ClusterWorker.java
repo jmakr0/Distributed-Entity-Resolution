@@ -10,8 +10,6 @@ import de.hpi.cluster.actors.listeners.MetricsListener;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-//import de.hpi.cluster.actors.Reaper;
-
 public class ClusterWorker extends ClusterSystem {
 
 	public static final String WORKER_ROLE = "worker";

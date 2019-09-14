@@ -44,16 +44,13 @@ public class ClusterSystem {
 			public void run() {
 				system.terminate();
 
-				new Thread() {
-					@Override
-					public void run() {
-						try {
-							Await.ready(system.whenTerminated(), Duration.create(10, TimeUnit.SECONDS));
-						} catch (Exception e) {
-							System.exit(-1);
-						}
+				new Thread(() -> {
+					try {
+						Await.ready(system.whenTerminated(), Duration.create(10, TimeUnit.SECONDS));
+					} catch (Exception e) {
+						System.exit(-1);
 					}
-				}.start();
+				}).start();
 			}
 		});
 		

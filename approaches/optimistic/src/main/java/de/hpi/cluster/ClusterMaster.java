@@ -9,8 +9,6 @@ import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
 
-//import de.hpi.cluster.actors.Reaper;
-
 public class ClusterMaster extends ClusterSystem {
 	
 	public static final String MASTER_ROLE = "master";
@@ -19,11 +17,9 @@ public class ClusterMaster extends ClusterSystem {
 		int workers = config.getInt("der.cluster.master.worker-actors");
 		String host = config.getString("der.cluster.master.host-address");
 		int port = config.getInt("der.cluster.master.port");
-		String inputPath = config.getString("der.data.input.path");
-		String goldPath = config.getString("der.data.gold-standard.path");
 		String loglevel = config.getString("der.logging.level");
 
-		final Config actorSystemConfig = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port, loglevel);
+        final Config actorSystemConfig = createConfiguration(actorSystemName, MASTER_ROLE, host, port, host, port, loglevel);
 		
 		final ActorSystem system = createSystem(actorSystemName, actorSystemConfig);
 		

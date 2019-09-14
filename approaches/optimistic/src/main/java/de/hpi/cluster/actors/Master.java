@@ -5,7 +5,6 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
-import de.hpi.cluster.messages.interfaces.InfoObjectInterface;
 import de.hpi.rdse.der.data.GoldReader;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
@@ -14,15 +13,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 
 public class Master extends AbstractActor {
-
-    public static final String DEFAULT_NAME = "master";
-
-    public static Props props() {
-        return Props.create(Master.class);
-    }
 
     @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class ConfigMessage implements Serializable {
@@ -31,36 +27,34 @@ public class Master extends AbstractActor {
         private Config config;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class RegisterMessage implements Serializable {
         private static final long serialVersionUID = -7643194361868862425L;
-        private RegisterMessage() {}
-        protected InfoObjectInterface info;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class WorkRequestMessage implements Serializable {
         private static final long serialVersionUID = -7643194361868862420L;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class AllDataParsedMessage implements Serializable {
         private static final long serialVersionUID = -4739494771812333325L;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class DuplicateMessage implements Serializable {
         private static final long serialVersionUID = -1444194311112342425L;
         private DuplicateMessage() {}
         protected Set<Set<Integer>> duplicates;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class WorkerFinishedMatchingMessage implements Serializable {
         private static final long serialVersionUID = -1031194361812333325L;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class MatchingCompletedMessage implements Serializable {
         private static final long serialVersionUID = -1942194771812333325L;
         private MatchingCompletedMessage() {}
@@ -68,31 +62,14 @@ public class Master extends AbstractActor {
         private Set<ActorRef> workers;
     }
 
-    @Data @AllArgsConstructor
-    public static class ReadyDFWMessage implements Serializable {
-        private static final long serialVersionUID = -1111194771812333325L;
-    }
-
-    @Data @AllArgsConstructor
-    public static class IdleDFWMessage implements Serializable {
-        private static final long serialVersionUID = -1111194771812333325L;
-    }
-
-    @Data @AllArgsConstructor
-    public static class DFWWorkMessage implements Serializable {
-        private static final long serialVersionUID = -1111194311112342421L;
-        private DFWWorkMessage() {}
-        protected DFWBlock block;
-    }
-
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class DFWWorkFinishedMessage implements Serializable {
         private static final long serialVersionUID = -1991194311112342421L;
         private DFWWorkFinishedMessage() {}
         protected DFWBlock block;
     }
 
-    @Data @AllArgsConstructor
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class DFWDoneMessage implements Serializable {
         private static final long serialVersionUID = -1971194311112342421L;
         private DFWDoneMessage() {}
@@ -100,19 +77,17 @@ public class Master extends AbstractActor {
         Queue<ActorRef> workers;
     }
 
+    @Data @AllArgsConstructor @SuppressWarnings("unused")
+    public static class WorkerGotParsedData implements Serializable {
+        private static final long serialVersionUID = -1971194313192342421L;
+    }
+
+    public static final String DEFAULT_NAME = "master";
+
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-
     private Config config;
-
-//    private Set<ActorRef> workers = new HashSet<>();
-    // todo: see if if we can merge lists in the end
     private Queue<ActorRef> registeredWorkers = new LinkedList<>();
-    private Queue<ActorRef> readyForDFWWork = new LinkedList<>();
-    private Queue<DFWWorkMessage> pendingDFWWork = new LinkedList<>();
-
-    private boolean repartitionRunning = false;
     private boolean dataAvailable = true;
-
     private String goldPath;
 
     // Coordinators
@@ -121,7 +96,9 @@ public class Master extends AbstractActor {
     private ActorRef matchingCoordinator;
     private ActorRef indexingCoordinator;
 
-    private int fwBlockSize;
+    public static Props props() {
+        return Props.create(Master.class);
+    }
 
     @Override
     public void preStart() throws Exception {
@@ -153,11 +130,9 @@ public class Master extends AbstractActor {
                 .match(DuplicateMessage.class, this::handle)
                 .match(WorkerFinishedMatchingMessage.class, this::handle)
                 .match(MatchingCompletedMessage.class, this::handle)
-                .match(ReadyDFWMessage.class, this::handle)
-                .match(IdleDFWMessage.class, this::handle)
-//                .match(DFWWorkMessage.class, this::handle)
                 .match(DFWWorkFinishedMessage.class, this::handle)
                 .match(DFWDoneMessage.class, this::handle)
+                .match(WorkerGotParsedData.class, this::handle)
                 .matchAny(object -> this.log.info("Received unknown message: \"{}\"", object.toString()))
                 .build();
     }
@@ -184,9 +159,9 @@ public class Master extends AbstractActor {
     private void handle(RegisterMessage registerMessage) {
         this.partitionCoordinator.tell(new PartitionCoordinator.RegisterMessage(this.sender()), this.self());
 
-//        ActorRef worker = this.sender();
-
-//        this.addWorker(worker);
+        if (!this.dataAvailable) {
+            this.log.info("Register after records has been sent to the cluster");
+        }
     }
 
     private void handle(WorkRequestMessage workRequestMessage) {
@@ -203,14 +178,6 @@ public class Master extends AbstractActor {
         this.dataAvailable = false;
     }
 
-    private void sendData(ActorRef worker) {
-        this.indexingCoordinator.tell(new IndexingCoordinator.SendDataMessage(worker), this.self());
-    }
-
-    private void sendSimilarity(ActorRef worker) {
-        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
-    }
-
     private void handle(DuplicateMessage duplicateMessage) {
         this.matchingCoordinator.tell(new MatchingCoordinator.DuplicateMessage(duplicateMessage.duplicates), this.sender());
     }
@@ -220,76 +187,34 @@ public class Master extends AbstractActor {
     }
 
     private void handle(MatchingCompletedMessage matchingCompletedMessage) {
-
-        Set<Set<Integer>> duplicates = matchingCompletedMessage.duplicates;
         Set<ActorRef> workers = matchingCompletedMessage.workers;
-
-        // just for testing: compute the transitive closure in a non distributed way
-        // int[][] matrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
-        // int[][] tkMatrix = FloydWarshall.apply(matrix);
-        // this.log.info("locally");
-        // this.logTransitiveClosure(MatrixConverter.fromTransitiveClosure(tkMatrix));
-
         this.transitiveClosure(matchingCompletedMessage.duplicates, workers);
     }
 
+    private void handle(WorkerGotParsedData workerGotParsedData) {
+        ActorRef worker = this.sender();
+        this.log.info("{} has new records in similarity phase", worker.path().name());
+
+        this.sendSimilarity(worker);
+        this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());
+    }
+
+    private void sendData(ActorRef worker) {
+        this.indexingCoordinator.tell(new IndexingCoordinator.SendDataMessage(worker), this.self());
+    }
+
+    private void sendSimilarity(ActorRef worker) {
+        this.matchingCoordinator.tell(new MatchingCoordinator.StartSimilarityMessage(worker), this.self());
+    }
+
     private void transitiveClosure(Set<Set<Integer>> duplicates, Set<ActorRef> workers) {
-        this.log.info("Calculate Transitive Closure");
-
-//        for (ActorRef worker: workers) {
-//            this.readyForDFWWork.add(worker);
-//        }
-
         tcMaster.tell(new TCMaster.CalculateMessage(duplicates, workers), this.self());
     }
-
-    private void handle(IdleDFWMessage idleDFWMessage) {
-        this.readyForDFWWork.add(this.sender());
-    }
-
-    private void handle(ReadyDFWMessage readyDFWMessage) {
-
-        while (!this.readyForDFWWork.isEmpty()) {
-            ActorRef worker = this.readyForDFWWork.poll();
-
-//            this.tcMaster.tell(new TCMaster.DispatchBlockMessage(null), this.self());
-            this.tcMaster.tell(new TCMaster.RequestWorkMessage(worker), this.self());
-        }
-
-    }
-
-//    private void handle(DFWWorkMessage dfwWorkMessage) {
-//        ActorRef worker = this.sender();
-//
-//        worker.tell(new Worker.DFWWorkMessage(dfwWorkMessage.block), this.self());
-//
-////        this.pendingDFWWork.add(dfwWorkMessage);
-////
-////        this.keepWorkersBusy();
-//    }
-
-//    private void keepWorkersBusy() {
-//        while (!(this.readyForDFWWork.isEmpty() || this.pendingDFWWork.isEmpty())) {
-//            ActorRef worker = this.readyForDFWWork.poll();
-//            DFWWorkMessage work = this.pendingDFWWork.poll();
-//
-//            worker.tell(new Worker.DFWWorkMessage(work.block), this.self());
-//        }
-//
-//    }
 
     private void handle(DFWWorkFinishedMessage dfwWorkFinishedMessage) {
         DFWBlock block = dfwWorkFinishedMessage.block;
 
-//        this.log.info("tell DispatchBlockMessage");
-
         this.tcMaster.tell(new DispatchBlockMessage(block), this.sender());
-
-//        this.tcMaster.tell(new TCMaster.RequestWorkMessage(this.sender()), this.self());
-
-//        this.readyForDFWWork.add(this.sender());
-//
-//        this.keepWorkersBusy();
     }
 
     private void handle(DFWDoneMessage dfwDoneMessage) {
@@ -322,11 +247,6 @@ public class Master extends AbstractActor {
 
         this.log.info("Unregistered {}", message.getActor());
     }
-
-//    private void addWorker(ActorRef actor) {
-//        this.workers.add(actor);
-//        this.registeredWorkers.add(actor);
-//    }
 
     private void shutdown() {
         this.getSelf().tell(PoisonPill.getInstance(), this.getSelf());

@@ -15,18 +15,6 @@ import java.io.Serializable;
 
 public class IndexingCoordinator extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "indexing-coordinator";
-
-    public static Props props() {
-        return Props.create(IndexingCoordinator.class);
-    }
-
-    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
-
-    private ActorRef master;
-    private PerformanceTracker performanceTracker;
-    private CSVService csvService;
-
     @Data
     @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
@@ -52,6 +40,18 @@ public class IndexingCoordinator extends AbstractActor {
                 .build();
     }
 
+    public static final String DEFAULT_NAME = "indexing-coordinator";
+
+    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
+
+    private ActorRef master;
+    private PerformanceTracker performanceTracker;
+    private CSVService csvService;
+
+    public static Props props() {
+        return Props.create(IndexingCoordinator.class);
+    }
+
     private void handle(ConfigMessage configMessage) {
         this.master = this.sender();
 
@@ -73,7 +73,7 @@ public class IndexingCoordinator extends AbstractActor {
     private void handle(SendDataMessage sendDataMessage) {
         ActorRef worker = sendDataMessage.worker;
         int numberOfLines = this.performanceTracker.getNumberOfLines(worker);
-        this.log.info("numberOfLines: {}", numberOfLines);
+        this.log.info("Performance tracker suggests sending: {} records", numberOfLines);
 
         if (this.csvService.dataAvailable()) {
             String data = this.csvService.getRecords(numberOfLines);
@@ -84,9 +84,6 @@ public class IndexingCoordinator extends AbstractActor {
             this.master.tell(new Master.WorkRequestMessage(), worker);
         }
 
-
-
-
-
     }
+
 }

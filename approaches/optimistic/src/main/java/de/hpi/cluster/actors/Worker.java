@@ -14,7 +14,6 @@ import akka.serialization.Serialization;
 import akka.serialization.SerializationExtension;
 import akka.serialization.Serializer;
 import de.hpi.cluster.ClusterMaster;
-import de.hpi.cluster.messages.InfoObject;
 import de.hpi.cluster.messages.interfaces.Blocking;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.dude.DuplicateDetector;
@@ -32,16 +31,6 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Worker extends AbstractActor {
-
-    private enum Phase {
-        PARSING, REPARTITIONING, UNDEFINED
-    }
-
-    public static final String DEFAULT_NAME = "worker";
-
-    public static Props props() {
-        return Props.create(Worker.class);
-    }
 
     @Data @AllArgsConstructor
     public static class RegisterAckMessage implements Serializable {
@@ -62,7 +51,7 @@ public class Worker extends AbstractActor {
     public static class DataMessage implements Serializable {
         private static final long serialVersionUID = -7643424368868862395L;
         private DataMessage() {}
-        protected String data;
+        protected String records;
     }
 
     @Data @AllArgsConstructor
@@ -70,7 +59,7 @@ public class Worker extends AbstractActor {
         private static final long serialVersionUID = -1643424368868861534L;
         private ParsedDataMessage() {}
         protected String key;
-        protected List<String[]> data;
+        protected List<String[]> records;
         protected byte[] serializedRouter;
     }
 
@@ -90,31 +79,34 @@ public class Worker extends AbstractActor {
         protected DFWBlock block;
     }
 
+    public static final String DEFAULT_NAME = "worker";
     private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
+
+    private boolean calculatingSimilarity = false;
+
     private final Cluster cluster = Cluster.get(this.context().system());
 
+    private Map<String, List<String[]>> records = new HashMap<>();
+
     private Md5HashRouter router;
-    private Map<String, List<String[]>> data = new HashMap<>();
-
     private Blocking blocking;
+    private ActorRef master;
 
+    public static Props props() {
+        return Props.create(Worker.class);
+    }
 
     @Override
     public void preStart() throws Exception {
         super.preStart();
-
         this.cluster.subscribe(this.self(), MemberUp.class);
-
         Reaper.watchWithDefaultReaper(this);
     }
 
     @Override
     public void postStop() throws Exception {
         super.postStop();
-
         this.cluster.unsubscribe(this.self());
-
-        // Log the stop event
         this.log.info("Stopped {}.", this.getSelf());
     }
 
@@ -145,22 +137,19 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(RegisterAckMessage registerAckMessage) {
-        Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
-        this.log.info("RegisterAckMessage received");
-        this.log.info("Router version: " + router.getVersion());
-
+        this.log.info("Registered");
         this.blocking = registerAckMessage.blocking;
-        this.setRouter(router, "RegisterAckMessage");
+        Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
+        this.setRouter(router, "registration");
 
         this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
     private void handle(RepartitionMessage repartitionMessage) {
         Md5HashRouter router = this.deserializeRouter(repartitionMessage.serializedRouter);
-        this.log.info("Repartitioning with worker router {}, master router {}", this.getRouterVersion(), router.getVersion());
 
         if(router.getVersion() > this.getRouterVersion()) {
-            this.setRouter(router, "RepartitionMessage");
+            this.setRouter(router, "repartitioning");
             this.repartition();
         }
 
@@ -168,23 +157,15 @@ public class Worker extends AbstractActor {
     }
 
     private void handle(DataMessage dataMessage) {
-        this.log.info("data massage received");
+        this.log.info("Data message received");
+        this.master = this.sender();
 
         Map<String,List<String[]>> parsedData = new HashMap<>();
 
-        String[] lines = {};
+        String[] lines = this.clean(dataMessage.records);
 
-        if (!dataMessage.data.isEmpty()) {
-            String data = cleanData(dataMessage.data);
-            lines = data.split("\n");
-        }
-        List<String[]> records = new LinkedList<>();
+        List<String[]> records = this.extract(lines);
 
-        for (String line: lines) {
-            records.add(line.split(","));
-        }
-
-        // TODO use blocking function that was received via message before
         for (String[] record: records) {
             String prefix = this.blocking.getKey(record);
             if(parsedData.containsKey(prefix)) {
@@ -198,20 +179,127 @@ public class Worker extends AbstractActor {
 
         this.distributeDataToWorkers(parsedData);
 
-        this.log.info("data size: {}",this.data.keySet().size());
+        this.log.info("Records size in total: {}",this.records.keySet().size());
 
         this.sender().tell(new Master.WorkRequestMessage(), this.self());
     }
 
-    private String cleanData(String data) {
-        return data.replaceAll("\"", "")
-            .replaceAll("\'", "");
+    private void handle(ParsedDataMessage parsedDataMessage) {
+        if (this.calculatingSimilarity) {
+            this.master.tell(new Master.WorkerGotParsedData(), this.self());
+        }
+
+        Md5HashRouter router = this.deserializeRouter(parsedDataMessage.serializedRouter);
+        int myRouterVersion = this.getRouterVersion();
+        int peerRouterVersion = router.getVersion();
+
+        this.setRecords(parsedDataMessage.key, parsedDataMessage.records);
+
+        if(peerRouterVersion > myRouterVersion) {
+            this.setRouter(router, "parsed records");
+            this.repartition();
+        }
+
+    }
+
+    private void handle(SimilarityMessage similarityMessage) {
+        this.calculatingSimilarity = true;
+        StringComparator sComparator = new JaroWinklerComparator();
+        NumberComparator nComparator = new AbsComparator(similarityMessage.thresholdMin, similarityMessage.thresholdMax);
+        UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
+
+        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, similarityMessage.similarityThreshold);
+
+        for (String key: records.keySet()) {
+            Set<Set<Integer>> duplicates = duDetector.findDuplicates(records.get(key));
+            if (!duplicates.isEmpty()) {
+                this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
+            }
+        }
+
+        this.sender().tell(new Master.WorkerFinishedMatchingMessage(), this.self());
+    }
+
+    private void handle(DFWWorkMessage dfwWorkMessage) {
+        DFWBlock block = dfwWorkMessage.block;
+        block.calculate();
+
+        this.sender().tell(new Master.DFWWorkFinishedMessage(block), this.self());
+    }
+
+    private void register(Member member) {
+        if (member.hasRole(ClusterMaster.MASTER_ROLE)) {
+
+            this.getContext()
+                    .actorSelection(member.address() + "/user/" + Master.DEFAULT_NAME)
+                    .tell(new Master.RegisterMessage(), this.self());
+        }
+    }
+
+    private int getRouterVersion() {
+        return this.router != null ? this.router.getVersion() : 0;
+    }
+
+    private void setRouter(Md5HashRouter router, String source) {
+        if(this.router == null) {
+            this.log.info("Set router to version {} from {}", router.getVersion(), source);
+        } else {
+            this.log.info("Set router from version {} to {} from {}", this.router.getVersion(), router.getVersion(), source);
+        }
+        this.router = router;
+    }
+
+    private void setRecords(String key, List<String[]> records) {
+        if(this.records.containsKey(key)) {
+            this.records.get(key).addAll(records);
+        } else {
+            List<String[]> list = new LinkedList<>();
+            list.addAll(records);
+            this.records.put(key,list);
+        }
+    }
+
+    private byte[] serializeRouter() {
+        Serialization serialization = SerializationExtension.get(this.context().system());
+        Serializer serializer = serialization.findSerializerFor(Md5HashRouter.class);
+
+        return serializer.toBinary(this.router);
+    }
+
+    private Md5HashRouter deserializeRouter(byte[] serializedRouter) {
+        Serialization serialization = SerializationExtension.get(this.context().system());
+        Serializer serializer = serialization.findSerializerFor(Md5HashRouter.class);
+
+        return  (Md5HashRouter) serializer.fromBinary(serializedRouter);
+    }
+
+    private String[] clean(String input) {
+        String[] lines = {};
+
+        if (!input.isEmpty()) {
+            String data = input
+                    .replaceAll("\"", "")
+                    .replaceAll("\'", "");
+            lines = data.split("\n");
+        }
+
+        return lines;
+    }
+
+    private List<String[]> extract(String[] lines) {
+        List<String[]> records = new LinkedList<>();
+
+        for (String line: lines) {
+            records.add(line.split(","));
+        }
+
+        return records;
     }
 
     private void repartition() {
-        this.log.info("Repartition");
+        this.log.info("Start repartitioning");
 
-        Iterator<Map.Entry<String,List<String[]>>> iterator = this.data.entrySet().iterator();
+        Iterator<Map.Entry<String,List<String[]>>> iterator = this.records.entrySet().iterator();
 
         while (iterator.hasNext()) {
             Map.Entry<String,List<String[]>> entry = iterator.next();
@@ -229,110 +317,16 @@ public class Worker extends AbstractActor {
     private void distributeDataToWorkers(Map<String, List<String[]>> parsedData) {
         for(String key: parsedData.keySet()) {
             ActorRef responsibleWorker = this.router.responsibleActor(key);
-            List<String[]> pd = parsedData.get(key);
+            List<String[]> records = parsedData.get(key);
 
             if(responsibleWorker.compareTo(this.self()) == 0) {
-
-                // todo: put in method
-                if(this.data.containsKey(key)) {
-                    this.data.get(key).addAll(pd);
-                } else {
-                    List<String[]> list = new LinkedList<String[]>();
-                    list.addAll(pd);
-                    this.data.put(key, list);
-                }
-
+                this.setRecords(key, records);
             } else {
                 byte [] serializedRouter = this.serializeRouter();
-                responsibleWorker.tell(new ParsedDataMessage(key, pd, serializedRouter), this.self());
+                responsibleWorker.tell(new ParsedDataMessage(key, records, serializedRouter), this.self());
             }
 
         }
-    }
-
-    private void handle(ParsedDataMessage parsedDataMessage) {
-        Md5HashRouter router = this.deserializeRouter(parsedDataMessage.serializedRouter);
-        int myRouterVersion = this.getRouterVersion();
-        int peerRouterVersion = router.getVersion();
-
-        String key = parsedDataMessage.key;
-
-        if(this.data.containsKey(key)) {
-            this.data.get(key).addAll(parsedDataMessage.data);
-        } else {
-            List<String[]> list = new LinkedList<String[]>();
-            list.addAll(parsedDataMessage.data);
-            this.data.put(key,list);
-        }
-
-        if(peerRouterVersion > myRouterVersion) {
-            this.setRouter(router, "ParsedDataMessage");
-            this.repartition();
-        }
-
-    }
-
-    private void handle(SimilarityMessage similarityMessage) {
-        this.log.info("number of data keys: {}", this.data.keySet().size());
-
-        StringComparator sComparator = new JaroWinklerComparator();
-        NumberComparator nComparator = new AbsComparator(similarityMessage.thresholdMin, similarityMessage.thresholdMax);
-        UniversalComparator comparator = new UniversalComparator(sComparator, nComparator);
-
-        DuplicateDetector duDetector= new SimpleDuplicateDetector(comparator, similarityMessage.similarityThreshold);
-
-        for (String key: data.keySet()) {
-            Set<Set<Integer>> duplicates = duDetector.findDuplicates(data.get(key));
-            if (!duplicates.isEmpty()) {
-                this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
-            }
-        }
-
-        this.sender().tell(new Master.WorkerFinishedMatchingMessage(), this.self());
-    }
-
-    private void handle(DFWWorkMessage dfwWorkMessage) {
-        DFWBlock block = dfwWorkMessage.block;
-        block.calculate();
-
-//        this.log.info("tell DFWWorkFinishedMessage");
-        this.sender().tell(new Master.DFWWorkFinishedMessage(block), this.self());
-    }
-
-    private void register(Member member) {
-        if (member.hasRole(ClusterMaster.MASTER_ROLE)) {
-            InfoObject infoObj = new InfoObject(this.self().toString());
-            this.getContext()
-                    .actorSelection(member.address() + "/user/" + Master.DEFAULT_NAME)
-                    .tell(new Master.RegisterMessage(infoObj), this.self());
-        }
-    }
-
-    private int getRouterVersion() {
-        return this.router != null ? this.router.getVersion() : 0;
-    }
-
-    private void setRouter(Md5HashRouter router, String source) {
-        if(this.router == null) {
-            this.log.info("Set router to version {} from {}", router.getVersion(), source);
-        } else {
-            this.log.info("Set router from version {} to {} from {}", this.router.getVersion(), router.getVersion(), source);
-        }
-        this.router = router;
-    }
-
-    private byte[] serializeRouter() {
-        Serialization serialization = SerializationExtension.get(this.context().system());
-        Serializer serializer = serialization.findSerializerFor(Md5HashRouter.class);
-
-        return serializer.toBinary(this.router);
-    }
-
-    private Md5HashRouter deserializeRouter(byte[] serializedRouter) {
-        Serialization serialization = SerializationExtension.get(this.context().system());
-        Serializer serializer = serialization.findSerializerFor(Md5HashRouter.class);
-
-        return  (Md5HashRouter) serializer.fromBinary(serializedRouter);
     }
 
 }

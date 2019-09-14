@@ -53,7 +53,7 @@ public class ClusterApp {
     }
 
     static class Command {
-        @Parameter(names = {"-c", "--config"}, description = "path to the config file", required=true)
+        @Parameter(names = {"-c", "--config"}, description = "path to the config file", required = true)
         String configPath;
     }
 

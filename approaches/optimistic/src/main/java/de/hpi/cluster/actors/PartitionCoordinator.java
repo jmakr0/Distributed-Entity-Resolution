@@ -16,38 +16,33 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 public class PartitionCoordinator extends AbstractActor {
 
-    public static final String DEFAULT_NAME = "partitioning-coordinator";
-
-    public static Props props() {
-        return Props.create(PartitionCoordinator.class);
-    }
-
-    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
-
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
         private static final long serialVersionUID = 7354361868862425L;
         private ConfigMessage() {}
         protected Config config;
     }
 
-    @Data
-    @AllArgsConstructor
+    @Data @AllArgsConstructor
     public static class RegisterMessage implements Serializable {
         private static final long serialVersionUID = -737354361868862425L;
         private RegisterMessage() {}
         protected ActorRef worker;
     }
 
-    private ActorRef master;
+    public static final String DEFAULT_NAME = "partitioning-coordinator";
+    private final LoggingAdapter log = Logging.getLogger(this.context().system(), this);
+
     private Md5HashRouter router;
     private Serializer serializer;
+    private ActorRef master;
+
+    public static Props props() {
+        return Props.create(PartitionCoordinator.class);
+    }
 
     @Override
     public Receive createReceive() {
@@ -78,15 +73,11 @@ public class PartitionCoordinator extends AbstractActor {
 
         this.router.putOnHashring(worker);
 
-        this.log.info("Router version: " + this.router.getVersion());
+        this.log.info("Registered {} with router version {}", worker.path().name(), this.router.getVersion());
 
         byte[] serializedRouter = serializer.toBinary(this.router);
 
-        worker.tell(new Worker.RegisterAckMessage(
-                        new NameBlocking(),
-                        serializedRouter),
-                    this.master
-        );
+        worker.tell(new Worker.RegisterAckMessage(new NameBlocking(), serializedRouter), this.master);
     }
 
 }
