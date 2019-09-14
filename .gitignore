@@ -36,3 +36,6 @@ classes/
 
 # Tests
 tests/testing
+
+# Evaluation
+evaluation/deployment

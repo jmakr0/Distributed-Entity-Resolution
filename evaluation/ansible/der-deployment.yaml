@@ -1,0 +1,18 @@
+---
+- hosts: '{{ target }}'
+  gather_facts: false
+  remote_user: student
+  vars:
+    - src_path: "../deployment/"
+    - deployment_path: "/home/student/DER"
+  tasks:
+
+  - name: ensure deployment path exists
+    file:
+      path: "{{ deployment_path }}"
+      state: directory
+
+  - name: deploy files to server
+    copy: 
+      src: "{{ src_path }}" 
+      dest: "{{ deployment_path }}"
