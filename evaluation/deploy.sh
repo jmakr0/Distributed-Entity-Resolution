@@ -2,14 +2,14 @@
 
 JAR_NAME="AMakkaN-1.0.jar"
 
-# remove test data
+# create deployment folder if not exist
 if ! [[ -d deployment/ ]]
 then
- mkdir deployment/
+  mkdir deployment/
 fi
 
 cd ../approaches
-./build.sh --optimistic
+./build.sh --shared --optimistic
 cd -
 
 cp ../approaches/optimistic/target/${JAR_NAME} deployment/
