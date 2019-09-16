@@ -26,7 +26,7 @@ mvn_build() {
 }
 
 shared_build() {
-    echo "build dependency ${1}/${2}"
+    echo "build dependency ${1}${2}"
     local dir=$1
     local script=$2
 
