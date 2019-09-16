@@ -43,7 +43,7 @@ public class EntityResolution {
         int[][] duplicateMatrix = MatrixConverter.duplicateSetToMatrix(duplicates);
         int[][] transitiveClosureMatrix = FloydWarshall.apply(duplicateMatrix);
 
-        Set<Set<Integer>> transitiveClosure = MatrixConverter.fromTransitiveClosure(transitiveClosureMatrix);
+        Set<Set<Integer>> transitiveClosure = MatrixConverter.formTransitiveClosure(transitiveClosureMatrix);
 
         Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(RESTAURANT_DATA_GOLD);
         GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();

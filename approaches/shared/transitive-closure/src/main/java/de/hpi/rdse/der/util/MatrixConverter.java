@@ -69,15 +69,15 @@ public class MatrixConverter {
         return result;
     }
 
-    public static Set<Set<Integer>> fromTransitiveClosure(int[][] matrix) {
+    public static Set<Set<Integer>> formTransitiveClosure(int[][] matrix) {
 
         boolean[][] boolMatrix = toBoolMatrix(matrix);
 
-        return fromTransitiveClosure(boolMatrix);
+        return formTransitiveClosure(boolMatrix);
 
     }
 
-    public static Set<Set<Integer>> fromTransitiveClosure(boolean[][] matrix) {
+    public static Set<Set<Integer>> formTransitiveClosure(boolean[][] matrix) {
         Set<Set<Integer>> transitiveClosure = new HashSet<>();
 
         int maxID = matrix.length - 1;

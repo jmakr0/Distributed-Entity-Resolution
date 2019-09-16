@@ -38,7 +38,7 @@ public class MatrixConverterTest {
         int[][] duplicateMatrix = MatrixConverter.duplicateSetToMatrix(this.duplicates);
         int[][] transitiveClosureMatrix = FloydWarshall.apply(duplicateMatrix);
 
-        Set<Set<Integer>> result = MatrixConverter.fromTransitiveClosure(transitiveClosureMatrix);
+        Set<Set<Integer>> result = MatrixConverter.formTransitiveClosure(transitiveClosureMatrix);
 
         Set<Set<Integer>> expected = new HashSet<>();
 

@@ -150,7 +150,7 @@ public class TCMaster extends AbstractActor {
 
         int[][] matrix = this.dfw.getMatrix();
 
-        Set<Set<Integer>> tk = MatrixConverter.fromTransitiveClosure(matrix);
+        Set<Set<Integer>> tk = MatrixConverter.formTransitiveClosure(matrix);
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }
