@@ -88,7 +88,7 @@ public class MatrixConverter {
         return new CompressedMatrix(matrix, reverseLookup);
     }
 
-    public Set<Set<Integer>> translateWithCompressionLookup(Set<Set<Integer>> duplicates, Map<Integer, Integer> lookup) {
+    public static Set<Set<Integer>> translateWithCompressionLookup(Set<Set<Integer>> duplicates, Map<Integer, Integer> lookup) {
         Set<Set<Integer>> result = new HashSet<>();
 
         for (Set<Integer> duplicatePair: duplicates) {

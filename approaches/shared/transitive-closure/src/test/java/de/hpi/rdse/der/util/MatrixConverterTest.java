@@ -5,7 +5,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class MatrixConverterTest {
@@ -118,12 +120,60 @@ public class MatrixConverterTest {
 
         int[][] result = MatrixConverter.duplicateSetToMatrix(duplicates);
 
-        for (int i = 0; i < result.length; i++) {
-            for (int j = 0; j < result.length; j++) {
-                Assert.assertTrue(result[i][j] == expected[i][j]);
-            }
-        }
+        Assert.assertTrue(Arrays.deepEquals(expected,result));
+    }
 
+    @Test
+    public void testMatrixDecompression() {
+
+        CompressedMatrix compressed = MatrixConverter.duplicateSetToCompressedMatrix(this.duplicates);
+
+        Map<Integer, Integer> lookupTable = compressed.getCompressionLookup();
+        int[][] compressedMatrix = compressed.getMatrix();
+
+        Set<Set<Integer>> compressedDuplicates = new HashSet<>();
+
+        Set<Integer> d1 = new HashSet<Integer>();
+        d1.add(0);
+        d1.add(1);
+
+        Set<Integer> d2 = new HashSet<Integer>();
+        d2.add(1);
+        d2.add(2);
+
+        Set<Integer> d3 = new HashSet<Integer>();
+        d3.add(4);
+        d3.add(5);
+
+        compressedDuplicates.add(d1);
+        compressedDuplicates.add(d2);
+        compressedDuplicates.add(d3);
+
+        MatrixConverter.translateWithCompressionLookup(compressedDuplicates, lookupTable);
+    }
+
+    @Test
+    public void testMatrixCompression() {
+
+        CompressedMatrix compressed = MatrixConverter.duplicateSetToCompressedMatrix(this.duplicates);
+
+        int[][] compressedMatrix = compressed.getMatrix();
+
+        int [][] expected = new int[5][5];
+
+        int [] line0 = {0,1,Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE};
+        int [] line1 = {1,0,1,Integer.MAX_VALUE,Integer.MAX_VALUE};
+        int [] line2 = {Integer.MAX_VALUE,1,0,Integer.MAX_VALUE,Integer.MAX_VALUE};
+        int [] line3 = {Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,0,1};
+        int [] line4 = {Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,1,0};
+
+        expected[0] = line0;
+        expected[1] = line1;
+        expected[2] = line2;
+        expected[3] = line3;
+        expected[4] = line4;
+
+        Assert.assertTrue(Arrays.deepEquals(expected, compressedMatrix));
     }
 
 
