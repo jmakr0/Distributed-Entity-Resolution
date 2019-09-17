@@ -59,7 +59,6 @@ public class MatrixConverter {
 
         int maxID = ids.size();
 
-        // we need length maxID + 1 (e.g. maxID = 3 -> need index 0,1,2, and 3)
         int [][] matrix = new int[maxID][maxID];
 
         // init matrix with infinity (using int max)
