@@ -8,6 +8,7 @@ import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.rdse.der.dfw.DFW;
 import de.hpi.rdse.der.dfw.DFWBlock;
+import de.hpi.rdse.der.util.CompressedMatrix;
 import de.hpi.rdse.der.util.MappedMatrix;
 import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -55,7 +57,7 @@ public class TCMaster extends AbstractActor {
     private Config config;
     private boolean restart = false;
     private ActorRef master;
-    private MappedMatrix mappedMatrix;
+    private Map<Integer, Integer> compressionLookup;
 
     public static Props props() {
         return Props.create(TCMaster.class);
@@ -106,9 +108,11 @@ public class TCMaster extends AbstractActor {
         int blockSize = this.config.getInt("der.transitive-closure.block-size");
 
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
-        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
+//        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
+        CompressedMatrix compressed = MatrixConverter.duplicateSetToCompressedMatrix(duplicates);
+        this.compressionLookup = compressed.getCompressionLookup();
 
-        this.dfw = new DFW(matrix, blockSize);
+        this.dfw = new DFW(compressed.getMatrix(), blockSize);
         this.idleWorkers.addAll(calculateMessage.idleWorkers);
         this.restart = false;
 
@@ -153,6 +157,7 @@ public class TCMaster extends AbstractActor {
         int[][] matrix = this.dfw.getMatrix();
 
         Set<Set<Integer>> tk = MatrixConverter.formTransitiveClosure(matrix);
+        tk = MatrixConverter.translateWithCompressionLookup(tk, this.compressionLookup);
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }

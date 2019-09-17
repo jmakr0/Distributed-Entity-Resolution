@@ -92,11 +92,11 @@ public class MatrixConverter {
         Set<Set<Integer>> result = new HashSet<>();
 
         for (Set<Integer> duplicatePair: duplicates) {
+            Set<Integer> translated = new HashSet<>();
             for (Integer compressionID: duplicatePair) {
-                Set<Integer> translated = new HashSet<>();
                 translated.add(lookup.get(compressionID));
-                result.add(translated);
             }
+            result.add(translated);
         }
 
         return result;

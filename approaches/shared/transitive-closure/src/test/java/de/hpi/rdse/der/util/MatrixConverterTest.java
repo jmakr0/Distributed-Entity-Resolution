@@ -142,14 +142,16 @@ public class MatrixConverterTest {
         d2.add(2);
 
         Set<Integer> d3 = new HashSet<Integer>();
+        d3.add(3);
         d3.add(4);
-        d3.add(5);
 
         compressedDuplicates.add(d1);
         compressedDuplicates.add(d2);
         compressedDuplicates.add(d3);
 
-        MatrixConverter.translateWithCompressionLookup(compressedDuplicates, lookupTable);
+        Set<Set<Integer>> result = MatrixConverter.translateWithCompressionLookup(compressedDuplicates, lookupTable);
+
+        Assert.assertEquals(this.duplicates, result);
     }
 
     @Test
