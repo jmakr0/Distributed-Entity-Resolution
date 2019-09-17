@@ -81,9 +81,9 @@ public class CSVService {
                             allDataRead = true;
                             break;
                         }
+                        this.id++;
                     }
                     queue.add(sb.toString());
-                    this.id++;
                 }
             }
 

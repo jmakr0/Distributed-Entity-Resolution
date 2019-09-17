@@ -106,10 +106,9 @@ public class TCMaster extends AbstractActor {
         int blockSize = this.config.getInt("der.transitive-closure.block-size");
 
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
-//        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
-        this.mappedMatrix = MatrixConverter.duplicateSetToMappedMatrix(duplicates);
+        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
 
-        this.dfw = new DFW(mappedMatrix.getMatrix(), blockSize);
+        this.dfw = new DFW(matrix, blockSize);
         this.idleWorkers.addAll(calculateMessage.idleWorkers);
         this.restart = false;
 
@@ -153,16 +152,7 @@ public class TCMaster extends AbstractActor {
 
         int[][] matrix = this.dfw.getMatrix();
 
-        // todo write method formTransitiveClosure (for mapped matrix)
         Set<Set<Integer>> tk = MatrixConverter.formTransitiveClosure(matrix);
-
-        // translate the mapped ids back to the original ones
-        for (Set<Integer> duplicateSet: tk) {
-            for (Integer id: duplicateSet) {
-                duplicateSet.remove(id);
-                duplicateSet.add(this.mappedMatrix.getIdForMappedId(id));
-            }
-        }
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }

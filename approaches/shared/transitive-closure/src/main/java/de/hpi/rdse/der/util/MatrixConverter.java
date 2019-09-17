@@ -14,7 +14,7 @@ public class MatrixConverter {
 
         // init matrix with infinity (using int max)
         // because the matrix is quadratic we can simply use matrix.length for both loops
-        fillMatrix(matrix.length, matrix);
+        fillMatrix(matrix);
 
         // fill matrix
         for (Set<Integer> duplicatePair: duplicates) {
