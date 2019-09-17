@@ -8,6 +8,7 @@ import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
 import de.hpi.rdse.der.dfw.DFW;
 import de.hpi.rdse.der.dfw.DFWBlock;
+import de.hpi.rdse.der.util.MappedMatrix;
 import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -54,6 +55,7 @@ public class TCMaster extends AbstractActor {
     private Config config;
     private boolean restart = false;
     private ActorRef master;
+    private MappedMatrix mappedMatrix;
 
     public static Props props() {
         return Props.create(TCMaster.class);
@@ -104,9 +106,10 @@ public class TCMaster extends AbstractActor {
         int blockSize = this.config.getInt("der.transitive-closure.block-size");
 
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
-        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
+//        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
+        this.mappedMatrix = MatrixConverter.duplicateSetToMappedMatrix(duplicates);
 
-        this.dfw = new DFW(matrix, blockSize);
+        this.dfw = new DFW(mappedMatrix.getMatrix(), blockSize);
         this.idleWorkers.addAll(calculateMessage.idleWorkers);
         this.restart = false;
 
@@ -150,7 +153,16 @@ public class TCMaster extends AbstractActor {
 
         int[][] matrix = this.dfw.getMatrix();
 
+        // todo write method formTransitiveClosure (for mapped matrix)
         Set<Set<Integer>> tk = MatrixConverter.formTransitiveClosure(matrix);
+
+        // translate the mapped ids back to the original ones
+        for (Set<Integer> duplicateSet: tk) {
+            for (Integer id: duplicateSet) {
+                duplicateSet.remove(id);
+                duplicateSet.add(this.mappedMatrix.getIdForMappedId(id));
+            }
+        }
 
         this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }

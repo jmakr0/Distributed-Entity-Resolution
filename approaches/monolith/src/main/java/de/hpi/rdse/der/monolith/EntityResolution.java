@@ -32,7 +32,7 @@ public class EntityResolution {
 
     private static void findDuplicatesForRestaurantDataset() {
         // read data
-        List<String[]> recordsRestaurant = CSVService.readDataset(RESTAURANT_DATA_PATH, ",", false);
+        List<String[]> recordsRestaurant = CSVService.readDataset(RESTAURANT_DATA_PATH, ",", true);
 
         // blocking
         Map<String,List<String[]>> groupedData = groupDataByPrefixOfName(recordsRestaurant);
@@ -50,7 +50,7 @@ public class EntityResolution {
         System.out.println("number of duplicates: " + duplicates.size());
         System.out.println(duplicates);
         evaluator.evaluate(duplicates, goldStandard);
-        System.out.println("number of groups in TC: " + transitiveClosure.size());
+        System.out.println("number of duplicates after TC: " + transitiveClosure.size());
         System.out.println(transitiveClosure);
         evaluator.evaluate(transitiveClosure, goldStandard);
     }

@@ -13,6 +13,7 @@ public class CSVService {
     private int maxQueuSize;
     private Set<Integer> queueSizes;
     private CSVReader csvReader;
+    private long id;
 
     public CSVService(String dataFile, boolean hasHeader, char separator, int minBlockSize, int maxQueueSize) {
         this.allDataRead = false;
@@ -25,6 +26,8 @@ public class CSVService {
         this.queueSizes.add(minBlockSize);
 
         this.csvReader = CSVReaderFactory.createCSVReader(dataFile, separator);
+
+        this.id = 1;
 
         if (hasHeader) {
             skipHeader();
@@ -70,6 +73,8 @@ public class CSVService {
                     for (int i = 0; i < numberOfLines; i++) {
                         String[] tmpRecord = this.csvReader.readNext();
                         if (tmpRecord != null) {
+                            sb.append(this.id);
+                            sb.append(",");
                             sb.append(tmpRecord[0]);
                             sb.append("\n");
                         } else {
@@ -78,6 +83,7 @@ public class CSVService {
                         }
                     }
                     queue.add(sb.toString());
+                    this.id++;
                 }
             }
 

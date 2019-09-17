@@ -14,16 +14,7 @@ public class MatrixConverter {
 
         // init matrix with infinity (using int max)
         // because the matrix is quadratic we can simply use matrix.length for both loops
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix.length; j++) {
-                if (i == j) {
-                    // from position node to itself the distance is 0
-                    matrix[i][j] = 0;
-                } else {
-                    matrix[i][j] = Integer.MAX_VALUE;
-                }
-            }
-        }
+        fillMatrix(matrix.length, matrix);
 
         // fill matrix
         for (Set<Integer> duplicatePair: duplicates) {
@@ -43,6 +34,52 @@ public class MatrixConverter {
 
         return matrix;
 
+    }
+
+    public static MappedMatrix duplicateSetToMappedMatrix(Set<Set<Integer>> duplicates) {
+
+        int dimension = duplicates.size();
+
+        int [][] matrix = new int[dimension][dimension];
+        fillMatrix(dimension, matrix);
+
+        MappedMatrix mappedMatrix = new MappedMatrix(matrix);
+
+        // fill matrix
+        for (Set<Integer> duplicatePair: duplicates) {
+            // we know that every duplicate Set contains exactly two ints
+            assert(duplicatePair.size() == 2);
+
+            // extract record IDs from set
+            int[] duplicateRecords = intSetToArray(duplicatePair);
+            int elem1 = duplicateRecords[0];
+            int elem2 = duplicateRecords[1];
+
+            // TODO put this logic in Mapped Matrix
+            int mappedID1 = mappedMatrix.getMappedIndexForId(elem1);
+            int mappedID2 = mappedMatrix.getMappedIndexForId(elem2);
+
+            // because duplicate relation is symmetric
+            mappedMatrix.setValue(mappedID1, mappedID2, 1);
+            mappedMatrix.setValue(mappedID2, mappedID1, 1);
+        }
+
+        return mappedMatrix;
+
+    }
+
+    private static void fillMatrix(int dimension, int[][] matrix) {
+        // init matrix with infinity (using int max)
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                if (i == j) {
+                    // from position node to itself the distance is 0
+                    matrix[i][j] = 0;
+                } else {
+                    matrix[i][j] = Integer.MAX_VALUE;
+                }
+            }
+        }
     }
 
     private static int getMaxNumber(Set<Set<Integer>> duplicates) {
