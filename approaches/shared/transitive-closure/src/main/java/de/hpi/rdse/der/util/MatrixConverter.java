@@ -14,16 +14,7 @@ public class MatrixConverter {
 
         // init matrix with infinity (using int max)
         // because the matrix is quadratic we can simply use matrix.length for both loops
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix.length; j++) {
-                if (i == j) {
-                    // from position node to itself the distance is 0
-                    matrix[i][j] = 0;
-                } else {
-                    matrix[i][j] = Integer.MAX_VALUE;
-                }
-            }
-        }
+        fillMatrix(matrix);
 
         // fill matrix
         for (Set<Integer> duplicatePair: duplicates) {
@@ -43,6 +34,85 @@ public class MatrixConverter {
 
         return matrix;
 
+    }
+
+    public static CompressedMatrix duplicateSetToCompressedMatrix(Set<Set<Integer>> duplicates) {
+        Set<Integer> ids = new HashSet();
+        // actual id -> mappedID
+        Map<Integer,Integer> compressionLookup = new HashMap<>();
+        // mappedID -> actual id
+        Map<Integer,Integer> reverseLookup = new HashMap<>();
+
+
+        // adding all original ids to set
+        for (Set<Integer>  duplicateTuple: duplicates) {
+            ids.addAll(duplicateTuple);
+        }
+
+        // create lookup maps
+        int mappedID = 0;
+        for (Integer actualID: ids) {
+            compressionLookup.put(actualID, mappedID);
+            reverseLookup.put(mappedID, actualID);
+            mappedID++;
+        }
+
+        int maxID = ids.size();
+
+        int [][] matrix = new int[maxID][maxID];
+
+        // init matrix with infinity (using int max)
+        // because the matrix is quadratic we can simply use matrix.length for both loops
+        fillMatrix(matrix);
+
+        // fill matrix
+        for (Set<Integer> duplicatePair: duplicates) {
+            // we know that every duplicate Set contains exactly two ints
+            assert(duplicatePair.size() == 2);
+
+            // extract record IDs from set
+            int[] duplicateRecords = intSetToArray(duplicatePair);
+
+            int actualID1 = duplicateRecords[0];
+            int actualID2 = duplicateRecords[1];
+
+            int mappedID1 = compressionLookup.get(actualID1);
+            int mappedID2 = compressionLookup.get(actualID2);
+
+            matrix[mappedID1][mappedID2] = 1;
+            matrix[mappedID2][mappedID1] = 1;
+
+        }
+
+        return new CompressedMatrix(matrix, reverseLookup);
+    }
+
+    public static Set<Set<Integer>> translateWithCompressionLookup(Set<Set<Integer>> duplicates, Map<Integer, Integer> lookup) {
+        Set<Set<Integer>> result = new HashSet<>();
+
+        for (Set<Integer> duplicatePair: duplicates) {
+            Set<Integer> translated = new HashSet<>();
+            for (Integer compressionID: duplicatePair) {
+                translated.add(lookup.get(compressionID));
+            }
+            result.add(translated);
+        }
+
+        return result;
+    }
+
+    private static void fillMatrix(int[][] matrix) {
+        // init matrix with infinity (using int max)
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix.length; j++) {
+                if (i == j) {
+                    // from position node to itself the distance is 0
+                    matrix[i][j] = 0;
+                } else {
+                    matrix[i][j] = Integer.MAX_VALUE;
+                }
+            }
+        }
     }
 
     private static int getMaxNumber(Set<Set<Integer>> duplicates) {
@@ -69,15 +139,15 @@ public class MatrixConverter {
         return result;
     }
 
-    public static Set<Set<Integer>> fromTransitiveClosure(int[][] matrix) {
+    public static Set<Set<Integer>> formTransitiveClosure(int[][] matrix) {
 
         boolean[][] boolMatrix = toBoolMatrix(matrix);
 
-        return fromTransitiveClosure(boolMatrix);
+        return formTransitiveClosure(boolMatrix);
 
     }
 
-    public static Set<Set<Integer>> fromTransitiveClosure(boolean[][] matrix) {
+    public static Set<Set<Integer>> formTransitiveClosure(boolean[][] matrix) {
         Set<Set<Integer>> transitiveClosure = new HashSet<>();
 
         int maxID = matrix.length - 1;

@@ -32,7 +32,7 @@ public class EntityResolution {
 
     private static void findDuplicatesForRestaurantDataset() {
         // read data
-        List<String[]> recordsRestaurant = CSVService.readDataset(RESTAURANT_DATA_PATH, ",", false);
+        List<String[]> recordsRestaurant = CSVService.readDataset(RESTAURANT_DATA_PATH, ",", true);
 
         // blocking
         Map<String,List<String[]>> groupedData = groupDataByPrefixOfName(recordsRestaurant);
@@ -43,14 +43,14 @@ public class EntityResolution {
         int[][] duplicateMatrix = MatrixConverter.duplicateSetToMatrix(duplicates);
         int[][] transitiveClosureMatrix = FloydWarshall.apply(duplicateMatrix);
 
-        Set<Set<Integer>> transitiveClosure = MatrixConverter.fromTransitiveClosure(transitiveClosureMatrix);
+        Set<Set<Integer>> transitiveClosure = MatrixConverter.formTransitiveClosure(transitiveClosureMatrix);
 
         Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(RESTAURANT_DATA_GOLD);
         GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
         System.out.println("number of duplicates: " + duplicates.size());
         System.out.println(duplicates);
         evaluator.evaluate(duplicates, goldStandard);
-        System.out.println("number of groups in TC: " + transitiveClosure.size());
+        System.out.println("number of duplicates after TC: " + transitiveClosure.size());
         System.out.println(transitiveClosure);
         evaluator.evaluate(transitiveClosure, goldStandard);
     }
