@@ -36,14 +36,35 @@ public class MatrixConverter {
 
     }
 
-    public static MappedMatrix duplicateSetToMappedMatrix(Set<Set<Integer>> duplicates) {
+    public static CompressedMatrix duplicateSetToCompressedMatrix(Set<Set<Integer>> duplicates) {
+        Set<Integer> ids = new HashSet();
+        // actual id -> mappedID
+        Map<Integer,Integer> compressionLookup = new HashMap<>();
+        // mappedID -> actual id
+        Map<Integer,Integer> reverseLookup = new HashMap<>();
 
-        int dimension = duplicates.size();
 
-        int [][] matrix = new int[dimension][dimension];
-        fillMatrix(dimension, matrix);
+        // adding all original ids to set
+        for (Set<Integer>  duplicateTuple: duplicates) {
+            ids.addAll(duplicateTuple);
+        }
 
-        MappedMatrix mappedMatrix = new MappedMatrix(matrix);
+        // create lookup maps
+        int mappedID = 0;
+        for (Integer actualID: ids) {
+            compressionLookup.put(actualID, mappedID);
+            reverseLookup.put(mappedID, actualID);
+            mappedID++;
+        }
+
+        int maxID = ids.size();
+
+        // we need length maxID + 1 (e.g. maxID = 3 -> need index 0,1,2, and 3)
+        int [][] matrix = new int[maxID][maxID];
+
+        // init matrix with infinity (using int max)
+        // because the matrix is quadratic we can simply use matrix.length for both loops
+        fillMatrix(matrix);
 
         // fill matrix
         for (Set<Integer> duplicatePair: duplicates) {
@@ -52,26 +73,73 @@ public class MatrixConverter {
 
             // extract record IDs from set
             int[] duplicateRecords = intSetToArray(duplicatePair);
-            int elem1 = duplicateRecords[0];
-            int elem2 = duplicateRecords[1];
 
-            // TODO put this logic in Mapped Matrix
-            int mappedID1 = mappedMatrix.getMappedIndexForId(elem1);
-            int mappedID2 = mappedMatrix.getMappedIndexForId(elem2);
+            int actualID1 = duplicateRecords[0];
+            int actualID2 = duplicateRecords[1];
 
-            // because duplicate relation is symmetric
-            mappedMatrix.setValue(mappedID1, mappedID2, 1);
-            mappedMatrix.setValue(mappedID2, mappedID1, 1);
+            int mappedID1 = compressionLookup.get(actualID1);
+            int mappedID2 = compressionLookup.get(actualID2);
+
+            matrix[mappedID1][mappedID2] = 1;
+            matrix[mappedID2][mappedID1] = 1;
+
         }
 
-        return mappedMatrix;
-
+        return new CompressedMatrix(matrix, reverseLookup);
     }
 
-    private static void fillMatrix(int dimension, int[][] matrix) {
+    public Set<Set<Integer>> translateWithCompressionLookup(Set<Set<Integer>> duplicates, Map<Integer, Integer> lookup) {
+        Set<Set<Integer>> result = new HashSet<>();
+
+        for (Set<Integer> duplicatePair: duplicates) {
+            for (Integer compressionID: duplicatePair) {
+                Set<Integer> translated = new HashSet<>();
+                translated.add(lookup.get(compressionID));
+                result.add(translated);
+            }
+        }
+
+        return result;
+    }
+
+
+//
+//    public static MappedMatrix duplicateSetToMappedMatrix(Set<Set<Integer>> duplicates) {
+//
+//        int dimension = duplicates.size();
+//
+//        int [][] matrix = new int[dimension][dimension];
+//        fillMatrix(dimension, matrix);
+//
+//        MappedMatrix mappedMatrix = new MappedMatrix(matrix);
+//
+//        // fill matrix
+//        for (Set<Integer> duplicatePair: duplicates) {
+//            // we know that every duplicate Set contains exactly two ints
+//            assert(duplicatePair.size() == 2);
+//
+//            // extract record IDs from set
+//            int[] duplicateRecords = intSetToArray(duplicatePair);
+//            int elem1 = duplicateRecords[0];
+//            int elem2 = duplicateRecords[1];
+//
+//            // TODO put this logic in Mapped Matrix
+//            int mappedID1 = mappedMatrix.getMappedIndexForId(elem1);
+//            int mappedID2 = mappedMatrix.getMappedIndexForId(elem2);
+//
+//            // because duplicate relation is symmetric
+//            mappedMatrix.setValue(mappedID1, mappedID2, 1);
+//            mappedMatrix.setValue(mappedID2, mappedID1, 1);
+//        }
+//
+//        return mappedMatrix;
+//
+//    }
+
+    private static void fillMatrix(int[][] matrix) {
         // init matrix with infinity (using int max)
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix.length; j++) {
                 if (i == j) {
                     // from position node to itself the distance is 0
                     matrix[i][j] = 0;
