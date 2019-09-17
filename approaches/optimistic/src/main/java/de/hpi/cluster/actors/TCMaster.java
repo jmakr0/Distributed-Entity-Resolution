@@ -108,7 +108,6 @@ public class TCMaster extends AbstractActor {
         int blockSize = this.config.getInt("der.transitive-closure.block-size");
 
         Set<Set<Integer>> duplicates = calculateMessage.duplicates;
-//        int[][] matrix = MatrixConverter.duplicateSetToMatrix(duplicates);
         CompressedMatrix compressed = MatrixConverter.duplicateSetToCompressedMatrix(duplicates);
         this.compressionLookup = compressed.getCompressionLookup();
 
