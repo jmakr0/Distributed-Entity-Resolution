@@ -9,22 +9,6 @@ import java.util.*;
 
 public class CSVService {
 
-    public static void writeCSV(String dataFile, List<String[]> records) {
-        CSVWriter writer = null;
-        try {
-            writer = new CSVWriter(
-                    new OutputStreamWriter(new FileOutputStream(dataFile, true), StandardCharsets.UTF_8), ',', '\"', '\\');
-            for (String[] record : records) {
-                writer.writeNext(record);
-            }
-            writer.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static List<String[]> readDataset(String dataFile, String splitSymbol, boolean addIdField) {
         List<String[]> result = new ArrayList<String[]>();
         CSVReader reader = null;
@@ -46,7 +30,7 @@ public class CSVService {
             }
 
             String[] tmpRecord = null;
-            int idCounter = 0;
+            int idCounter = 1;
             int destCopyPosition = addIdField ? 1 : 0;
             while ((tmpRecord = reader.readNext()) != null) {
                 String line = tmpRecord[0].replaceAll("\"", "").replaceAll("\'", "");
@@ -75,37 +59,4 @@ public class CSVService {
         return result;
     }
 
-    public static Set<Set<Integer>> readRestaurantGoldStandard(String dataFile, String splitSymbol) {
-        Set<Set<Integer>> goldStandard = new HashSet<Set<Integer>>();
-
-        CSVReader reader = null;
-        try {
-            InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(dataFile), StandardCharsets.UTF_8);
-            reader = new CSVReader(inputStreamReader, '\n');
-
-            // first line is header
-            String[] tmpRecord = reader.readNext();
-            while ((tmpRecord = reader.readNext()) != null) {
-                String[] split = tmpRecord[0].split(splitSymbol);
-                Integer id1 = Integer.parseInt(removeWhitespaces(split[1]));
-                Integer id2 = Integer.parseInt(removeWhitespaces(split[2]));
-                HashSet<Integer> set = new HashSet<Integer>();
-                set.add(id1);
-                set.add(id2);
-                goldStandard.add(set);
-            }
-            reader.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return  goldStandard;
-    }
-
-    private static String removeWhitespaces(String s) {
-        return s.replaceAll("\\s+","");
-    }
 }
