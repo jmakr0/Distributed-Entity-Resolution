@@ -102,40 +102,6 @@ public class MatrixConverter {
         return result;
     }
 
-
-//
-//    public static MappedMatrix duplicateSetToMappedMatrix(Set<Set<Integer>> duplicates) {
-//
-//        int dimension = duplicates.size();
-//
-//        int [][] matrix = new int[dimension][dimension];
-//        fillMatrix(dimension, matrix);
-//
-//        MappedMatrix mappedMatrix = new MappedMatrix(matrix);
-//
-//        // fill matrix
-//        for (Set<Integer> duplicatePair: duplicates) {
-//            // we know that every duplicate Set contains exactly two ints
-//            assert(duplicatePair.size() == 2);
-//
-//            // extract record IDs from set
-//            int[] duplicateRecords = intSetToArray(duplicatePair);
-//            int elem1 = duplicateRecords[0];
-//            int elem2 = duplicateRecords[1];
-//
-//            // TODO put this logic in Mapped Matrix
-//            int mappedID1 = mappedMatrix.getMappedIndexForId(elem1);
-//            int mappedID2 = mappedMatrix.getMappedIndexForId(elem2);
-//
-//            // because duplicate relation is symmetric
-//            mappedMatrix.setValue(mappedID1, mappedID2, 1);
-//            mappedMatrix.setValue(mappedID2, mappedID1, 1);
-//        }
-//
-//        return mappedMatrix;
-//
-//    }
-
     private static void fillMatrix(int[][] matrix) {
         // init matrix with infinity (using int max)
         for (int i = 0; i < matrix.length; i++) {
