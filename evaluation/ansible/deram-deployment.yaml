@@ -4,9 +4,8 @@
   remote_user: student
   vars:
     - src_path: "../deployment/"
-    - deployment_path: "/home/student/DER"
+    - deployment_path: "/home/student/DERAM"
   tasks:
-
   - name: ensure deployment path exists
     file:
       path: "{{ deployment_path }}"
@@ -16,3 +15,9 @@
     copy: 
       src: "{{ src_path }}" 
       dest: "{{ deployment_path }}"
+
+  - name: make all scripts executable
+    file:
+      path: "{{ deployment_path }}"
+      mode: a+x
+      recurse: yes

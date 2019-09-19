@@ -12,3 +12,23 @@ odin05 ansible_host=172.16.64.65
 odin06 ansible_host=172.16.64.66
 odin07 ansible_host=172.16.64.67
 odin08 ansible_host=172.16.64.68
+
+[test-cluster]
+thor01
+thor02
+
+[thor-cluster]
+thor01
+thor02
+thor03
+thor04
+
+[odin-cluster]
+odin01
+odin02
+odin03
+odin04
+odin05
+odin06
+odin07
+odin08
