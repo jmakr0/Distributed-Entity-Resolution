@@ -138,6 +138,7 @@ public class Worker extends AbstractActor {
 
     private void handle(RegisterAckMessage registerAckMessage) {
         this.log.debug("Registered");
+        this.master = this.sender();
         this.blocking = registerAckMessage.blocking;
         Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
         this.setRouter(router, "registration");
@@ -158,7 +159,6 @@ public class Worker extends AbstractActor {
 
     private void handle(DataMessage dataMessage) {
         this.log.debug("Data message received");
-        this.master = this.sender();
 
         Map<String,List<String[]>> parsedData = new HashMap<>();
 
