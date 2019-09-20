@@ -6,7 +6,6 @@
     - deployment_path: "/home/student/DERAM"
     - jar: "AMakkaN-1.0.jar"
   tasks:
-
   - name: run worker for experiment {{ experiment_nr }}; repeat it {{ repeat }} times
     command:
       argv:
@@ -28,7 +27,6 @@
     - deployment_path: "/home/student/DERAM"
     - jar: "AMakkaN-1.0.jar"
   tasks:
-
   - name: run master for experiment {{ experiment_nr }}; repeat it {{ repeat }} times
     command:
       argv:
@@ -41,14 +39,36 @@
     args:
       chdir: "{{ deployment_path }}"
 
+  # - name: ensure local result directory exists
+  #   file:
+  #     path: "../results/experiment_{{ experiment_nr }}/master"
+  #     state: directory
+  #   delegate_to: localhost
+
+  # - name: get results from experiment {{ experiment_nr }}
+  #   synchronize:  
+  #     src: "{{ deployment_path }}/experiment_{{ experiment_nr }}/result/"
+  #     dest: "../results/experiment_{{ experiment_nr }}/master"
+  #     mode: pull
+
+- hosts: 127.0.0.1
+  gather_facts: false
+  connection: local
+  tasks:
   - name: ensure local result directory exists
     file:
       path: "../results/experiment_{{ experiment_nr }}"
       state: directory
-    delegate_to: localhost
+
+- hosts: "{{ worker }}:{{ master }}"
+  gather_facts: false
+  remote_user: student
+  vars:
+    - deployment_path: "/home/student/DERAM"
+  tasks:
 
   - name: get results from experiment {{ experiment_nr }}
     synchronize:  
       src: "{{ deployment_path }}/experiment_{{ experiment_nr }}/result/"
-      dest: "../results/experiment_{{ experiment_nr }}"
+      dest: "../results/experiment_{{ experiment_nr }}/"
       mode: pull

@@ -28,8 +28,16 @@ cd ${DIR}
 for i in $(seq ${repeat}); do
     echo "run experiment $experiment_nr $i / $repeat"
 
-    java -jar ${jar} ${role} -c evaluation.conf > result/${role}_${HOSTNAME}_${i}.log
-    sleep 1 # process is killed after 10sec anyway; +1sec to be sure
+    java -jar ${jar} ${role} -c evaluation.conf > result/${role}_${HOSTNAME}_${i}.log &
+
+    pid=$(pgrep -f "java -jar ${jar}")
+	while ! [[ -z ${pid} ]]; do
+		ps -p ${pid} -o %cpu --noheader >> result/${role}_${HOSTNAME}_${i}_CPU.log
+		ps -p ${pid} -o %mem --noheader >> result/${role}_${HOSTNAME}_${i}_MEM.log
+		sleep 1
+		pid=$(pgrep -f "java -jar ${jar}")
+	done
+
 done
 
 echo "done with experiment $experiment_nr"
