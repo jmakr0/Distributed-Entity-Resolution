@@ -17,12 +17,12 @@ sed '1d' ${CSV_PATH} > ${TMP_FILE}
 
 # Create file
 
-SIZE_MB=$(du -m ${NEW_CSV_PATH} | cut -f1)
+NEW_SIZE_BYTE=$(( ${NEW_SIZE_MB} * 1048576 ))
+SIZE_BYTE=$(($(wc -c < ${NEW_CSV_PATH})))
 
-until [[ ${SIZE_MB} -ge ${NEW_SIZE_MB} ]]; do
+until [[ ${SIZE_BYTE} -ge ${NEW_SIZE_BYTE} ]]; do
 	cat ${TMP_FILE} >> ${NEW_CSV_PATH}
-	SIZE_MB=$(du -m ${NEW_CSV_PATH} | cut -f1);
-	#echo "SIZE_MB: $SIZE_MB"
+	SIZE_BYTE=$(($(wc -c < ${NEW_CSV_PATH})))
 done
 
 rm ${TMP_FILE}
