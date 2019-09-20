@@ -179,6 +179,9 @@ public class Master extends AbstractActor {
     }
 
     private void handle(AllDataParsedMessage allDataParsedMessage) {
+        long time = System.currentTimeMillis();
+        this.log.info("DATA-READ: " + (time - this.startTime) + " ms");
+
         this.dataAvailable = false;
     }
 
@@ -212,6 +215,9 @@ public class Master extends AbstractActor {
     }
 
     private void transitiveClosure(Set<Set<Integer>> duplicates, Set<ActorRef> workers) {
+        long time = System.currentTimeMillis();
+        this.log.info("START-TC: " + (time - this.startTime) + " ms");
+
         tcMaster.tell(new TCMaster.CalculateMessage(duplicates, workers), this.self());
     }
 
@@ -222,8 +228,8 @@ public class Master extends AbstractActor {
     }
 
     private void handle(DFWDoneMessage dfwDoneMessage) {
-        long stopTime = System.currentTimeMillis();
-        this.log.info("Time: " + (stopTime - this.startTime) + " ms");
+        long time = System.currentTimeMillis();
+        this.log.info("DONE: " + (time - this.startTime) + " ms");
 
         Set<Set<Integer>> tk = dfwDoneMessage.transitiveClosure;
         logTransitiveClosure(tk);
