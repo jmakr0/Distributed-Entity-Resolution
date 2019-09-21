@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 from glob import glob
 
 
@@ -41,14 +42,16 @@ def extract_list(path):
     return log_values
 
 
-def extract():
-    experiment_paths = glob('../results/*')
+def extract(rootpath):
+    experiment_paths = glob(rootpath + '/*')
 
     log_results = {}
 
     for experiment in experiment_paths:
 
-        log_results[experiment] = {}
+        experiment_name = os.path.basename(experiment)
+
+        log_results[experiment_name] = {}
 
         nodes_paths = glob(experiment + '/*')
 
@@ -60,20 +63,20 @@ def extract():
             node = "node-count-" + tmp[i - 2]
             i_round = "round-" + tmp[i - 1]
 
-            if node not in log_results[experiment]:
-                log_results[experiment][node] = {}
+            if node not in log_results[experiment_name]:
+                log_results[experiment_name][node] = {}
 
-            if i_round not in log_results[experiment][node]:
-                log_results[experiment][node][i_round] = {}
-                log_results[experiment][node][i_round]["data-read"] = 0
-                log_results[experiment][node][i_round]["start-tc"] = 0
-                log_results[experiment][node][i_round]["finish"] = 0
-                log_results[experiment][node][i_round]["cpu-master"] = []
-                log_results[experiment][node][i_round]["cpu-worker"] = []
+            if i_round not in log_results[experiment_name][node]:
+                log_results[experiment_name][node][i_round] = {}
+                log_results[experiment_name][node][i_round]["data-read"] = 0
+                log_results[experiment_name][node][i_round]["start-tc"] = 0
+                log_results[experiment_name][node][i_round]["finish"] = 0
+                log_results[experiment_name][node][i_round]["cpu-master"] = []
+                log_results[experiment_name][node][i_round]["cpu-worker"] = []
 
             logs = glob(node_path + '/*')
 
-            entry = log_results[experiment][node][i_round]
+            entry = log_results[experiment_name][node][i_round]
 
             for log in logs:
 
