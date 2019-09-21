@@ -12,7 +12,7 @@
       path: "{{ src_path }}"
       dest: "{{ src_path }}deployment.tgz"
 
-- hosts: '{{ target }}'
+- hosts: "{{ target }}"
   gather_facts: false
   remote_user: student
   vars:

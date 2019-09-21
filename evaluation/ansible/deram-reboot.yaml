@@ -1,5 +1,5 @@
 ---
-- hosts: '{{ target }}'
+- hosts: "{{ target }}"
   gather_facts: false
   remote_user: sysadmin
   become: true

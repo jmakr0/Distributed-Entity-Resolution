@@ -13,9 +13,8 @@
         - "{{ experiment_nr }}"
         - "{{ jar }}"
         - "worker"
-        # - "{{ repeat }}"
         - "{{ master }}"
-    async: 10000
+    async: 1000
     poll: 0
     args:
       chdir: "{{ deployment_path }}"
@@ -34,7 +33,6 @@
         - "{{ experiment_nr }}"
         - "{{ jar }}"
         - "master"
-        # - "{{ repeat }}"
         - "{{ master }}"
     args:
       chdir: "{{ deployment_path }}"

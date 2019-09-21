@@ -1,15 +1,53 @@
 #!/usr/bin/env python
-import re
-from datetime import time
 from glob import glob
 
 experiment_paths = glob('results/*')
 
-result = {}
+log_results = {}
+
+
+def extract_master_log(path):
+    times = {}
+    indicator_data = "DATA-READ: "
+    indicator_tc = "START-TC: "
+    indicator_done = "DONE: "
+
+    f = open(log, "r")
+    log_string = f.read()
+
+    s_data = log_string.find(indicator_data) + len(indicator_data)
+    e_data = log_string.find(' ms', s_data)
+    s_tc = log_string.find(indicator_tc) + len(indicator_tc)
+    e_tc = log_string.find(' ms', s_tc)
+    s_done = log_string.find(indicator_done) + len(indicator_done)
+    e_done = log_string.find(' ms', s_done)
+
+    times["data-read"] = log_string[s_data:e_data]
+    times["start-tc"] = log_string[s_tc:e_tc]
+    times["finish"] = log_string[s_done:e_done]
+
+    return times
+
+
+# used for CPU logs
+def extract_list(path):
+    log_values = []
+
+    open_file = open(path, "r")
+    string = open_file.read()
+    lst = string.split('\n')
+
+    for value in lst:
+        value = value.strip()
+        if len(value) > 0:
+            log_values.append(value.strip())
+
+    return log_values
+
 
 for experiment in experiment_paths:
 
-    result[experiment] = {}
+    log_results[experiment] = {}
 
     nodes_paths = glob(experiment + '/*')
 
@@ -18,55 +56,42 @@ for experiment in experiment_paths:
         tmp = node_path.split('_')
         i = len(tmp)
 
-        node = tmp[i - 2]
-        i_round = tmp[i - 1]
+        node = "node-count-" + tmp[i - 2]
+        i_round = "round-" + tmp[i - 1]
 
-        if node not in result[experiment]:
-            result[experiment][node] = {}
-            result[experiment][node]["finish"] = []
-            result[experiment][node]["cpu-master"] = []
-            result[experiment][node]["cpu-worker"] = {}
+        if node not in log_results[experiment]:
+            log_results[experiment][node] = {}
 
-        if i_round not in result[experiment][node]["cpu-worker"]:
-            result[experiment][node]["cpu-worker"][i_round] = []
+        if i_round not in log_results[experiment][node]:
+            log_results[experiment][node][i_round] = {}
+            log_results[experiment][node][i_round]["data-read"] = 0
+            log_results[experiment][node][i_round]["start-tc"] = 0
+            log_results[experiment][node][i_round]["finish"] = 0
+            log_results[experiment][node][i_round]["cpu-master"] = []
+            log_results[experiment][node][i_round]["cpu-worker"] = []
 
         logs = glob(node_path + '/*')
 
+        entry = log_results[experiment][node][i_round]
+
         for log in logs:
 
-            # final times
+            # final times for data, tc, finish
             if log.find("master") != -1 and log.find("_.log") != -1:
-                indicator = "DONE: "
-                f = open(log, "r")
-                output = f.read()
+                master_log = extract_master_log(log)
 
-                s = output.find(indicator) + len(indicator)
-                e = output.find(' ms', s)
-
-                result[experiment][node]["finish"].append(output[s:e])
+                entry["data-read"] = master_log["data-read"]
+                entry["start-tc"] = master_log["start-tc"]
+                entry["finish"] = master_log["finish"]
 
             # cpu-master
             if log.find("master") != -1 and log.find("_CPU.log") != -1:
-                f = open(log, "r")
-                cpu_times = f.read()
-
-                cpu_times_list = cpu_times.split('\n')
-
-                for time in cpu_times_list:
-                    time = time.strip()
-                    if len(time) > 0:
-                        result[experiment][node]["cpu-master"].append(time.strip())
+                values = extract_list(log)
+                entry["cpu-master"] = values
 
             # cpu-worker
             if log.find("worker") != -1 and log.find("_CPU.log") != -1:
-                f = open(log, "r")
-                cpu_times = f.read()
+                values = extract_list(log)
+                entry["cpu-worker"].append(values)
 
-                cpu_times_list = cpu_times.split('\n')
-
-                for time in cpu_times_list:
-                    time = time.strip()
-                    if len(time) > 0:
-                        result[experiment][node]["cpu-worker"][i_round].append(time.strip())
-
-print result
+# print log_results
