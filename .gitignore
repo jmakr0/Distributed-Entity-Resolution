@@ -40,3 +40,9 @@ tests/testing
 # Evaluation
 evaluation/deployment
 evaluation/results
+
+evaluation/plot/bin/
+evaluation/plot/etc/
+evaluation/plot/lib/
+evaluation/plot/pyvenv.cfg
+evaluation/plot/share/
