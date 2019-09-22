@@ -14,7 +14,7 @@
         - "{{ jar }}"
         - "worker"
         - "{{ master }}"
-    async: 1000
+    async: 10000
     poll: 0
     args:
       chdir: "{{ deployment_path }}"

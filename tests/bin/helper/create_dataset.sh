@@ -17,7 +17,8 @@ sed '1d' ${CSV_PATH} > ${TMP_FILE}
 
 # Create file
 
-NEW_SIZE_BYTE=$(( ${NEW_SIZE_MB} * 1048576 ))
+NEW_SIZE_BYTE=$(echo ${NEW_SIZE_MB} \* 1048576 | bc -l)
+NEW_SIZE_BYTE=${NEW_SIZE_BYTE%.*} # convert to int
 SIZE_BYTE=$(($(wc -c < ${NEW_CSV_PATH})))
 
 until [[ ${SIZE_BYTE} -ge ${NEW_SIZE_BYTE} ]]; do

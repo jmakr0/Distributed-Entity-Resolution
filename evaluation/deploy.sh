@@ -8,14 +8,14 @@ then
   mkdir deployment/
 fi
 
-# Get JAR
-cd ../approaches
-./build.sh --shared --optimistic
-cd -
+# # Get JAR
+# cd ../approaches
+# ./build.sh --shared --optimistic
+# cd -
 
-cp ../approaches/optimistic/target/${JAR_NAME} deployment/
-cp -r ../data deployment/
-cp evaluation.conf deployment/
+# cp ../approaches/optimistic/target/${JAR_NAME} deployment/
+# cp -r ../data deployment/
+# cp evaluation.conf deployment/
 
 # Get data-script
 cp ../tests/bin/helper/create_dataset.sh deployment/

@@ -3,11 +3,11 @@
 experiment_nr=$1
 jar=$2
 role=$3
-# repeat=$4
-
 export MASTER_HOST=$4
-
 export DIR=experiment_${experiment_nr}
+
+# Kill experiment after X seconds
+timeout=900
 
 # Remove old experiment
 if [[ -d ${DIR} ]]
@@ -26,19 +26,22 @@ cp evaluation.conf ${DIR}
 
 cd ${DIR}
 
-# for i in $(seq ${repeat}); do
-#     echo "run experiment $experiment_nr $i / $repeat"
-
 java -jar ${jar} ${role} -c evaluation.conf > result/${role}_${HOSTNAME}_${i}.log &
 
 pid=$(pgrep -f "java -jar ${jar}")
-while ! [[ -z ${pid} ]]; do
+sec=0
+while ! [[ -z ${pid} ]] || [[ ${sec} -ge ${timeout} ]]; do
     ps -p ${pid} -o %cpu --noheader >> result/${role}_${HOSTNAME}_${i}_CPU.log
     ps -p ${pid} -o %mem --noheader >> result/${role}_${HOSTNAME}_${i}_MEM.log
     sleep 1
     pid=$(pgrep -f "java -jar ${jar}")
+    
+    sec=$((sec+1));
+    if [[ ${sec} -ge ${timeout} ]]
+    then
+        kill -9 ${pid}
+        mv result/${role}_${HOSTNAME}_${i}.log result/${role}_${HOSTNAME}_${i}_TIMEOUT.log
+    fi
 done
-
-# done
 
 echo "done with experiment $experiment_nr"
