@@ -143,7 +143,7 @@ public class Worker extends AbstractActor {
         Md5HashRouter router = this.deserializeRouter(registerAckMessage.serializedRouter);
         this.setRouter(router, "registration");
 
-        this.sender().tell(new Master.WorkRequestMessage(), this.self());
+        this.sender().tell(new MessageCoordinator.WorkRequestMessage(), this.self());
     }
 
     private void handle(RepartitionMessage repartitionMessage) {
@@ -154,7 +154,7 @@ public class Worker extends AbstractActor {
             this.repartition();
         }
 
-        this.sender().tell(new Master.WorkRequestMessage(), this.self());
+        this.sender().tell(new MessageCoordinator.WorkRequestMessage(), this.self());
     }
 
     private void handle(DataMessage dataMessage) {
@@ -181,12 +181,12 @@ public class Worker extends AbstractActor {
 
         this.log.debug("Records size in total: {}",this.records.keySet().size());
 
-        this.sender().tell(new Master.WorkRequestMessage(), this.self());
+        this.sender().tell(new MessageCoordinator.WorkRequestMessage(), this.self());
     }
 
     private void handle(ParsedDataMessage parsedDataMessage) {
         if (this.calculatingSimilarity) {
-            this.master.tell(new Master.WorkerGotParsedData(), this.self());
+            this.master.tell(new MessageCoordinator.WorkerGotParsedData(), this.self());
         }
 
         Md5HashRouter router = this.deserializeRouter(parsedDataMessage.serializedRouter);
@@ -213,26 +213,26 @@ public class Worker extends AbstractActor {
         for (String key: records.keySet()) {
             Set<Set<Integer>> duplicates = duDetector.findDuplicates(records.get(key));
             if (!duplicates.isEmpty()) {
-                this.sender().tell(new Master.DuplicateMessage(duplicates), this.self());
+                this.sender().tell(new MessageCoordinator.DuplicateMessage(duplicates), this.self());
             }
         }
 
-        this.sender().tell(new Master.WorkerFinishedMatchingMessage(), this.self());
+        this.sender().tell(new MessageCoordinator.WorkerFinishedMatchingMessage(), this.self());
     }
 
     private void handle(DFWWorkMessage dfwWorkMessage) {
         DFWBlock block = dfwWorkMessage.block;
         block.calculate();
 
-        this.sender().tell(new Master.DFWWorkFinishedMessage(block), this.self());
+        this.sender().tell(new MessageCoordinator.DFWWorkFinishedMessage(block), this.self());
     }
 
     private void register(Member member) {
         if (member.hasRole(ClusterMaster.MASTER_ROLE)) {
 
             this.getContext()
-                    .actorSelection(member.address() + "/user/" + Master.DEFAULT_NAME)
-                    .tell(new Master.RegisterMessage(), this.self());
+                    .actorSelection(member.address() + "/user/" + MessageCoordinator.DEFAULT_NAME)
+                    .tell(new MessageCoordinator.RegisterMessage(), this.self());
         }
     }
 

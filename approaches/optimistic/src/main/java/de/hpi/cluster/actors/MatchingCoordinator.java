@@ -116,7 +116,7 @@ public class MatchingCoordinator extends AbstractActor {
 
         if (busyWorkers.isEmpty()) {
             this.log.info("Matching phase completed; duplicates found: {}", this.duplicates.size());
-            this.master.tell(new Master.MatchingCompletedMessage(this.duplicates, this.idleWorkers), this.self());
+            this.master.tell(new MessageCoordinator.MatchingCompletedMessage(this.duplicates, this.idleWorkers), this.self());
         }
     }
 

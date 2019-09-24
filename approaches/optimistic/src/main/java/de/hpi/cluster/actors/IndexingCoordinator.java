@@ -81,8 +81,8 @@ public class IndexingCoordinator extends AbstractActor {
             assert data != null;
             worker.tell(new Worker.DataMessage(data), this.master);
         } else {
-            this.master.tell(new Master.AllDataParsedMessage(), this.self());
-            this.master.tell(new Master.WorkRequestMessage(), worker);
+            this.master.tell(new MessageCoordinator.AllDataParsedMessage(), this.self());
+            this.master.tell(new MessageCoordinator.WorkRequestMessage(), worker);
         }
 
     }

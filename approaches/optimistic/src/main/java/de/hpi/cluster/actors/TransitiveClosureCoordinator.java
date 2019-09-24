@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-public class TCMaster extends AbstractActor {
+public class TransitiveClosureCoordinator extends AbstractActor {
 
     @Data @AllArgsConstructor
     public static class ConfigMessage implements Serializable {
@@ -59,7 +59,7 @@ public class TCMaster extends AbstractActor {
     private Map<Integer, Integer> compressionLookup;
 
     public static Props props() {
-        return Props.create(TCMaster.class);
+        return Props.create(TransitiveClosureCoordinator.class);
     }
 
 
@@ -157,7 +157,7 @@ public class TCMaster extends AbstractActor {
         Set<Set<Integer>> tk = MatrixConverter.formTransitiveClosure(matrix);
         tk = MatrixConverter.translateWithCompressionLookup(tk, this.compressionLookup);
 
-        this.master.tell(new Master.DFWDoneMessage(tk, this.idleWorkers), this.sender());
+        this.master.tell(new MessageCoordinator.DFWDoneMessage(tk, this.idleWorkers), this.sender());
     }
 
 }

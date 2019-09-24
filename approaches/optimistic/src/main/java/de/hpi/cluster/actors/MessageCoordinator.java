@@ -4,7 +4,7 @@ import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.typesafe.config.Config;
-import de.hpi.cluster.actors.TCMaster.DispatchBlockMessage;
+import de.hpi.cluster.actors.TransitiveClosureCoordinator.DispatchBlockMessage;
 import de.hpi.rdse.der.data.GoldReader;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.evaluation.ConsoleOutputEvaluator;
@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-public class Master extends AbstractActor {
+public class MessageCoordinator extends AbstractActor {
 
     @Data @AllArgsConstructor @SuppressWarnings("unused")
     public static class ConfigMessage implements Serializable {
@@ -99,7 +99,7 @@ public class Master extends AbstractActor {
     private ActorRef indexingCoordinator;
 
     public static Props props() {
-        return Props.create(Master.class);
+        return Props.create(MessageCoordinator.class);
     }
 
     @Override
@@ -156,8 +156,8 @@ public class Master extends AbstractActor {
         this.matchingCoordinator = context().actorOf(MatchingCoordinator.props(), MatchingCoordinator.DEFAULT_NAME);
         this.matchingCoordinator.tell(new MatchingCoordinator.ConfigMessage(config), this.self());
 
-        this.tcMaster = context().actorOf(TCMaster.props(), TCMaster.DEFAULT_NAME);
-        this.tcMaster.tell(new TCMaster.ConfigMessage(config), this.self());
+        this.tcMaster = context().actorOf(TransitiveClosureCoordinator.props(), TransitiveClosureCoordinator.DEFAULT_NAME);
+        this.tcMaster.tell(new TransitiveClosureCoordinator.ConfigMessage(config), this.self());
     }
 
     private void handle(RegisterMessage registerMessage) {
@@ -203,7 +203,7 @@ public class Master extends AbstractActor {
         this.log.debug("{} has new records in similarity phase", worker.path().name());
 
         this.sendSimilarity(worker);
-        this.tcMaster.tell(new TCMaster.RestartMessage(), this.self());
+        this.tcMaster.tell(new TransitiveClosureCoordinator.RestartMessage(), this.self());
     }
 
     private void sendData(ActorRef worker) {
@@ -218,7 +218,7 @@ public class Master extends AbstractActor {
         long time = System.currentTimeMillis();
         this.log.info("START-TC: " + (time - this.startTime) + " ms");
 
-        tcMaster.tell(new TCMaster.CalculateMessage(duplicates, workers), this.self());
+        tcMaster.tell(new TransitiveClosureCoordinator.CalculateMessage(duplicates, workers), this.self());
     }
 
     private void handle(DFWWorkFinishedMessage dfwWorkFinishedMessage) {
