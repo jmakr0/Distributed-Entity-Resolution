@@ -9,7 +9,6 @@ import com.typesafe.config.Config;
 import de.hpi.rdse.der.dfw.DFW;
 import de.hpi.rdse.der.dfw.DFWBlock;
 import de.hpi.rdse.der.util.CompressedMatrix;
-import de.hpi.rdse.der.util.MappedMatrix;
 import de.hpi.rdse.der.util.MatrixConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;

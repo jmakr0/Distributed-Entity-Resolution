@@ -1,0 +1,37 @@
+---
+- hosts: 127.0.0.1
+  gather_facts: false
+  connection: local
+  vars:
+  - src_path: "../deployment/"
+  - deployment_path: "/home/student/DERAM"
+  tasks:
+
+  - name: compress deployment
+    archive:
+      path: "{{ src_path }}"
+      dest: "{{ src_path }}deployment.tgz"
+
+- hosts: "{{ target }}"
+  gather_facts: false
+  remote_user: student
+  vars:
+  - src_path: "../deployment/"
+  - deployment_path: "/home/student/DERAM"
+  tasks:
+
+  - name: ensure deployment path exists
+    file:
+      path: "{{ deployment_path }}"
+      state: directory
+
+  - name: deploy files to server
+    unarchive: 
+      src: "{{ src_path }}deployment.tgz"
+      dest: "{{ deployment_path }}"
+
+  - name: make all scripts executable
+    file:
+      path: "{{ deployment_path }}"
+      mode: a+x
+      recurse: yes
