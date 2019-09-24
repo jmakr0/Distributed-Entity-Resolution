@@ -9,6 +9,12 @@ import java.nio.charset.StandardCharsets;
 
 public class CSVReaderFactory {
 
+    /**
+     * A Method that generates a CSVService and returns it
+     * @param dataFile The path to the file that should be read by the CSVReader
+     * @param separator The separator that is used for the CSVReader
+     * @return A CSVReader that was initialized with the values that were given as parameters
+     */
     public static CSVReader createCSVReader(String dataFile, char separator) {
         CSVReader reader = null;
         InputStreamReader inputStreamReader = null;

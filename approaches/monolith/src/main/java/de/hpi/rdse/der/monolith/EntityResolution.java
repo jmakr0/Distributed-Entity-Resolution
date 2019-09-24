@@ -16,6 +16,12 @@ import de.hpi.rdse.der.util.MatrixConverter;
 
 import java.util.*;
 
+/**
+ * A Monolithic approach using the same libraries as our distributed approach.
+ * It is used to verify that our pipeline for entity resolution leads to proper results.
+ * I addition the results of a distributed execution can be compared against the results of this approach
+ * to see if the results are modified by distributing the algorithm
+ */
 public class EntityResolution {
     private static final String RESTAURANT_DATA_PATH = "../../data/restaurant.csv";
     private static final String RESTAURANT_DATA_GOLD = "../../data/restaurant_gold.csv";
