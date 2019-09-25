@@ -21,8 +21,8 @@ This directory contains all our code and setup of our experiments. The scripts i
 
 The ansible folder contains the following playbooks:
 
-* [deram-deployment.yaml](ansible/deram-deployment.yaml) - It compresses the deployment folder, copies and deploys the achieve to the nodes. 
-* [deram-experiments.yaml](ansible/deram-experiments.yaml) - First, it starts all workers asynchronously, waits till the master has completed, and pulls the results from the nodes.
+* [deram-deployment.yaml](ansible/deram-deployment.yaml) - It compresses the deployment folder, copies and deploys the achieve to the nodes 
+* [deram-experiments.yaml](ansible/deram-experiments.yaml) - First, it starts all workers asynchronously, waits till the master has completed, and pulls the results from the nodes
 * [deram-reboot.yaml](ansible/deram-reboot.yaml) - Just reboots the entire cluster
 
 ## Experiments
@@ -45,4 +45,4 @@ used to investigate the results of our experiments and finally, plot the figures
  
 * [cpu-usage.ipynb](plot/cpu-usage.ipynb) - Was used to investigate the CPU utilization within the single phases of our 
 algorithm and additionally investigates how the computing power of the master and the workers evolves in several different settings. 
-* [scaleout.ipynb](plot/scaleout.ipynb) - Was used to analyze how DERAM scales concerning a rising amount of computational power.  
+* [scaleout.ipynb](plot/scaleout.ipynb) - Was used to analyze how DERAM scales concerning a rising amount of computational power  
