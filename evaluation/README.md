@@ -3,9 +3,9 @@
 To increase repeatability, we automated our evaluation as much as possible. 
 This directory contains all our code and setup of our experiments. The scripts in the root directory have the following tasks:
 
-* [deploy.sh] - Builds the current DERAM project with its dependencies, sets up the `deployment/` folder with the all experiments, and finally, deploys it to the test cluster using ansible.
+* [deploy.sh](deploy.sh)- Builds the current DERAM project with its dependencies, sets up the `deployment/` folder with the all experiments, and finally, deploys it to the test cluster using ansible.
 
-* [experiments.sh] - Uses ansible to run an experiment with the determined setup. It has the following parameters:
+* [experiments.sh](experiments.sh) - Uses ansible to run an experiment with the determined setup. It has the following parameters:
   * `$1` - master node
   * `$2` - worker nodes
   * `$3` - experiment number
@@ -13,9 +13,9 @@ This directory contains all our code and setup of our experiments. The scripts i
   * `$5` - number of workers to start with
   * `$6` - max number of workers
   * `$7` - deployment password
-  * `Example: $./experiments odin01 all 4 5 1 7 PASSWORD`
+  * Example: `./experiments odin01 all 4 5 1 7 PASSWORD`
 
- * [reboot.sh] - Reboots the entire cluster
+ * [reboot.sh](reboot.sh) - Reboots the entire cluster
 
 ## Ansible
 
