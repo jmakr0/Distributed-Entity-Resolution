@@ -4,7 +4,7 @@
   remote_user: student
   vars:
     - deployment_path: "/home/student/DERAM"
-    - jar: "AMakkaN-1.0.jar"
+    - jar: "DERAM-1.0.jar"
   tasks:
   - name: run worker for experiment {{ experiment_nr }}
     command:
@@ -24,7 +24,7 @@
   remote_user: student
   vars:
     - deployment_path: "/home/student/DERAM"
-    - jar: "AMakkaN-1.0.jar"
+    - jar: "DERAM-1.0.jar"
   tasks:
   - name: run master for experiment {{ experiment_nr }}
     command:
