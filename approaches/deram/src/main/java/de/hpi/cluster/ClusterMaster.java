@@ -4,7 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.cluster.Cluster;
 import com.typesafe.config.Config;
-import de.hpi.cluster.actors.Master;
+import de.hpi.cluster.actors.MessageCoordinator;
 import de.hpi.cluster.actors.Reaper;
 import de.hpi.cluster.actors.Worker;
 import de.hpi.cluster.actors.listeners.ClusterListener;
@@ -30,8 +30,8 @@ public class ClusterMaster extends ClusterSystem {
 
 				system.actorOf(ClusterListener.props(), ClusterListener.DEFAULT_NAME);
 
-				ActorRef master = system.actorOf(Master.props(), Master.DEFAULT_NAME);
-				master.tell(new Master.ConfigMessage(config), ActorRef.noSender());
+				ActorRef master = system.actorOf(MessageCoordinator.props(), MessageCoordinator.DEFAULT_NAME);
+				master.tell(new MessageCoordinator.ConfigMessage(config), ActorRef.noSender());
 				
 				for (int i = 0; i < workers; i++)
 					system.actorOf(Worker.props(), Worker.DEFAULT_NAME + i);

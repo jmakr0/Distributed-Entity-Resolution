@@ -12,8 +12,8 @@ import static com.google.common.hash.Hashing.consistentHash;
 import static com.google.common.hash.Hashing.md5;
 
 /**
- * This object is responsible to manage an consistent hashRing.
- * A constant number of buckets is is placed on the hashRing and i mapped to a flexible number of actors represented
+ * This object is responsible to manage a consistent hashring.
+ * A constant number of buckets is placed on the hashring and i mapped to a flexible number of actors
  * represented by a ActorRef
  * As a Hash function MD5 is used
  * For the hash calculation as well as for the consistent hashing itself we use the com.google.common.hash library
@@ -35,7 +35,7 @@ public class Md5HashRouter implements Serializable {
 
     /**
      * Inits a new MD5HashRouter dividing the keyspace of the MD5 hashring
-     * @param buckets the number of buckets in the hashring
+     * @param buckets the number of buckets on the hashring
      */
     public Md5HashRouter(int buckets) {
         this.numberOfBuckets = buckets;
@@ -43,7 +43,7 @@ public class Md5HashRouter implements Serializable {
     }
 
     /**
-     * Puts a new Actor on the hashRing so that it becomes responsible for a number of buckets
+     * Puts a new Actor on the hashring so that it becomes responsible for a number of buckets
      * @param actorRef the actor
      */
     public void putOnHashring(ActorRef actorRef) {

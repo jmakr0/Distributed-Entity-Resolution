@@ -14,16 +14,30 @@ public class SimpleDuplicateDetector implements DuplicateDetector{
     private UniversalComparator comparator;
     private double similarityThreshold;
 
+    /**
+     * Inits a SimpleDuplicateDetector
+     * @param comparator the UniversalComparator object that is used to compare two records
+     * @param similarityThreshold A value between 0 and 1 that is used to decide whether a two records are classified as duplicates or not
+     */
     public SimpleDuplicateDetector(UniversalComparator comparator, double similarityThreshold) {
         this.comparator = comparator;
         this.similarityThreshold = similarityThreshold;
     }
 
+    /**
+     * Inits a SimpleDuplicateDetector
+     * @param comparator the UniversalComparator object that is used to compare two records
+     * @param config An Configuration object containing the key: duplicate-detection.similarity-threshold
+     */
     public SimpleDuplicateDetector(UniversalComparator comparator, Config config) {
         this.comparator = comparator;
         this.similarityThreshold = config.getDouble("duplicate-detection.similarity-threshold");
     }
 
+    /**
+     * Inits a SimpleDuplicateDetector using the default configuration
+     * @param comparator the UniversalComparator object that is used to compare two records
+     */
     public SimpleDuplicateDetector(UniversalComparator comparator) {
         this(comparator, ConfigFactory.load("default"));
     }

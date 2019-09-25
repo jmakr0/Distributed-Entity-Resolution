@@ -10,7 +10,7 @@ import java.io.File;
 
 public class ClusterApp {
 
-    public static final String ACTOR_SYSTEM_NAME = "der-optimistic";
+    public static final String ACTOR_SYSTEM_NAME = "deram";
 
     public static void main(String[] args) {
 

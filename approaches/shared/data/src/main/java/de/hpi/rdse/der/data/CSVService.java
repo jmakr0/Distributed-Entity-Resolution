@@ -15,6 +15,14 @@ public class CSVService {
     private CSVReader csvReader;
     private long id;
 
+    /**
+     * Initializes a new object of type CSVService
+     * @param dataFile the path to the file that should be read
+     * @param hasHeader indicates whether the first line of that file is the header
+     * @param separator the char that is used to separate all values of a single record
+     * @param minBlockSize the minimal number of lines within a datachunk
+     * @param maxQueueSize the maximum size of the queues that are used to provide datachunks of specific sizes
+     */
     public CSVService(String dataFile, boolean hasHeader, char separator, int minBlockSize, int maxQueueSize) {
         this.allDataRead = false;
 
@@ -36,6 +44,10 @@ public class CSVService {
         this.fillQueues();
     }
 
+    /**
+     * Indicates if there is data available to read
+     * @return True if there is data available
+     */
     public boolean dataAvailable() {
         if (allQueuesEmpty()) {
             fillQueues();
@@ -45,6 +57,11 @@ public class CSVService {
         }
     }
 
+    /**
+     * Returns a specific number of lines as a single datachunk
+     * @param lines The number of lines that should be read
+     * @return a String consisting of n lines of the dataset to be read
+     */
     public String getRecords(int lines) {
         this.queueSizes.add(lines);
 

@@ -21,7 +21,7 @@ The script [build_images.sh](build_images.sh) uses maven to build a `JAR` of the
 
 ## Mounts
 
-Once the container is executed, the application uses the following directories if not changed via the [config file](..approaches/optimistic/src/main/resources/default.conf):
+Once the container is executed, the application uses the following directories if not changed via the [config file](..approaches/deram/src/main/resources/default.conf):
 
 * `/app/data` - The location of the data; given in a *csv* format
 * `/app/conf` - The application's config file location

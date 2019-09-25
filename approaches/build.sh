@@ -8,11 +8,11 @@
 # -m, --monolith
 # builds monolith approach
 
-# -o, --optimistic
+# -d, --deram
 # builds optimistic approach
 
 MONOLITH_PATH="monolith/"
-OPTIMISTIC_PATH="optimistic/"
+DERAM_PATH="deram/"
 SHARED="shared/"
 SHARED_SH="update-local-dependencies.sh"
 
@@ -38,7 +38,7 @@ shared_build() {
 build_all() {
     shared_build ${SHARED} ${SHARED_SH}
     mvn_build ${MONOLITH_PATH}
-    mvn_build ${OPTIMISTIC_PATH}
+    mvn_build ${DERAM_PATH}
 }
 
 # no arguments
@@ -61,8 +61,8 @@ else
         fi
 
         # build optimistic
-        if [[ ${i} == "--optimistic" ]] || [[ ${i} == "-o" ]]; then
-            mvn_build ${OPTIMISTIC_PATH}
+        if [[ ${i} == "--deram" ]] || [[ ${i} == "-d" ]]; then
+            mvn_build ${DERAM_PATH}
         fi
     done
 fi

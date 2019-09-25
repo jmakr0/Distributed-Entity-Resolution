@@ -13,12 +13,19 @@ public class DFW {
     private int blksize;
     private DFWCoordinator dfwCoordinator;
 
+    /**
+     * @param matrix Adjacent matrix of the directed graph
+     * @param blksize Size of the blocks
+     */
     public DFW(int[][] matrix, int blksize) {
         this.matrix = matrix;
         this.blksize = blksize;
         this.dfwCoordinator = new DFWCoordinator(matrix.length, blksize);
     }
 
+    /**
+     * @return Returns if the calculation is done
+     */
     public boolean isCalculated() {
         return this.dfwCoordinator.isDone();
     }
@@ -27,10 +34,16 @@ public class DFW {
         return this.matrix;
     }
 
+    /**
+     * @return Returns if there are still blocks to calculate
+     */
     public boolean hasNextBlock() {
         return this.dfwCoordinator.hasNext();
     }
 
+    /**
+     * @return Returns the next block or null when this is not possible, e.g. calculation is done
+     */
     public DFWBlock getNextBlock() {
         Position position = this.dfwCoordinator.getNextPosition();
 
@@ -42,6 +55,9 @@ public class DFW {
         return null;
     }
 
+    /**
+     * @param block Resolves a block that was calculated
+     */
     public void dispatch(SubMatrix block) {
         this.dfwCoordinator.calculated(block.getPosition());
         this.merge(block);

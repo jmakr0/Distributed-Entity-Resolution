@@ -1,4 +1,4 @@
-# Optimistic
+# DERAM
 
 ## Configuration
 
@@ -11,8 +11,10 @@ Per default the [default.conf](src/main/resources/default.conf) file is used.
 
 ## Fields
 
-The config file defines the following fields: 
+The config file defines the following fields:
 
+- logging
+    - **level**: The log level that is specified by one of the following strings: OFF, ERROR, WARNING, INFO, DEBUG.  
 - cluster
     - master
         - **host-address**: The host address on which the master node can be reached.
@@ -35,6 +37,7 @@ The config file defines the following fields:
 	- performance-tracker
 		- **time-threshold**: The maximum time that a given worker should need for parsing a chunk of data
 		- **min-workload**: A natural number indicating the minimum workload a worker should get regardless of his current performance. The size of the workload is defined as follows: `number_of_rows_in_data_chunk = workload^2`
+		- **max-workload**: A natural number indicating the maximum workload a worker should get regardless of his current performance. The size of the workload is defined as follows: `number_of_rows_in_data_chunk = workload^2`
 	- similarity 
 		- abs-comparator
 			- **threshold_min**: The distance between two given numbers that is at least required so that similarity != 1. For more details, we refer to the [AbsComparator](../shared/entity-resolution/src/main/java/de/hpi/rdse/der/similarity/numeric/AbsComparator.java).

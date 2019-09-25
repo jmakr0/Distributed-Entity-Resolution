@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-JAR_NAME="AMakkaN-1.0.jar"
+JAR_NAME="DERAM-1.0.jar"
 MASTER_HOST="rdse-master"
 PORT_MASTER=7877
 PORT_WORKER=7879
@@ -11,7 +11,7 @@ cd ../approaches/
 ./build.sh "$@"                                         # ATTENTION: args will be passed to the approaches/build.sh
 cd -
 
-cp ../approaches/optimistic/target/${JAR_NAME} build/   # Copy build
+cp ../approaches/deram/target/${JAR_NAME} build/   # Copy build
 
 # Build image
 

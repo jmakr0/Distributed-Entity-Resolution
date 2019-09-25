@@ -9,6 +9,13 @@ import java.util.*;
 
 public class CSVService {
 
+    /**
+     * Reads the restaurant dataset all at once and parses it into single records
+     * @param dataFile The path to the restaurant dataset
+     * @param splitSymbol The split symbol that is used
+     * @param addIdField A flag that can be used to add an increasing id field as the first value of each record
+     * @return A list of string arrays, where every string array represents a singel record of the dataset
+     */
     public static List<String[]> readDataset(String dataFile, String splitSymbol, boolean addIdField) {
         List<String[]> result = new ArrayList<String[]>();
         CSVReader reader = null;
