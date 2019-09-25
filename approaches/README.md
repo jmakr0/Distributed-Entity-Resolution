@@ -1,18 +1,19 @@
 # Approaches
 
-## DERAM
-Mainly we worked on an approach we call Distributed Entity Resolution using the Actor Model (DERAM).
-It is extensively discussed in our [paper](../documentation/RDSE-DERAM-kroschewski-strassenburg.pdf).
+The [build.sh](build.sh) is used to build all approaches and offers some parameters to determine which build should be 
+ performed: `-a --all, -s --shared, -d --deram, -m --monolith`
+
+## Distributed Entity Resolution using the Actor Model (DERAM)
+This approach is extensively discussed in our [paper](../documentation/RDSE-DERAM-kroschewski-strassenburg.pdf).
 
 ### Configuration
-To make DERAM configurable in order to test it with different parameters 
-(e.g. number of buckets for the consistent hashing) we introduced a configuration file that can 
-be customized. 
+To make DERAM configurable and test it with different parameters, e.g. number of buckets for the consistent hashing, 
+we introduced a configuration file that can be customized. 
 
 #### Apply configuration
-* Whenever a `master` or `worker` instance should be started, the path to the config file that should be applied must be provided
-    - therefor use the `-c` or `--config` parameter
-- As a default configuration the [default.conf](src/main/resources/default.conf) can be used.
+
+Whenever a `master` or `worker` instance should be started, the path to the config file that should be applied must be provided with: `-c --config`.
+The [default.conf](src/main/resources/default.conf) can be used as a default configuration.
 
 #### Fields in the configuration
 
@@ -65,32 +66,32 @@ The config file defines the following fields:
 
 
 ## Monolith
-Before we started to develop a distributed approach for entity resolution we developed a monolithic approach
- using most of our shared libraries to show that our suggested pipeline for entity resolution
- performs properly. 
+Before we started to develop a distributed approach, we developed a monolithic approach using most of our shared libraries 
+to show that our suggested pipeline performs properly. 
  
-It consists of the class `EntityResolution` that contains all the entity resolution logic and a second class
- called 'CSVService' which is used to read the Restaurant dataset and its gold standard.
- Because we do not use queues but instead want to read the whole dataset at once for the monolithic approach we cannot
- use the CSV reading functionality from our shared libraries. 
-
+It consists of the class `EntityResolution` that contains all the entity resolution logic and a second class called `CSVService`, 
+which is used to read the restaurant dataset and its gold standard. Because we do not use queues but instead want to read 
+the whole dataset at once for the monolithic approach, we cannot use the CSV reading functionality from our shared libraries. 
 
 ## Shared 
 
-To make our code reusable in different approaches, we implemented parts in different projects. These can be locally imported as `maven` dependency. For more details, please read the provided `Javadoc`.
+To make our code reusable in different approaches, we implemented parts in different projects. These can be locally 
+imported as `maven` dependency. For more details, please read the provided `Javadoc`.
 
 ### Available projects
 * **data**: Contains the functionality of parsing the input and gold standard data.
 * **entity-resolution**: Provides the similarity calculation for numbers, strings, and records.
 * **evaluation**: Evaluates results against the corresponding *gold standard* by using _accuracy_, _recall_, and _F1-score_ as metrics.
 * **partitioning**: Provides the logic for the hash partitioning.
-* **set-operations**: Provides simple set operation functionalities that are used for example for the calculation of the F1-score.
+* **set-operations**: Provides simple set operation functionalities that are used, for example, for the calculation of the F1-score.
 * **transitive-closure**: Provides all the logic for the distributed calculation of the transitive closure using the Floyd Warshall Algorithm.
 
 ### Usage
-The projects are imported into the `monolith` and `optimistic` approach using `maven`. Since we don't wanted to publish the projects as publicly available `maven` dependencies they have to be build and imported before they can be used. 
+The projects are imported into the `monolith` and `optimistic` approach using `maven`. Since we don't wanted to publish 
+the projects as publicly available `maven` dependencies, they have to be build and imported before they can be used. 
 
-We provide the [update-local-dependencies](update-local-dependencies.sh) script. It first builds the projects using `mvn clean verify`, and afterward, imports the project locally using the `mvn install:install-file` command.
+We provide the [update-local-dependencies](update-local-dependencies.sh) script. It first builds the projects using 
+`mvn clean verify`, and afterward, imports the project locally using the `mvn install:install-file` command.
 
 After running the script the libraries can be imported and used like normal `maven` libraries.
 For example, to include the `evaluation` project add the following dependency to your maven dependencies.
