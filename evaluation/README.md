@@ -1,11 +1,11 @@
 # TODO
-
-## plot
-- We provide the JupyterNotebooks (`cpu-usage`and `scaleout`) that were used to generate the plots for our paper and 
-can be used to further explore the collected data.   
-
-- The log data that were generated as the result of our experiments are transformed to 
-a single data object by a python script (`extract.py`).
- Ta access teh data the `zip` has to be extracted and in case that teh path chnaged it has to be adjusted in the notebooks. 
-
  
+## plot
+To analyze the logged data of the experiments we wrote a python script (`extract.py`)
+that provides a method to read all the data and transform it into a structured python dictionary.
+This functionality is used in two Jupyter Notebooks that were used to investigate the results of our experiments
+and finally, plot the figures for our paper.
+ 
+- [cpu-usage.ipynb](./plot/cpu-usage.ipynb) was used to investigate the CPU utilization within the single phases of our 
+algorithm and additionally see how the computing power of the master and the workers develops in several different settings. 
+- [scaleout.ipynb](./plot/scaleout.ipynb) was used to analyze how our approach scales concerning a rising amount of computational power.  
