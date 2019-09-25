@@ -85,7 +85,7 @@ To make our code reusable in different approaches, we implemented parts in diffe
 * **evaluation**: Evaluates results against the corresponding *gold standard* by using _accuracy_, _recall_, and _F1-score_ as metrics.
 * **partitioning**: Provides the logic for the hash partitioning.
 * **set-operations**: Provides simple set operation functionalities that are used for example for the calculation of the F1-score.
-* **transitive-closure**: TODO
+* **transitive-closure**: Provides all the logic for the distributed calculation of the transitive closure using the Floyd Warshall Algorithm.
 
 ### Usage
 The projects are imported into the `monolith` and `optimistic` approach using `maven`. Since we don't wanted to publish the projects as publicly available `maven` dependencies they have to be build and imported before they can be used. 
