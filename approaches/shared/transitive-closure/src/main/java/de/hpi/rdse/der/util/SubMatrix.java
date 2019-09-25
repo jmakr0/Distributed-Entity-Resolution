@@ -8,6 +8,10 @@ public class SubMatrix {
     private int subMatrixSize;
     private int [][] subMatrix;
 
+    public SubMatrix() {
+        // default constructor for serialization
+    }
+
     public SubMatrix(int [][] matrix, Position position, int size) {
         this.position = position;
         this.subMatrixSize = size;

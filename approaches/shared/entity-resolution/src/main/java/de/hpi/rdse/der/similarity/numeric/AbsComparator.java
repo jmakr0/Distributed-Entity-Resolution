@@ -9,8 +9,7 @@ public class AbsComparator implements NumberComparator {
     double thresholdMax;
 
     /**
-     * abs-comparator
-     * Initializes a abs based number comparator
+     * Initializes an abs based number comparator
      * @param thresholdMin The distance between two given numbers that is at least required so that similarity != 1.
      * @param thresholdMax The distance between two given numbers that is so high such that we set similarity = 0.
      *
@@ -25,11 +24,18 @@ public class AbsComparator implements NumberComparator {
         this.thresholdMax = thresholdMax;
     }
 
+    /**
+     * Initializes an abs based number comparator
+     * @param config An Configuration object containing the keys: similarity.abs-comparator.threshold-min and similarity.abs-comparator.threshold-min
+     */
     public AbsComparator(Config config) {
         this.thresholdMin = config.getDouble("similarity.abs-comparator.threshold-min");
-        this.thresholdMax = config.getDouble("similarity.abs-comparator.threshold-max");
+        this.thresholdMax = config.getDouble("similarity.abs-comparator.threshold-min");
     }
 
+    /**
+     * Initializes an abs based number comparator using the default configuration
+     */
     public AbsComparator() {
        this(ConfigFactory.load("default"));
     }

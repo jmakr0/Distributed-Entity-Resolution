@@ -1,34 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set +e
+JAR_NAME="DERAM-1.0.jar"
+MASTER_HOST="rdse-master"
+PORT_MASTER=7877
+PORT_WORKER=7879
+CONFIG_FILE="default.conf"
 
-# set environment
-
-export JAR_NAME="AMakkaN-1.0.jar"
-export MASTER_HOST="rdse-master"
-
-# get current app
-
-mkdir tmp
-cd ../approaches/optimistic
-mvn clean verify
+mkdir build
+cd ../approaches/
+./build.sh "$@"                                         # ATTENTION: args will be passed to the approaches/build.sh
 cd -
-cp ../approaches/optimistic/target/$JAR_NAME tmp/
 
-# build image
+cp ../approaches/deram/target/${JAR_NAME} build/   # Copy build
 
-docker build -t rdse/base -f images/Dockerfile-base .
+# Build image
 
 docker build -t rdse/master \
-             --build-arg JAR_NAME=$JAR_NAME \
-             --build-arg MASTER_HOST=$MASTER_HOST \
-             -f images/Dockerfile-master .
+             --build-arg JAR_NAME=${JAR_NAME} \
+             --build-arg PORT=${PORT_MASTER} \
+             --build-arg CONFIG_FILE=${CONFIG_FILE} \
+             --build-arg ROLE=master \
+             -f Dockerfile-DER .
 
 docker build -t rdse/worker \
-             --build-arg JAR_NAME=$JAR_NAME \
-             --build-arg MASTER_HOST=$MASTER_HOST \
-             -f images/Dockerfile-worker .
+             --build-arg JAR_NAME=${JAR_NAME} \
+             --build-arg PORT=${PORT_WORKER} \
+             --build-arg CONFIG_FILE=${CONFIG_FILE} \
+             --build-arg ROLE=worker \
+             -f Dockerfile-DER .
 
-# cleanup
+# Cleanup
 
-rm -rf tmp
+rm -rf build

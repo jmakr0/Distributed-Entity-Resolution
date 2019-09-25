@@ -1,0 +1,8 @@
+---
+- hosts: "{{ target }}"
+  gather_facts: false
+  remote_user: sysadmin
+  become: true
+  tasks:
+  - name: unconditionally reboot the machine with all defaults
+    reboot:

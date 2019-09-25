@@ -1,0 +1,47 @@
+[all]
+thor01 ansible_host=172.16.64.55
+thor02 ansible_host=172.16.64.56
+thor03 ansible_host=172.16.64.57
+thor04 ansible_host=172.16.64.58
+
+odin01 ansible_host=172.16.64.61
+odin02 ansible_host=172.16.64.62
+odin03 ansible_host=172.16.64.63
+odin04 ansible_host=172.16.64.64
+odin05 ansible_host=172.16.64.65
+odin06 ansible_host=172.16.64.66
+odin07 ansible_host=172.16.64.67
+odin08 ansible_host=172.16.64.68
+
+[test_cluster]
+thor01
+thor02
+
+[thor_worker]
+thor01
+thor02
+thor03
+thor04
+
+[odin_worker]
+odin02
+odin03
+odin04
+odin05
+odin06
+odin07
+odin08
+
+[all_worker]
+thor01
+thor02
+thor03
+thor04
+
+odin02
+odin03
+odin04
+odin05
+odin06
+odin07
+odin08

@@ -8,6 +8,11 @@ import java.util.Set;
 
 public class GoldReader {
 
+    /**
+     * Reads the restaurant gold standard and parses it into a set of two-dimensional sets of integers
+     * @param dataFile The path to the gold standard as a String
+     * @return a set of two-dimensional sets of integers representing the duplicates of the gold standard
+     */
     public static Set<Set<Integer>> readRestaurantGoldStandard(String dataFile) {
         char separator = '\n';
         String splitSymbol = ",";

@@ -16,6 +16,12 @@ import de.hpi.rdse.der.util.MatrixConverter;
 
 import java.util.*;
 
+/**
+ * A Monolithic approach using the same libraries as our distributed approach.
+ * It is used to verify that our pipeline for entity resolution leads to proper results.
+ * I addition the results of a distributed execution can be compared against the results of this approach
+ * to see if the results are modified by distributing the algorithm
+ */
 public class EntityResolution {
     private static final String RESTAURANT_DATA_PATH = "../../data/restaurant.csv";
     private static final String RESTAURANT_DATA_GOLD = "../../data/restaurant_gold.csv";
@@ -32,7 +38,7 @@ public class EntityResolution {
 
     private static void findDuplicatesForRestaurantDataset() {
         // read data
-        List<String[]> recordsRestaurant = CSVService.readDataset(RESTAURANT_DATA_PATH, ",", false);
+        List<String[]> recordsRestaurant = CSVService.readDataset(RESTAURANT_DATA_PATH, ",", true);
 
         // blocking
         Map<String,List<String[]>> groupedData = groupDataByPrefixOfName(recordsRestaurant);
@@ -43,12 +49,14 @@ public class EntityResolution {
         int[][] duplicateMatrix = MatrixConverter.duplicateSetToMatrix(duplicates);
         int[][] transitiveClosureMatrix = FloydWarshall.apply(duplicateMatrix);
 
-        Set<Set<Integer>> transitiveClosure = MatrixConverter.fromTransitiveClosure(transitiveClosureMatrix);
+        Set<Set<Integer>> transitiveClosure = MatrixConverter.formTransitiveClosure(transitiveClosureMatrix);
 
         Set<Set<Integer>> goldStandard = GoldReader.readRestaurantGoldStandard(RESTAURANT_DATA_GOLD);
         GoldStandardEvaluator evaluator = new ConsoleOutputEvaluator();
+        System.out.println("number of duplicates: " + duplicates.size());
         System.out.println(duplicates);
         evaluator.evaluate(duplicates, goldStandard);
+        System.out.println("number of duplicates after TC: " + transitiveClosure.size());
         System.out.println(transitiveClosure);
         evaluator.evaluate(transitiveClosure, goldStandard);
     }

@@ -7,8 +7,8 @@ public interface DuplicateDetector {
 
     /**
      * Finds all duplicates within a given list of records
-     * @param records the records of a block, each record is represented as a array of Strings
-     * @return A set of sets representing the identified duplicates grouped in classes
+     * @param records the records of a block, each record is represented as an array of Strings
+     * @return A set of sets of integers representing the identified duplicates
      */
     Set<Set<Integer>> findDuplicates(List<String[]> records);
 
