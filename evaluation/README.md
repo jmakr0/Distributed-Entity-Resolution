@@ -1,9 +1,21 @@
 # Evaluation
 
 This directory contains all our code and setup for our experimental evaluation. The scripts in the root directory have the following tasks:
+
 * `deploy.sh` - Builds the current DERAM project with its dependencies, sets up the `deployment/` folder with the all experiments, and finally, deploys it to the test cluster using ansible.
-* `experiments.sh` - 
-* `reboot.sh` - 
+
+* `experiments.sh` - Uses ansible to run an experiment with the determined setup. It has the following parameters:
+  * `$1` - master node
+  * `$2` - worker nodes
+  * `$3` - experiment number
+  * `$4` - repeat
+  * `$5` - number of workers to start with
+  * `$6` - max number of workers
+  * `$7` - deployment password
+  * `Example: $./experiments odin01 all 4 5 1 7 PASSWORD`
+
+ * `reboot.sh` - 
+ 
 
 ## Ansible
 
