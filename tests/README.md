@@ -1,4 +1,4 @@
-# Testing
+# Tests
 
 Tests are using our [docker setup](../docker) to test the current DERAM approach locally in isolation. 
 A test script, e.g. [test_1.sh](test_1.sh), sets up its environment by sourcing [env.sh](bin/env.sh) and executes the following scripts:
@@ -17,7 +17,7 @@ was created. A dataset with a size of 10MB can hence created with:
 ./create_dataset.sh ../data/restaurant.csv ../data/restaurant_new.csv 10
 ```
 
-## Tests
+## Testing
 
 To setup a custom test, copy [test_template.sh](test_template.sh) and adjust it. 
 The [env.sh](bin/env.sh) contains all possible settings. During development, a couple of tests have been developed:
